@@ -1,3 +1,5 @@
+package HW1;
+
 import java.io.*;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -9,10 +11,14 @@ import java.util.Date;
  * Created by amaliujia on 15-9-19.
  */
 public class Label {
-
+    public  static final String output_path = "/Users/amaliujia/Documents/CMU/Fall2015/11676/labeled/";
     private ArrayList<Record> records = new ArrayList<Record>();
     private ArrayList<Float> avgsFroTenMins = new ArrayList<Float>();
 
+    private ArrayList<Record> records_prev = new ArrayList<Record>();
+    private ArrayList<Record> records_now = new ArrayList<Record>();
+    private BufferedWriter bufferedWriter = null;
+    public long line_count = 0;
     /**
      * Read all records into arraylist
      * @param path
@@ -23,18 +29,73 @@ public class Label {
      *          throws when parsing date format wrong.
      */
     public void processData(File path) throws IOException, ParseException {
+        bufferedWriter = new BufferedWriter(new FileWriter(new File(output_path + "test.csv")));
+        bufferedWriter.write("currency,time,bid,ask,label\n");
         BufferedReader reader = new BufferedReader(new FileReader(path));
-
         String line;
         while ((line = reader.readLine()) != null){
             String[] components = line.split(",");
             if(components.length != 4){
                 continue;
             }else{
-                Record record = new Record(components);
-                records.add(record);
+              if(records_prev.size() < 500){
+                  records_prev.add(new Record(components));
+              }else if(records_now.size() < 500){
+                  records_now.add(new Record(components));
+              }else{
+                  PartialAnalyze();
+                  records_now.add(new Record(components));
+              }
+            }
+
+            if(line_count > 10000){
+                try {
+                    bufferedWriter.flush();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                System.exit(0);
             }
         }
+
+        System.out.println("Finish process " + path);
+    }
+
+    public void PartialAnalyze(){
+        float count = 0;
+        float asksum = 0;
+
+        // compute bid avg for every ten minutes
+        for(Record r : records_now){
+            count++;
+            asksum += r.askPrice;
+        }
+
+        float avg_now = asksum / (float) count;
+
+        // compare current bid price with future avg bid price
+        int label = 0;
+        for(Record r : records_prev){
+            if(r.bidPrice < avg_now){
+                label = 1;
+            }else{
+                label = 0;
+            }
+
+            //System.out.println(r.currency + "," + r.date + "," + r.bidPrice + "," + r.askPrice + "," + label);
+            try {
+                bufferedWriter.write(r.currency + "," + r.date + "," + r.bidPrice + "," + r.askPrice + "," + label + "\n");
+                line_count++;
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        records_prev.clear();
+        records_prev.addAll(records_now);
+        records_now.clear();
+
     }
 
     /**
@@ -94,7 +155,7 @@ public class Label {
             }
         }
 
-        label.analyze();
+        // label.analyze();
     }
 
     private class Record{
