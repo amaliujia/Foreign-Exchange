@@ -1,11 +1,8 @@
-import javafx.util.Pair;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by amaliujia on 15-10-11.
@@ -22,9 +19,7 @@ public class RandomForest {
     // number of random selected attributes to build binary.
     public static int numAttrRandom;
 
-    /**
-     * The collection of the forest's decision trees.
-     * */
+    // The collection of the forest's decision trees.
     private ArrayList<RealDecisionTree> trees;
 
     /** the number of trees in this random tree */
