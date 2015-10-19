@@ -1,3 +1,5 @@
+package HW3;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -64,7 +66,7 @@ public class RandomForest {
 
         int index = 0;
         for (int[] one_instance : test_data){
-            Map<Integer, Integer> predictions = new HashMap<>();
+            Map<Integer, Integer> predictions = new HashMap<Integer, Integer>();
             int res = 0;
             for (RealDecisionTree tree : collec_tree){
                 int label = tree.predict(one_instance);
