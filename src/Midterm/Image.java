@@ -8,5 +8,6 @@ import org.opencv.core.Mat;
 public class Image {
     public String fileName;
     public Mat desc;
+    public float[] hog;
     public int label;
 }

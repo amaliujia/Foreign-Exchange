@@ -1,12 +1,11 @@
 package Midterm;
 
-import org.opencv.core.Core;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfKeyPoint;
-import org.opencv.core.TermCriteria;
+import org.opencv.core.*;
 import org.opencv.features2d.DescriptorExtractor;
 import org.opencv.features2d.FeatureDetector;
 import org.opencv.highgui.Highgui;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.objdetect.HOGDescriptor;
 
 import javax.imageio.ImageIO;
 import java.awt.image.*;
@@ -22,15 +21,18 @@ import java.util.List;
  * Created by amaliujia on 15-10-15.
  */
 public class Solution {
-    public static int cluster_num = 500;
+    public static int cluster_num = 100;
+    public static boolean HOGFeature = true;
+    public static boolean SIFTFeature = true;
 
     public static void main(String[] args){
         System.load(new File("/usr/local/Cellar/opencv/2.4.12/share/OpenCV/java/libopencv_java2412.dylib").getAbsolutePath());
         Solution s = new Solution();
         try {
-            //s.produceLabeledDataForTrainingAndTesting(args[0], args[1], args[2]);
+            //s.produceLabeledFullDataForTrainingAndTesting(args[0], args[1], args[2]);
             //String[] trainArgs = {"files/FV"};
             s.produceSIFTFromImageData(args[0], args[1], args[2]);
+            //s.produceHOGFeature("/Users/amaliujia/Documents/CMU/Fall2015/11676/midterm/train2/acantharia_protist/100224.jpg");
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -47,16 +49,24 @@ public class Solution {
 
                 for(File f : iamge) {
                     if (f.getName().endsWith("jpg")) {
-                        Mat res = produceSIFTFeature(f.getAbsolutePath());
-                        if (res == null || res.rows() == 0) {
-                            continue;
-                        }
                         Image img = new Image();
                         img.fileName = f.getAbsolutePath();
-                        img.desc = res;
                         img.label = i;
+
+                        if (Solution.SIFTFeature){
+                            Mat res = produceSIFTFeature(f.getAbsolutePath());
+                            if (res == null || res.rows() == 0) {
+                                continue;
+                            }
+                            img.desc = res;
+                            decriptors.push_back(res);
+                        }
+
+
+                        if (HOGFeature){
+                            img.hog = produceHOGFeature(f.getAbsolutePath());
+                        }
                         images.add(img);
-                        decriptors.push_back(res);
                     }
                 }
             }
@@ -65,7 +75,7 @@ public class Solution {
         Mat labels = new Mat();
         TermCriteria criteria = new TermCriteria(TermCriteria.COUNT, 100, 1);
         Mat centers = new Mat();
-        Core.kmeans(decriptors, Solution.cluster_num, labels, criteria, 100, Core.KMEANS_PP_CENTERS, centers);
+        Core.kmeans(decriptors, Solution.cluster_num, labels, criteria, 50, Core.KMEANS_PP_CENTERS, centers);
 
         System.out.println("Clustering down....");
         System.out.println(decriptors.rows() + "  " + labels.rows() + "  " + labels.cols());
@@ -85,6 +95,8 @@ public class Solution {
             }
             writeSIFTFeatureVector(img, labels, cur_row, cur_writer, Solution.cluster_num);
 
+            cur_writer.newLine();
+            cur_writer.flush();
             cur_row += img.desc.rows();
             index++;
         }
@@ -93,36 +105,70 @@ public class Solution {
 
     private void writeSIFTFeatureVector(Image image, Mat label, int cur_row, BufferedWriter cur_writer, int N){
         int[] stat = new int[N];
-        System.out.println(image.desc.rows());
-        for(int i = cur_row; i < cur_row + image.desc.rows(); i++){
-            int l = (int)label.get(i, 0)[0];
-            stat[l]++;
-        }
-
         double sum = 0;
-        for(int j = 0; j < stat.length; j++){
-            sum += stat[j];
+        if (Solution.SIFTFeature){
+            //System.out.println(image.desc.rows());
+            for(int i = cur_row; i < cur_row + image.desc.rows(); i++){
+                int l = (int)label.get(i, 0)[0];
+                stat[l]++;
+            }
+
+            for(int j = 0; j < stat.length; j++){
+                sum += stat[j];
+            }
         }
 
         try {
             cur_writer.write(image.label + "");
-            for (int j = 0; j < stat.length; j++){
-                if (stat[j] == 0){
-                    continue;
+            int j = 0;
+            if (Solution.SIFTFeature){
+                for (; j < stat.length; j++){
+                    if (stat[j] == 0){
+                        continue;
+                    }
+                    cur_writer.write(" " + (j+1) + ":" + stat[j] / sum);
                 }
-
-                cur_writer.write(" " + (j+1) + ":" + stat[j] / sum);
             }
-            cur_writer.newLine();
-            cur_writer.flush();
+
+
+            if (Solution.HOGFeature){
+                for (int x = 0; x < image.hog.length; j++, x++){
+                    if (image.hog[x] == 0){
+                        continue;
+                    }
+                    cur_writer.write(" " + (j+1) + ":" + image.hog[x]);
+                }
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
     }
 
+    private float[] produceHOGFeature(String imageName) throws IOException{
+        Mat test_mat = Highgui.imread(imageName, Highgui.CV_LOAD_IMAGE_GRAYSCALE);
+        Mat target = new Mat();
+        Size size = new Size(40,24);
+        Imgproc.resize(test_mat, target, size);
+        test_mat = target;
+        MatOfFloat descriptors = new MatOfFloat();
+        Mat desc = new Mat();
+        Size winSize = new Size(40, 24);
+        Size blockSize = new Size(8, 8);
+        Size blockStride = new Size(16, 16);
+        Size cellSize = new Size(2, 2);
+        int nBins = 9;
+        Size winStride = new Size(16, 16);
+        Size padding = new Size(0, 0);
+        HOGDescriptor hogDescriptor = new HOGDescriptor(winSize, blockSize, blockStride, cellSize, nBins);
+        hogDescriptor.compute(test_mat, descriptors);
+        //System.out.println(descriptors.rows() + " " + descriptors.cols());
+        return descriptors.toArray();
+    }
+
     private Mat produceSIFTFeature(String imageName) throws IOException{
         Mat test_mat = Highgui.imread(imageName, Highgui.CV_LOAD_IMAGE_GRAYSCALE);
+        //System.out.println(test_mat.rows() + " " + test_mat.cols());
         Mat desc = new Mat();
         FeatureDetector fd = FeatureDetector.create(FeatureDetector.SIFT);
         MatOfKeyPoint mkp =new MatOfKeyPoint();
@@ -188,7 +234,36 @@ public class Solution {
         }
 
     }
+    private void produceLabeledFullDataForTrainingAndTesting(String dir, String output, String Test) throws IOException {
+        File folder = new File(dir);
+        File[] listOfFiles = folder.listFiles();
+        BufferedWriter train_writer = new BufferedWriter(new FileWriter(new File(output)));
+        BufferedWriter test_writer = new BufferedWriter(new FileWriter(new File(Test)));
+        for (int i = 0; i < listOfFiles.length; i++){
+            if (listOfFiles[i].isDirectory()){
+                File[] iamge = listOfFiles[i].listFiles();
 
+                for(int x = 0; x < iamge.length; x++) {
+                    File f = iamge[x];
+                    int[] pixels = processImage(f);
+                    if (pixels == null) continue;
+                    int index = 1;
+                    BufferedWriter writer = null;
+                    if (x % 5 == 0){
+                        writer = test_writer;
+                    }else{
+                        writer = train_writer;
+                    }
+                    writer.write(i + "");
+                    for(int j = 0; j < pixels.length; j++){
+                        writer.write(" " + j + ":" + pixels[j]);
+                    }
+                    writer.newLine();
+                    writer.flush();
+                }
+            }
+        }
+    }
 
     private void produceLabeledDataForTrainingAndTesting(String dir, String output, String Test) throws IOException {
         File folder = new File(dir);
