@@ -7,7 +7,10 @@ import org.opencv.core.Mat;
  */
 public class Image {
     public String fileName;
+    // SIFT feature
     public Mat desc;
+    //HOG feature
     public float[] hog;
+    //Image labels
     public int label;
 }
