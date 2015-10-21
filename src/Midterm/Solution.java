@@ -31,14 +31,23 @@ public class Solution {
         try {
             //s.produceLabeledFullDataForTrainingAndTesting(args[0], args[1], args[2]);
             //String[] trainArgs = {"files/FV"};
-            s.produceSIFTFromImageData(args[0], args[1], args[2]);
+            s.produceFeatureFromImageData(args[0], args[1], args[2]);
             //s.produceHOGFeature("/Users/amaliujia/Documents/CMU/Fall2015/11676/midterm/train2/acantharia_protist/100224.jpg");
 
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-    private void produceSIFTFromImageData(String dir, String output, String test) throws IOException {
+
+    /**
+     * This function process all the images and extract HOG and SIFT feature. 20% images are used for test, others are
+     * for training.
+     * @param dir
+     * @param output
+     * @param test
+     * @throws IOException
+     */
+    private void produceFeatureFromImageData(String dir, String output, String test) throws IOException {
         File folder = new File(dir);
         File[] listOfFiles = folder.listFiles();
         List<Image> images = new ArrayList<Image>();
@@ -94,7 +103,7 @@ public class Solution {
             }else{
                 cur_writer = train_writer;
             }
-            writeSIFTFeatureVector(img, labels, cur_row, cur_writer, Solution.cluster_num);
+            writeFeatureVector(img, labels, cur_row, cur_writer, Solution.cluster_num);
 
             cur_writer.newLine();
             cur_writer.flush();
@@ -106,7 +115,15 @@ public class Solution {
         System.out.println("Finish");
     }
 
-    private void writeSIFTFeatureVector(Image image, Mat label, int cur_row, BufferedWriter cur_writer, int N){
+    /**
+     * Generate feature vector of HOG and SIFT, write to file.
+     * @param image
+     * @param label
+     * @param cur_row
+     * @param cur_writer
+     * @param N
+     */
+    private void writeFeatureVector(Image image, Mat label, int cur_row, BufferedWriter cur_writer, int N){
         int[] stat = new int[N];
         double sum = 0;
         if (Solution.SIFTFeature){
@@ -133,7 +150,6 @@ public class Solution {
                 }
             }
 
-
             if (Solution.HOGFeature){
                 for (int x = 0; x < image.hog.length; j++, x++){
                     if (image.hog[x] == 0){
@@ -148,6 +164,12 @@ public class Solution {
 
     }
 
+    /**
+     * Extract HOG feature from image.
+     * @param imageName
+     * @return
+     * @throws IOException
+     */
     private float[] produceHOGFeature(String imageName) throws IOException{
         Mat test_mat = Highgui.imread(imageName, Highgui.CV_LOAD_IMAGE_GRAYSCALE);
         Mat target = new Mat();
@@ -169,6 +191,13 @@ public class Solution {
         return descriptors.toArray();
     }
 
+    /**
+     * Extract SIFT feature from image
+     * @param imageName
+     * @return
+     *      Mat in opencv
+     * @throws IOException
+     */
     private Mat produceSIFTFeature(String imageName) throws IOException{
         Mat test_mat = Highgui.imread(imageName, Highgui.CV_LOAD_IMAGE_GRAYSCALE);
         //System.out.println(test_mat.rows() + " " + test_mat.cols());
@@ -214,6 +243,12 @@ public class Solution {
         }
     }
 
+    /**
+     *
+     * @param dir
+     * @param output
+     * @throws IOException
+     */
     private void produceTestData(String dir, String output) throws IOException {
         File folder = new File(dir);
         File[] listOfFiles = folder.listFiles();
@@ -237,6 +272,18 @@ public class Solution {
         }
 
     }
+
+    /**
+     * Deal with a directory which contains lots of image. Divide these images to two cluster, one for training and
+     * another for testing. Output every pixel.
+     * @param dir
+     *          The path to all images
+     * @param output
+     *          The path for training data.
+     * @param Test
+     *          The past for testing data.
+     * @throws IOException
+     */
     private void produceLabeledFullDataForTrainingAndTesting(String dir, String output, String Test) throws IOException {
         File folder = new File(dir);
         File[] listOfFiles = folder.listFiles();
@@ -268,6 +315,17 @@ public class Solution {
         }
     }
 
+    /**
+     * Deal with a directory which contains lots of image. Divide these images to two cluster, one for training and
+     * another for testing. Compute the 3 key important values for every 50 pixels.
+     * @param dir
+     *          The path to all images
+     * @param output
+     *          The path for training data.
+     * @param Test
+     *          The past for testing data.
+     * @throws IOException
+     */
     private void produceLabeledDataForTrainingAndTesting(String dir, String output, String Test) throws IOException {
         File folder = new File(dir);
         File[] listOfFiles = folder.listFiles();
@@ -309,6 +367,14 @@ public class Solution {
         }
     }
 
+    /**
+     * Given each image, return an array that contains all the pixels.
+     * @param imageName
+     *          Filename of image
+     * @return
+     *          Array of pixels
+     * @throws IOException
+     */
     private int[] processImage(File imageName) throws IOException {
         // open image
         //File imgPath = new File(imageName);
