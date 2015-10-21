@@ -21,7 +21,7 @@ import java.util.List;
  * Created by amaliujia on 15-10-15.
  */
 public class Solution {
-    public static int cluster_num = 100;
+    public static int cluster_num = 20;
     public static boolean HOGFeature = true;
     public static boolean SIFTFeature = true;
 
@@ -75,7 +75,8 @@ public class Solution {
         Mat labels = new Mat();
         TermCriteria criteria = new TermCriteria(TermCriteria.COUNT, 100, 1);
         Mat centers = new Mat();
-        Core.kmeans(decriptors, Solution.cluster_num, labels, criteria, 50, Core.KMEANS_PP_CENTERS, centers);
+        if (Solution.SIFTFeature)
+            Core.kmeans(decriptors, Solution.cluster_num, labels, criteria, 50, Core.KMEANS_PP_CENTERS, centers);
 
         System.out.println("Clustering down....");
         System.out.println(decriptors.rows() + "  " + labels.rows() + "  " + labels.cols());
@@ -97,7 +98,9 @@ public class Solution {
 
             cur_writer.newLine();
             cur_writer.flush();
-            cur_row += img.desc.rows();
+            if (Solution.SIFTFeature)
+                cur_row += img.desc.rows();
+
             index++;
         }
         System.out.println("Finish");
@@ -156,7 +159,7 @@ public class Solution {
         Size winSize = new Size(40, 24);
         Size blockSize = new Size(8, 8);
         Size blockStride = new Size(16, 16);
-        Size cellSize = new Size(2, 2);
+        Size cellSize = new Size(8, 8);
         int nBins = 9;
         Size winStride = new Size(16, 16);
         Size padding = new Size(0, 0);
