@@ -1,9 +1,11 @@
 import libsvm.*;
-import java.applet.*;
+
+import java.applet.Applet;
 import java.awt.*;
-import java.util.*;
 import java.awt.event.*;
 import java.io.*;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
 public class svm_toy extends Applet {
 

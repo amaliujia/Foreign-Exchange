@@ -1,6 +1,10 @@
 import libsvm.*;
-import java.io.*;
-import java.util.*;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
 class svm_train {
 	private svm_parameter param;		// set by parse_command_line

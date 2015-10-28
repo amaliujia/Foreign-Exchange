@@ -4,8 +4,10 @@
 
 
 package libsvm;
+
 import java.io.*;
-import java.util.*;
+import java.util.Random;
+import java.util.StringTokenizer;
 
 //
 // Kernel Cache

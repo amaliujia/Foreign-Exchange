@@ -5,7 +5,11 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
 
 
 /**
@@ -28,12 +32,12 @@ public class CassandraDriver {
      * @param CSVPath
      * @throws IOException
      */
-    public void insertData(String CSVPath) throws IOException{
+    public void insertData(String CSVPath, String tablename) throws IOException{
         BufferedReader reader = new BufferedReader(new FileReader(new File(CSVPath)));
         String line = reader.readLine();
         String[] attributes = line.split(",");
 
-        String sql = "INSERT INTO data (" + attributes[0];
+        String sql = "INSERT INTO " + tablename + " (" + attributes[0];
         for (int i = 1; i < attributes.length; i++){
             sql += ", ";
             sql +=  attributes[i];
@@ -72,23 +76,26 @@ public class CassandraDriver {
      * @param tablename
      * @param schema
      */
-    public void queryData(String tablename, String[] schema){
+    public ArrayList<int[]> queryData(String tablename, String[] schema){
+        ArrayList<int[]> res = new ArrayList<int[]>();
+
         ResultSet resultSet = session.execute("SELECT * FROM " + tablename);
         for (Row row : resultSet) {
+            int[] data = new int[schema.length];
+            int j = 0;
             for (String s : schema) {
-                System.out.print(row.getString(s));
-                System.out.print(" ");
+                data[j] = Integer.parseInt(s);
             }
-
-            System.out.println();
+            res.add(data);
         }
+        return res;
     }
 
     public static void main(String[] args){
         CassandraDriver solution = new CassandraDriver();
         solution.setup();
         try {
-            solution.insertData(args[0]);
+            solution.insertData(args[0], args[1]);
         } catch (IOException e) {
             e.printStackTrace();
         }

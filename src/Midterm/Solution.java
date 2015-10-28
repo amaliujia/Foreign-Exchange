@@ -8,7 +8,7 @@ import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.HOGDescriptor;
 
 import javax.imageio.ImageIO;
-import java.awt.image.*;
+import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
