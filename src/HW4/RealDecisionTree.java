@@ -1,5 +1,6 @@
 package HW4;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -8,7 +9,7 @@ import java.util.List;
 /**
  * Created by amaliujia on 15-10-11.
  */
-public class RealDecisionTree {
+public class RealDecisionTree implements Serializable {
     // the number of data records
     private int N;
 

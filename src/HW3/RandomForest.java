@@ -1,5 +1,6 @@
 package HW3;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -9,7 +10,7 @@ import java.util.concurrent.Executors;
 /**
  * Created by amaliujia on 15-10-11.
  */
-public class RandomForest {
+public class RandomForest implements Serializable{
     private static final int NUM_THREADS=Runtime.getRuntime().availableProcessors();
 
     // the number of category. Here should be binary.
@@ -19,7 +20,7 @@ public class RandomForest {
     public static int numAttr = 3;
 
     // number of random selected attributes to build binary.
-    public static int numAttrRandom;
+    public static int numAttrRandom = 1;
 
     // The collection of the forest's decision trees.
     private ArrayList<RealDecisionTree> trees;
