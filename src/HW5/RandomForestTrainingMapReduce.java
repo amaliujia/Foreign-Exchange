@@ -20,6 +20,7 @@ import java.util.ArrayList;
 
 /**
  * @author amaliujia
+ *
  */
 public class RandomForestTrainingMapReduce {
     public static int N = 3;
@@ -152,10 +153,8 @@ public class RandomForestTrainingMapReduce {
         public int run(String[] strings) throws Exception {
             Job job = new Job(getConf(), "Ramdom Forest Traning");
             job.setJarByClass(RandomForestTrainingMapReduce.class);
-            job.setMapperClass(DummyMapper.class);
-            job.setReducerClass(ForestTestingReducer.class);
-            job.setOutputKeyClass(Text.class);
-            job.setOutputValueClass(IntWritable.class);
+            job.setMapperClass(DummyMapper.class); // Mapper writes tree into database, so no need to output to reducer.
+            job.setReducerClass(ForestTestingReducer.class); // reducer reads tree from databse, so no input for reducer.
             // only need one reducer for aggregating.
             job.setNumReduceTasks(1);
             FileInputFormat.addInputPath(job, new Path(strings[0]));
