@@ -10,7 +10,7 @@ import org.apache.spark.mllib.util.MLUtils
 val conf = new SparkConf().setAppName("Spark_RandomForest").setMaster("local[1]")
 val sc = new SparkContext(conf)
 
-//
+// Read data from Cassandra
 val driver = CassandraDriver.getInstance()
 val file = new File("data/sample.txt")
 val bw = new BufferedWriter(new FileWriter(file))
@@ -36,8 +36,11 @@ val maxBins = 32
 val model = RandomForest.trainClassifier(trainingData, numClasses, categoricalFeaturesInfo,
   numTrees, featureSubsetStrategy, impurity, maxDepth, maxBins)
 
-// Save and load model
+// Save model to file system
 model.save(sc, "myModelPath")
+// Save mode to Cassandra
+driver.insertData(model.toString(), "model")
+// load model from file system
 val sameModel = RandomForestModel.load(sc, "myModelPath")
 
 // Evaluate model on test instances and compute test error
@@ -49,7 +52,5 @@ val testErr = labelAndPreds.filter(r => r._1 != r._2).count.toDouble / testData.
 println("Test Error = " + testErr)
 println("Learned classification forest model:\n" + model.toDebugString)
 
-// write model back to Cassandra.
-driver.insertData(model.toString(), "model")
 // write test result back to Cassandra
 driver.insertData(testErr.toString(), "error")
