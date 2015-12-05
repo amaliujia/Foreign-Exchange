@@ -14,6 +14,7 @@ public class KeywordsFetchPipeline {
     private Set<Integer> fileIDSet;
     private String fileTopicDistributionFile;
     private String fileWordTopicDistributionFile;
+    private WordTopicDistribution wordTopicDistribution;
 
     public KeywordsFetchPipeline() {
         this.fileTopicDistributionList = new ArrayList<FileTopicDistribution>();
@@ -51,6 +52,8 @@ public class KeywordsFetchPipeline {
     public void start() {
         try {
             this.readFileTopicDistribution();
+            WordTopicComputor computor = new WordTopicComputor(this.fileWordTopicDistributionFile);
+            this.wordTopicDistribution = computor.compute();
         } catch (IOException e) {
             e.printStackTrace();
         }
