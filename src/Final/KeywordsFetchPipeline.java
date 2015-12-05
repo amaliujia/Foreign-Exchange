@@ -13,6 +13,7 @@ public class KeywordsFetchPipeline {
     private List<FileTopicDistribution> fileTopicDistributionList;
     private Set<Integer> fileIDSet;
     private String fileTopicDistributionFile;
+    private String fileWordTopicDistributionFile;
 
     public KeywordsFetchPipeline() {
         this.fileTopicDistributionList = new ArrayList<FileTopicDistribution>();
@@ -21,6 +22,10 @@ public class KeywordsFetchPipeline {
 
     public void setFileTopicDistributionFile(String filename) {
         this.fileTopicDistributionFile = filename;
+    }
+
+    public void setFileWordTopicDistributionFile(String filename) {
+        this.fileWordTopicDistributionFile = filename;
     }
 
     private void readFileTopicDistribution() throws IOException {
