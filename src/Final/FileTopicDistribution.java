@@ -45,5 +45,8 @@ public class FileTopicDistribution {
 
         this.distributions[this.cur_index++] = value;
     }
+    public double getLikelihood(int id) {
+        return this.distributions[id];
+    }
 
 }

@@ -11,16 +11,19 @@ import java.util.Map;
  */
 public class WordTopicSingleInstance {
     private int wordId;
-    private String word;
-    private Map<Integer, Integer> topicStatistics;
+    // private String word;
+    public Map<Integer, Integer> topicStatistics;
 
-    public WordTopicSingleInstance (int id, String w) {
+    public WordTopicSingleInstance (int id) {
         this.wordId = id;
-        this.word = w;
         this.topicStatistics = new HashMap<Integer, Integer>();
     }
 
     public void add(int id, int occurence) {
         this.topicStatistics.put(id, occurence);
+    }
+
+    public int getWordId() {
+        return this.wordId;
     }
 }
