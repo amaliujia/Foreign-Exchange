@@ -1,10 +1,4 @@
-import java.io.{FileWriter, BufferedWriter, File}
 
-import HW6.CassandraDriver
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.mllib.tree.RandomForest
-import org.apache.spark.mllib.tree.model.RandomForestModel
-import org.apache.spark.mllib.util.MLUtils
 
 // connect to spark
 //val conf = new SparkConf().setAppName("Spark_RandomForest").setMaster("local[1]")

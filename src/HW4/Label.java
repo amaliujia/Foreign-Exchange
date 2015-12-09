@@ -1,7 +1,5 @@
 package HW4;
 
-import javafx.scene.shape.SVGPath;
-
 import java.io.*;
 import java.text.DateFormat;
 import java.text.ParseException;
