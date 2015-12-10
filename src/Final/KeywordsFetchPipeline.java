@@ -4,6 +4,8 @@ import cc.mallet.pipe.*;
 import cc.mallet.pipe.iterator.ArrayIterator;
 import cc.mallet.topics.ParallelTopicModel;
 import cc.mallet.types.InstanceList;
+import org.apache.commons.configuration.SystemConfiguration;
+import org.apache.commons.io.output.FileWriterWithEncoding;
 
 import javax.net.ssl.StandardConstants;
 import java.io.*;
@@ -11,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * Created by amaliujia on 15-12-5.
@@ -93,7 +96,8 @@ public class KeywordsFetchPipeline {
     private InstanceList createInstanceList(List<String> texts) throws IOException
     {
         ArrayList<Pipe> pipes = new ArrayList<Pipe>();
-        pipes.add(new CharSequence2TokenSequence());
+        Pattern tokenPattern = Pattern.compile("[\\p{L}\\p{N}_]+");
+        pipes.add(new CharSequence2TokenSequence(tokenPattern));
         pipes.add(new TokenSequenceLowercase());
         pipes.add(new TokenSequenceRemoveStopwords());
         pipes.add(new TokenSequence2FeatureSequence());
@@ -108,6 +112,7 @@ public class KeywordsFetchPipeline {
         ParallelTopicModel model = new ParallelTopicModel(numTopics);
         model.addInstances(instanceList);
         model.setNumIterations(numIterations);
+        model.setNumThreads(2);
         model.estimate();
         return model;
     }
@@ -118,7 +123,7 @@ public class KeywordsFetchPipeline {
                 listFilesForFolder(fileEntry, texts, targetWord);
             } else {
                 String text = this.readFile(fileEntry.getPath());
-                String[] tokens = text.split(" ");
+                String[] tokens = text.split("\\s+");
 
                 for (int i = 0; i < tokens.length; i++) {
                     if (tokens[i].equals(targetWord)) {
@@ -130,20 +135,58 @@ public class KeywordsFetchPipeline {
         }
     }
 
+    private void printMatrix(String outputfile, String separator, double[][] dist) {
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(new File(outputfile)));
+            for (int i = 0; i < dist.length; i++) {
+                writer.write(i + separator + "file" + i);
+                for (int j = 0; j < dist[i].length; j++) {
+                    writer.write(separator + dist[i][j]);
+                }
+                writer.write("\n");
+            }
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     private  void extractLDAMatrix(String targetWord, int numTopics, int numIterations, int numKeywords)  {
         File folder = new File(this.corpusDir);
-        ArrayList<String> texts = new ArrayList<String>();
         ParallelTopicModel model = null;
+        int numDocuments = 0;
         try {
+            ArrayList<String> texts = new ArrayList<String>();
             this.listFilesForFolder(folder, texts, targetWord);
-            int numDocuments = texts.size();
-             model = createLDAModel(texts,numTopics,numIterations);
+            numDocuments = texts.size();
+            model = createLDAModel(texts,numTopics,numIterations);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
 
+        try {
+            File here = new File(this.fileWordTopicDistributionFile);
+
+            model.printTypeTopicCounts(here);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        double[][] tmDist = new double[numDocuments][];
+        for (int i = 0; i < numDocuments; i++) {
+
+            tmDist[i] = model.getTopicProbabilities(i);
+            if (tmDist[i].length != numTopics) {
+                System.out.println("Shit");
+                System.exit(1);
+            }
+        }
+        this.printMatrix(this.fileTopicDistributionFile, "\t", tmDist);
     }
 
     private String readFile(String path)
@@ -153,15 +196,34 @@ public class KeywordsFetchPipeline {
         return new String(encoded, StandardCharsets.UTF_8);
     }
 
-    public void start(String output) {
+
+    private void run(String targetWord) throws IOException {
+        this.extractLDAMatrix(targetWord, 20, 1000, 20);
+        this.readFileTopicDistribution();
+        WordTopicComputor computor = new WordTopicComputor(this.fileWordTopicDistributionFile);
+        this.wordTopicDistribution = computor.compute();
+        this.compute();
+        Collections.sort(this.wordsRanking, Collections.reverseOrder());
+    }
+
+    public String[] start(int num, String targetWord) {
         try {
-            this.extractLDAMatrix("");
-            this.readFileTopicDistribution();
-            WordTopicComputor computor = new WordTopicComputor(this.fileWordTopicDistributionFile);
-            this.wordTopicDistribution = computor.compute();
-            this.compute();
-            Collections.sort(this.wordsRanking, Collections.reverseOrder());
-            this.printTopNWords(100, output);
+            this.run(targetWord);
+            String[] result = new String[num];
+            for (int i = 0; i < num; i++) {
+                result[i] = this.wordTopicDistribution.getDictionary().get(this.wordsRanking.get(i).wordID);
+            }
+            return result;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public void start(int num, String targetWord, String output) {
+        try {
+            this.run(targetWord);
+            this.printTopNWords(num, output);
         } catch (IOException e) {
             e.printStackTrace();
         }
