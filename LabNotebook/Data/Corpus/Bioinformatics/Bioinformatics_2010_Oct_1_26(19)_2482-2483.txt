@@ -1,0 +1,42 @@
+1 INTRODUCTION
+Finding tightly connected clusters in large datasets is a frequent task in many areas of bioinformatics such as the analysis of protein similarity networks, microarray or protein–protein interaction data. Classical clustering algorithms have difficulties in handling large datasets used in bioinformatics owing to high demands on computer resources. Fast heuristic algorithms have been developed for specific tasks, e.g. BLASTClust (ftp://ftp.ncbi.nih.gov/blast/documents/blastclust.html) from the NCBI–BLAST package (Altschul et al., ), Tribe-MCL (Enright et al., ) or the CD-HIT (Li and Godzik, ) can delineate protein or gene families in a large network of sequence similarities (e.g. BLAST E-values). However, there are no apparent tools that could efficiently handle large multiple networks, such as those necessary to group proteins using more than one similarity criterion (e.g. based on sequence, structure or function) (A).
+ The principle of Multi-netclust is illustrated on a two-parameter network. Thick and thin edges correspond to distinct similarity data (A). Dotted lines denote edges that are below the respective threshold, and hence can be omitted from the networks. Two different aggregation rules are implemented: the weighted arithmetic averaging (‘sum rule’) gives clusters that are connected within either of the two networks (B); the weighted geometric averaging (‘product rule’) gives clusters that are connected within both networks (C). Mij denotes the value assigned to the edges, w is the weighting factor (‘alpha’) of the two matrices (hence n = 2) and Mmix refers to the aggregated matrix.
+
+
+
+We developed an efficient, semi-supervised tool that takes the users’ empirical knowledge of cutoff values into account (below which interactions or similarities can be neglected) to combine multiple data networks using an averaging or kernel fusion method (Kittler et al., ). The resulting combined network can then be queried for connected components (clusters) using an efficient implementation of the union-find algorithm (Tarjan, ). The clusters correspond to groups of nodes that are connected either by any or by all of the constituent networks, depending on the aggregation rule used (B and C, respectively). To adapt this method to large heterogeneous datasets, we combined the thresholding, aggregation as well as the connected component search into a single, memory- and time-efficient tool, Multi-netclust. Multi-netclust is not a new clustering method but an optimized implementation of existing graph algorithms suitable for handling large networks of &gt; 106 nodes and 108 edges.
+
+2 MULTI-NETCLUST INPUT AND OUTPUT
+Multi-netclust uses external memory rather than the in-core approach (Chiang, ) for matrix manipulations so that the size of the datasets is not a limiting factor. The input to Multi-netclust are networks given in sparse matrix format, as well as the aggregation rule, ‘alpha’ weighting factor, and similarity (or distance) cutoff value(s) associated with a processing step(s). Generally, the product rule results in more reliable connections confirmed by multiple data sources, whereas the sum rule expands the network with new (not necessarily reliable) connections. Setting the ‘alpha’ value for each matrix provides means, e.g. to weight the reliability of different data sources or to decide which dataset is more likely to contribute with new (additional) information. A permissive cutoff value usually results in a few large clusters, while a strict cutoff value tend to produce many small (singleton) clusters. The data can be entered either via a CGI interface, or from the command line. The output of Multi-netclust is a list of the connected clusters given in a structured text format.
+
+Multi-netclust is written in the C/C++ language, and the CGI interface is a Perl script. The source code, sample data, explanations and benchmark results are available on the website http://www.bioinformatics.nl/netclust/. There is also a web-based application suitable to run smaller test-sets.
+
+3 PERFORMANCE
+The run-time of Multi-netclust subsumes: (i) the time needed for reading-in the data, thresholding and aggregation (&gt;99.9%); and (ii) finding the connected components and writing the results (&lt;0.1%). A benchmark dataset of 1357 proteins, taken from the Protein Classification Benchmark database (Sonego et al., ) was used to combine sequence similarities calculated by the BLAST and Smith–Waterman (Smith and Waterman, ) algorithms, and DALI 3D structure similarities (Holm and Sander, ). The analysis took 4 s on a 2 GHz processor, the influence of parameter settings on the purity of connected clusters is apparent from the results (). An interesting example is the immunoglobulin superfamily (SCOP b.1.1), which has 125 members in the benchmark dataset. Using DALI alone, the b.1.1 proteins clustered together with the ‘E set domains’ (SCOP b.1.18), grouping proteins related to immunoglobulin and/or fibronectin Type III superfamilies. Using BLAST alone, the b.1.1. proteins clustered together with a number of other superfamilies. Surprisingly, the combination of both DALI and BLAST datasets made 94% of the group b.1.1 cluster correctly.
+Protein classification results obtained for the individual and combined similarity networks
+
+Dataset	Correct	Incorrect	Singletons	
+SW × DALI1 (251)	910	0	447	
+BLAST (0.1) × DALI2 (0.4)	888	0	469	
+BLAST (0.4) + DALI2 (0.4)	803	469	85	
+SW (251)	316	0	1041	
+DALI1 (251)	56	1266	35	
+DALI2 (0.4)	790	475	92	
+BLAST (0.4)	36	0	1321	
+BLAST (0.1)	66	1101	190	
+Numbers in parentheses denote the threshold used. Symbols ‘×’ and ‘+’ refer to the product and sum aggregation rules, respectively. The results were obtained for ‘alpha’ weighting factor 0.5.
+
+DALI1, matrix of raw scores; DALI2, matrix of diagonally normalized scores; correct, proteins connected only to members of the same SCOP superfamily; incorrect, proteins connected to members of other SCOP superfamilies.
+
+
+
+
+The external memory-based, connected component search algorithm is fast and memory-efficient compared to single-linkage-based clustering methods and in-memory graph algorithms used for similar purposes within the bioinformatics community (see Supplementary Material). The strength of Multi-netclust becomes more apparent when we deal with large datasets that cannot be handled with other algorithms. For example, a network of 2 713 908 nodes and 781 328 458 edges took &lt;5 min on an ordinary computer. Of the other algorithms tested (see case studies on the website), only BLASTClust was able to handle a dataset of similar size; however, its use is limited to BLAST similarity networks (and at greater expense of CPU time and memory required), whereas Multi-netclust is generally applicable. To conclude, Multi-netclust is an efficient tool that can aid exploratory analyzes of large biological networks using an ordinary computer. Specifically, the potential applications include any task where network data of heterogeneous sources, such as sequence and structure similarities, gene expression or protein–protein interaction data, are to be combined together, resulting in new and/or improved biologically relevant predictions.
+
+ACKNOWLEDGEMENTS
+The authors would like to thank Pieter van Beek (SARA Computing and Networking Services) for help in providing additional BLAST data, Anand Gavai for preparing binaries for Mac OS X, Stijn van Dongen for the help with the MCL utilities and the NBIC initiative for using the Dutch Life Science Grid platform.
+
+Funding: Graduate School Experimental Plant Sciences (to A.K.); BioAssist programme of the Netherlands Bioinformatics Centre (to H.N.).
+
+Conflict of Interest: none declared.
+

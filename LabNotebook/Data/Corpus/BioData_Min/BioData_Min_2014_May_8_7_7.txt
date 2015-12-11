@@ -1,0 +1,268 @@
+Background
+Simple clustering methods such as agglomerative hierarchical clustering and k-means have been widely used on gene expression data analysis. However, individual clustering algorithms have their limitations in dealing with different datasets. For example, k-means is unable to capture clusters with complex structures, and selection of k value is somewhat challenge without subjectivity. Therefore, many studies used consensus clustering (also called cluster ensemble) to improve the robustness and quality of clustering results [-].
+
+Consensus clustering solves a clustering problem in two steps. The first step, known as base clustering, takes a dataset as input and outputs an ensemble of clustering solutions. The second step takes the cluster ensemble as input and combines the solutions through a consensus function, and then produces final partitioning as the final output, known as final clustering. The consensus clustering algorithms differ in chosen algorithms for basic clustering, consensus function and final clustering. Monti et al. used hierarchical clustering(HC) or self-organizing map (SOM) as the base clustering to generate consensus matrix and either HC or SOM for final clustering []. Yu et al. used k-means as the base clustering on subspace datasets and graph-cut algorithms for the final clustering []. Kim used k-means as the base algorithm with random multiple number of clusters and applied a graph-cut algorithm for final clustering []. The base clustering generates diverse clustering solutions through: 1) generating subspace datasets using gene resampling [,,]; 2) using a single clustering algorithm with random parameter initializations such as selecting a random number of clusters [,]; 3) using different clustering algorithms for each base clustering []. Some consensus clustering methods used a pairwise similarity matrix of instances to combine multiple clustering solutions [,], others used associations between instances and clusters in the consensus matrix []. These consensus clustering algorithms usually outperform single clustering algorithms on gene expression datasets [-].
+
+Consensus clustering has been used for clustering samples to discover and classify cancer types in cancer microarray data [-,]. It achieved successes in capturing informative patterns from microarray data [-]. A well known consensus clustering algorithm, link-based cluster ensemble (LCE) was introduced in []. LCE outperforms 10 algorithms tested in [], specifically, four simple clustering algorithms, three pairwise similarity based consensus clustering algorithms, and three graph-based cluster ensemble techniques. Consensus clustering is also used for clustering genes to identify biologically informative gene clusters [].
+
+Many studies used prior knowledge in clustering genes [-]. These methods are referred as semi-supervised clustering approaches. The results showed that using small amount of prior knowledge was able to significantly improve the clustering results; also the more specific prior knowledge used the better in improving the quality of clustering.
+
+Consensus clustering itself can be considered as unsupervised and improves the robustness and quality of results. Semi-supervised clustering is partially supervised and improves the quality of results in domain knowledge directed fashion. Although there are many consensus clustering and semi-supervised clustering approaches, very few of them used prior knowledge in the consensus clustering. Yu et al. used prior knowledge in assessing the quality of each clustering solution and combining them in a consensus matrix []. In this paper, we propose to integrate semi-supervised clustering and consensus clustering, design a new semi-supervised consensus clustering algorithm, and compare it with consensus clustering and semi-supervised clustering algorithms, respectively. In our study, we evaluate the performance of semi-supervised consensus clustering, consensus clustering, semi-supervised clustering and single clustering algorithms using h-fold cross-validation. Prior knowledge was used on h-1 folds, but not in the testing data. We compared the performance of semi-supervised consensus clustering with other clustering methods.
+
+Method
+Our semi-supervised consensus clustering algorithm (SSCC) includes a base clustering, consensus function, and final clustering. We use semi-supervised spectral clustering (SSC) as the base clustering, hybrid bipartite graph formulation (HBGF) as the consensus function, and spectral clustering (SC) as final clustering in the framework of consensus clustering in SSCC.
+
+Spectral clustering
+The general idea of SC contains two steps: spectral representation and clustering. In spectral representation, each data point is associated with a vertex in a weighted graph. The clustering step is to find partitions in the graph. Given a dataset X‒=‒{x
+i
+|i‒=‒1, …, n} and similarity s
+i
+j
+‒≥‒0 between data points x
+i
+ and x
+j
+, the clustering process first construct a similarity graph G‒=‒(V, E), V‒=‒{v
+i
+}, E‒=‒{e
+i
+j
+} to represent relationship among the data points; where each node v
+i
+ represents a data point x
+i
+, and each edge e
+i
+j
+ represents the connection between two nodes v
+i
+ and v
+j
+, if their similarity s
+i
+j
+ satisfies a given condition. The edge between nodes is weighted by s
+i
+j
+. The clustering process becomes a graph cutting problem such that the edges within the group have high weights and those between different groups have low weights. The weighted similarity graph can be fully connected graph or t-nearest neighbor graph. In fully connected graph, the Gaussian similarity function is usually used as the similarity function s
+i
+j
+= exp(-∥x
+i
+-x
+j
+∥2/2σ2), where parameter σ controls the width of the neighbourhoods. In t-nearest neighbor graph, x
+i
+ and x
+j
+ are connected with an undirected edge if x
+i
+ is among the t-nearest neighbors of x
+j
+ or vice versa. We used the t-nearest neighbours graph for spectral representation for gene expression data.
+
+Semi-supervised spectral clustering
+SSC uses prior knowledge in spectral clustering. It uses pairwise constraints from the domain knowledge. Pairwise constraints between two data points can be represented as must-links (in the same class) and cannot-links (in different classes). For each pair of must-link (i,j), assign s
+i
+j
+ = s
+j
+i
+ = 1, For each pair of cannot-link (i, j), assign s
+i
+j
+ = s
+j
+i
+ = 0.
+
+If we use SSC for clustering samples in gene expression data using t-nearest neighbor graph representation, two samples with highly similar expression profiles are connected in the graph. Using cannot-links means to change the similarity between the pairs of samples into 0, which breaks edges between a pair of samples in the graph. Therefore, only must-links are applied in our study. The details of SSC algorithm is described in Algorithm 1. Given the data points x1, …, x
+n
+, l pairwise constraints of must-link are generated. The similarity matrix S can be obtained using similarity function s
+i
+j
+ = exp(-∥x
+i
+ - x
+j
+∥2/2σ2). σ is the scaling parameter for measuring when two points are considered similar, and was calculated according to []. Then S is modified to be a sparse matrix, only t nearest neighbors are kept for each data point in S. Then, l pairwise constraints are applied in S. Steps 5-10 follow normalized spectral clustering algorithm [,]. 
+
+Consensus function
+We used LCE ensemble framework in our SSCC adopting HBGF as the consensus function. The cluster ensemble is represented as a graph that consists of vertices and weighted edges. HBGF models both instances and clusters of the ensemble simultaneously as vertices in the graph. This approach retains all information provided by a given ensemble, allowing the similarities among instances and among clusters to be considered collectively in forming the final clustering []. More details about LCE can be found in [].
+
+Semi-supervised consensus clustering
+To make a consensus clustering into a semi-supervised consensus clustering algorithm, prior knowledge can be applied in base clustering, consensus function, or final clustering. Final clustering is usually applied on the consensus matrix generated from base clustering. SSCC uses semi-supervised clustering algorithm SSC for base clustering, does not use prior knowledge either in consensus function or final clustering. Our experiment was performed using h-fold cross-validation. The dataset was split into training and testing sets, and the prior knowledge was added to the h-1 folds training set. After the final clustering result was obtained, it was evaluated on the testing set alone. The influence of prior knowledge could be assessed in a cross-validation framework.
+
+Our semi-supervised consensus clustering algorithm is described in Algorithm 2. Similar to [], for a given n × d dataset of n samples and d genes, a n × q data subspace (q &lt; d) is generated by 
+
+
+
+α ∈ [ 0,1] is a uniform random variable, q
+m
+i
+n
+ and q
+m
+a
+x
+ are the lower and upper bonds of the subspace. q
+m
+i
+n
+ and q
+m
+a
+x
+ are set to 0.75d and 0.85d. Let  be a cluster ensemble with m clustering solutions. SSC is applied on each subspace dataset to obtain clustering results. We use the fixed number of clusters k, each  is one clustering solution. A basic cluster-association matrix BM is generated at first based on the crisp associations between samples and clusters using HBGF, in which there are n samples and m×k clusters. If x
+i
+ belongs to a cluster C
+j
+, BM(x
+i
+,C
+j
+)=1,i=1,…,n; j=1,…,g, otherwise BM(x
+i
+,C
+j
+)=0. Next, a refined cluster-association matrix RM is generated from BM by estimating new association values in RM(x
+i
+,C
+j
+) if BM(x
+i
+,C
+j
+)=0. RM(x
+i
+,C
+j
+) is the similarity between C
+j
+ and other clusters to which x
+i
+ probably belongs. The similarity of any clusters in the cluster ensemble is obtained from a weighted graph of clusters. Finally, spectral clustering is applied on RM to obtain the final clustering solution. 
+
+Results
+Selected algorithms
+We compared the performance of four algorithms: SSCC, SSC [], LCE [], and k-means (Table ). The performance of SSCC was influenced by amount of prior knowledge, consensus function and base clustering. By increasing the amount of prior knowledge, we observed the influence of prior knowledge on SSCC. SSCC uses SSC as the base clustering. By comparing SSCC with SSC on the same amount of prior knowledge, we were able to observe the influence of consensus clustering on SSCC. Same as LCE, SSCC uses HBGF as the consensus function. SSCC became a consensus clustering algorithm when it did not use prior knowledge. k-means was used as the baseline algorithm in this study. In both SSCC and LCE, we used subspace and fixed number of clusters, ensemble size of 10, and nearest neighbor size of 5. We implemented SSCC in Matlab and adopted Matlab code of SSC [], LCE [] and k-means.
+
+Attributes of four clustering algorithms
+
+Clustering	Type	Base	Final	Consensus	Using prior	
+algorithms	 	clustering	clustering	function	knowledge	
+k-means	Simple clustering	k-means	-	-	No	
+LCE	Consensus clustering	k-means	SC	HBGF	No	
+SSC	Semi-supervised clustering	SC	-	-	Yes	
+SSCC	Semi-supervised consensus clustering	SSC	SC	HBGF	Yes	
+Datasets
+All four algorithms were tested with eight cancer gene expression datasets (Table ). These were processed datasets after removing the non-informative genes and obtained from []. Prior knowledge was represented as pairwise constraints generated from class labels. Prior knowledge in the eight datasets was derived from sample class labels. A pair of samples share the same class were given a must-link prior knowledge. We used a small amount of prior knowledge to test the effectiveness of SSCC (Table ).
+
+Cancer gene expression datasets used in experiments
+
+Dataset	Samples	Original	Selected	Classes	Constraints	Constraints	
+ 	 	probes	probes	 	number	% in total	
+CNS []	42	7129	1379	5	20	2.2%	
+Leukemia1 []	72	7129	1877	2	20	0.77%	
+Leukemia2 []	72	7129	1877	3	20	0.77%	
+Leukemia3 []	72	12582	2194	3	20	0.77%	
+LungCancer []	203	12600	1543	5	100	0.48%	
+St.Jude []	248	12625	2526	6	100	0.32%	
+Multi-Tissue1 []	174	12533	1571	10	100	0.66%	
+Multi-Tissue2 []	190	16063	1363	14	100	0.55%	
+Performance measures
+The performance was measured with normalized mutual information (NMI) [] and adjusted rand index (ARI) []. ARI is often used to assess the performance of clustering samples in gene expression datasets [-]. The definition of NMI is described as follows. Let X and Y be the random variables described by the cluster assignments and class labels. I(X,Y) denotes the mutual information between X and Y; H(X) and H(Y) the entropy of X and Y. NMI is defined by 
+
+
+
+Experimental results
+The experiments were performed by increasing number of pairwise constraints with 5 fold cross validation and 50 runs (Figures , ).
+
+Normalized mutual information with various numbers of constraints on (A) CNS (B) Leukemia1 (C) Leukemia2 (D) Leukemia3 (E) LungCancer (F) St. Jude (G) Multi-Tissue1 (H) Multi-Tissues2 datasets (Error bars show 95% confidence interval).
+
+Adjusted rand index with various numbers of constraints on (A) CNS (B) Leukemia1 (C) Leukemia2 (D) Leukemia3 (E) LungCancer (F) St. Jude (G) Multi-Tissue1 (H) Multi-Tissues2 datasets (Error bars show 95% confidence interval).
+
+Without prior knowledge, comparisons of SSCC, SSC, LCE and k-means was performed by using one-way ANOVA with Bonferroni correction (p&lt;0.05) on NMI and ARI (Table  and Additional file ). We used paired t-test (p&lt;0.05) to compare SSCC and SSC with prior knowledge on NMI and ARI, respectively. The null hypothesis was that no difference existed between the mean of SSCC and SSC. We used 20 pair-wise constraints for CNS, Leukemia1, Leukemia2 and Leukemia3, but 100 constraints for other 4 datasets (Table ).
+
+Without prior knowledge, comparison among SSCC, SSC, LCE, and 
+k
+-means
+
+ 	NMI	ARI	
+ 	SSC	LCE	
+k
+-means	SSC	LCE	
+k
+-means	
+SSCC	4/4/0	7/1/0	8/0/0	4/3/1	7/1/0	8/0/0	
+SSC/SC	-	6/2/0	8/0/0	-	6/2/0	6/2/0	
+LCE	-	-	6/2/0	-	-	5/3/0	
+All results are summarized in w/t/l, i.e. the first algorithm wins w times, ties t times and loses l times.
+
+With prior knowledge, paired t-test for the mean difference between SSCC and SSC
+
+ 	NMI	ARI	
+CNS	0.041*	0.097*	
+Leukemia1	0.056*	0.053*	
+Leukemia2	0.094*	0.143*	
+Leukemia3	0.024*	0.031*	
+Lungcancer	0.018*	-0.037*	
+St.Jude	0.009*	0.0144*	
+MultiTissue1	0.002	0.007	
+MultiTissue2	0.012*	0.035*	
+ 	SSCC vs. SSC	SSCC vs. SSC	
+w/t/l	7/1/0	6/1/1	
+*The mean difference (SSCC - SSC) is significant at p&lt;0.05 level. The results are summarized in w/t/l, i.e. the first algorithm wins w times, ties t times and loses l times.
+
+Our result clearly demonstrated that consensus clustering and using prior knowledge both contribute to improving the quality of clustering and an integration of both performed even better (Figures ,  and Tables , ). Without injection of prior knowledge, performance of SSCC and SSC were more or less equivalent, but both were significantly better than LCE and k-means (Table ). On the other hand, with injection of prior knowledge, SSCC significantly outperformed SSC (Table ).
+
+Parameter analysis
+Ensemble size was one of important parameters that influence SSCC and LCE (Figure ). SSCC significantly outperformed LCE in all ensemble size settings across the 8 datasets excepting size 40 and 50 on Leukemia3. In some datasets, the performance of SSCC or LCE is improved with the increase of ensemble size from 10 to 20. However, there is no significant improvement in other datasets such as Multi-Tissue1 and Multi-Tissue2. In such case we suggest a small ensemble size, such as 10.
+
+Normalized mutual information of SSCC and LCE with the change of ensemble size on eight datasets.
+
+Influence of ensemble type appeared to be more obvious (Figure ). We compared the performance of two ensemble types, “Fixed k + Subspace” and “Random k + Full-space”, on SSCC and LCE. SSCC outperformed LCE with both ensemble types in majority of the 8 datasets. SSCC with “Fixed k + Subspace” appeared to be generally better than other combinations.
+
+Normalized mutual information of SSCC and LCE with two ensemble types on eight datasets.
+
+Performance of both SSCC and SSC was significantly influenced by neighborhood size (Figure ). Without applying prior knowledge, we conducted paired two-tailed t-test (p&lt;0.05) between SSCC and SSC under four different t values. In majority of the datasets, both algorithms performed better with smaller neighborhood size. Generally, SSCC outperformed SSC.
+
+Normalized mutual information of SSC and SSCC with various numbers of neighbor size on eight datasets.
+
+Discussion
+We compared the performance of SSCC with SSC, LCE and k-means and each of our pairwise comparison provides information of the effect of either semi-supervision or consensus clustering. Specifically, comparing LCE with k-means reveals the effectiveness of ensemble strategy since k-means is used as the base clustering in LCE. Similarly, in comparing SSC with SSCC, we used the same amount of prior knowledge, so actually we compared spectral clustering with consensus clustering. The comparison between SSCC and LCE reveals the effect of semi-supervision under the consensus clustering paradigm.
+
+SSCC significantly outperforms SSC with or without prior knowledge. This clearly shows that consensus clustering algorithms outperform single clustering algorithms in the gene expression datasets. This observation is consistent with [-].
+
+We compared SSCC with LCE using the same datasets and same parameter settings. Without considering prior knowledge, the difference between SSCC and LCE is in base clustering, SSCC uses spectral clustering but LCE uses k-means. They both use spectral clustering for final clustering (Table ). Without prior knowledge, SSC becomes SC, and SC outperforms k-means in all 8 datasets (Figures ,  and Table ). This indicates the performance of base clustering has significant influence on results of consensus clustering.
+
+SSCC consists of spectral clustering and LCE. The majority of computational time of spectral clustering spends on finding t nearest neighbors []. The time complexity of obtaining t nearest neighbor sparse matrix is O(n2d)+O(n2 logt), where n is the number of samples, d is the number of genes in the graph of spectral clustering. We use the fixed number of cluster k in LCE, the time complexity of generating a cluster-association matrix R is O(m2k2+nmk)+O(m2k2t′+nmk), where m is ensemble size, and t′ is the average number of neighbors connecting to one cluster in a network of clusters in final clustering. In SSCC, the complexity of generating l pairwise constraints is O(l). The overall time complexity of SSCC using “Fixed k + subspace” ensemble type is 
+
+
+
+Since n&gt;m, n&gt;k, d&gt;n, d&gt;l, and d&gt;t in our experiments, the bottle neck of SSCC is to find t nearest neighbors with computational time O(mn2d). The implementation of spectral clustering is a parallel algorithm [], so the majority of computational time of SSCC can be reduce to , where p′ is the number of parallel threads. SSCC is limited to large data set due to the computational complexity of spectral clustering. SSCC can be improved by adopting faster spectral clustering algorithms, which are applicable for data sets with thousands of instances.
+
+Our study provided an insight into the contribution of consensus clustering and semi-supervised clustering to the clustering results. To our knowledge, the Knowledge based Cluster Ensemble (KCE) [] is the only algorithm using prior knowledge in consensus clustering paradigm for gene expression datasets. Unfortunately, we are unable to directly compare SSCC with KCE because of the unavailability of the software.
+
+Our study uses SSCC for clustering samples. Since the optimal number of clusters (k in k-means algorithm) and the class label of each sample are known, the prior knowledge is derived from the given class structure. A must-link constraint is given to a pair of samples if they are from the same class. For many real applications, we might not know the whole class structure, but most likely we know whether some of samples are in the same class (cluster). We can generate must-links between these samples, and prior knowledge is derived from these samples. In these cancer gene expression datasets, we validate the performance of SSCC with the labeled data. The next step would be to apply SSCC for clustering genes for gene function prediction. However, the performance on clustering genes might vary due to two reasons: the quality of prior knowledge and the optimal number of clusters. Pairwise constraints in this study have been generated from class labels of samples in the cancer gene expression datasets and they are true prior knowledge. Prior knowledge in clustering of genes will be known gene functions, and they are partial domain knowledge. A gene may have multiple functions; some functions are inclusive to others as well. For example, a level 6 gene ontology term apoptotic process (GO:0006915) has over ten thousands of gene products and under which at level 7, there are 21 GO terms. Our earlier work shows that more specific (higher level) GO term contribute better to semi-supervised clustering result []. Also the description of a certain gene function is based on current knowledge in the domain field. Such domain knowledge is often subject to change. For example, current knowledge of certain existing gene is limited and will gradually be enriched. Therefore, the generated prior knowledge from a pair of genes most likely contains certain noise and subsequently influence the results. The optimal number of clusters is often unknown and a different distance measure would generate a different optimum number of clusters. Therefore, for comparison of semi-supervised clustering algorithms, it is better to use defined prior knowledge, such as the sample labels we used in this paper. When an algorithm considered to be superior over the others, such an algorithm can be used to cluster genes.
+
+In reality, obtaining large amount of prior knowledge for gene expression datasets is difficult. Designing algorithms which work best with a small amount of prior knowledge, such as less than 20 pairwise constraints, will be very useful for clustering microarray data. A study on semi-supervised clustering shows that with small amounts of prior knowledge, search-based approach tends to outperform similarity-based []. With larger amounts of labeled data, similarity-based tends to perform better. Combining both approaches outperforms respective individual approaches. SSC is a similarity-based semi-supervised clustering algorithm. The results in Figures ,  show that the performance of SSCC and SSC is slightly improved with small numbers of constraints and significantly improved with increasing numbers of constraints. Our SSCC method presented in this paper is applicable not only to gene expression data, but also to other types of data as long as prior knowledge is provided.
+
+Conclusions
+In this study, we proposed a new semi-supervised consensus clustering method, designed an algorithm, and compared it with another semi-supervised clustering algorithm, a consensus clustering algorithm and a simple clustering algorithm on eight real cancer gene expression datasets. In general, using prior knowledge improves the performance of clustering in gene expression datasets. Consensus clustering is able to reach the goal of maximizing intra-cluster similarity and minimizing inter-cluster similarity. Also, using prior knowledge enhances the high consistency between data partitioning and domain knowledge. A combination of both significantly improves the quality of clustering. SSCC outperforms the semi-supervised clustering algorithm SSC and consensus clustering algorithm LCE in most datasets over various parameter settings, ensemble size and type, with or without prior knowledge. This study demonstrates that SSCC is an effective and robust semi-supervised consensus clustering algorithm with prior knowledge, and also a superior consensus clustering algorithm without prior knowledge.
+
+Competing interests
+The authors declare that they have no competing interests.
+
+Authors’ contributions
+YW conceived and designed the program. YW and YP wrote the paper. Both authors read and approved the final manuscript.
+
+Supplementary Material
+Additional file 1
+Table S1. Comparision between SSCC, SSC and LCE. Without prior knowledge, part of results of one-way ANOVA with Bonferroni correction for comparison among SSCC, SSC, and LCE.
+
+Click here for file
+
+Acknowledgements
+This research was conducted under Genomics and Health Initiative of National Research Council Canada.
+

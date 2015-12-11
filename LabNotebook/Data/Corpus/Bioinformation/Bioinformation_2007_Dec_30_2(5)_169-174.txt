@@ -1,0 +1,126 @@
+Background
+Transcription factor (TF), termed as the major regulator of tissue and environment specific gene expression, binds to sequence specific sites in the 
+regulatory region to control the transcription of its target gene. Extensive efforts have been made in developing statistical methods to describe DNA 
+binding specificity of transcription factors [–] based on known transcription factors and their binding sites [,]. Early in the 1980s, Gary D. Stormo [] 
+proposed the widely used Position Weight Matrix (PWM) model to characterize the binding preference, which rests on the main assumption that the probability 
+of any nucleotide that occurs at a certain position of the binding site is independent of those occurring at all other positions. However, this assumption 
+of independency remains disputed in some circumstances. Recent work demonstrated the necessity of the inner dependency among nucleotide positions [,] 
+and employed new methods to capture the inner dependency [,,], such as the Bayesian Network Model [], serving as a more natural approach to uncover 
+the substance of transcription factor binding site (TFBS).
+
+Given the model which characterizes DNA binding preference, we can perform a genome-wide scan to identify putative TFBSa. Each putative TFBS will be 
+assigned a score by a certain score scheme to evaluate the binding potential. But it remains a challenge since controlling the false positive/negative 
+prediction is urgently needed in performing such a scan, especially for eukaryotic genomes where binding sites appear in extremely long intergenic regions. 
+Calculating statistical significance of these scores provides a conventional method to reduce errors in prediction. Formally, for a statistical model M to 
+predict TFBS of the fixed length L, the p-value of a putative binding site with score S is calculated using equation (1) (given in ).
+
+A simple idea is to exhaustingly enumerate the total nucleotide sequences with length of L, named as the sequence set hereinafter. Unfortunately, this naive 
+method takes a time complexity of O(4L), an undesirable task when L is larger than 10. In 2005, Barash Y. improve this naïve method by introducing importance 
+sampling technique []. However, due to the nature of the sampling technique, it produces an approximate result rather than an accurate solution.
+
+
+To overcome the time complexity raised by directly enumerating the sequence set, we turn to enumerate the total scores, named as the score set hereinafter, 
+of all possible nucleotide sequences with length of L. It is a compressed set much smaller than the sequence set since an element of the score set may have 
+several mappings into the sequence set, that is to say, some different sequences often have the same score. Based on this idea, in this contribution, we propose 
+an accurate solution with time complexity of O(4xLxΩ)&lt;&lt;4L to calculate p-values, where Ω is a constant about 104.
+
+Methodology
+Consider a binding site R = R1R2…Rl…RL with L nucleotides, where LϵZ+. Obviously, each site Rl could be any one of the four nucleotides ‘A’, ‘C’, ‘G’ and ‘T’, 
+where 1≤l≤L, lϵZ+. And, the probability of Rl being ‘A’ is denoted as p(l, Rl = ‘A’). Generally, the nucleotide selecting preference of binding sites R can be 
+expressed in terms of probability matrix, using equation (2) in . 
+
+The independency assumption is not always reliable as it is common that a single amino acid residue contacts with more than one nucleotide and vice versa. 
+So, to some extent, a nucleotide Rl is correlated with other nucleotides. In this case, the probability of Rl being ‘A’ is expressed in terms of the conditional 
+probability using equation (3) (under ).
+
+Generally, a more reasonable statistical model for describing the nucleotide selection preference of transcription factor DNA binding sites can be denoted 
+as in equation (4) (shown in ).
+
+Next we scan regulatory regions followed by assigning each sites a score in the light of the following score scheme, by using formula (5) (given in 
+).
+
+Then potential TFBS, R, can be identified according to the score cutoff, where binding sites with scores larger than the threshold or with adequate 
+statistical significance are considered as potential TFBSs. Calculating the statistical significance, usually known as the p-value, is a conventional 
+way to define cutoffs. Since the null-distribution of total scores is known, the p-value of any potential TFBS can be easily obtained according to 
+equation (1) (). Therefore, our task is to offer an effective and accurate solution for calculating the null-distribution of all scores, which is regarded 
+as the prerequisite to p-values.
+
+Assume that the sequence set is composed of all short nucleotide sequence with length of L, denoted as in equation (6) shown in the .
+
+Intuitively, the size of SL is smaller than RL, since some of the different sequences in Rl result the identical score in SL. Hence, enumerating 
+set SL can be much more efficient than enumerating RL, leading to considerable reduction of computation time. In fact, our improvement in time economy 
+goes far beyond this extent. Since the exact size of Sl contributes remarkably to the efficiency of our method as we mention above, how we control this 
+factor is of great importance. Here we estimate that the size of Sl, is less than 10m+n, where m, nϵZ+ are parameters that represent the count of effective 
+digits of S(Rl), S(Rl) ϵSl,l=1, 2…,L before the decimal point and behind the decimal point respectively (equation (4) see ). Here, we 
+summarize our method into pseudo codes presented in .
+
+Results
+The dataset of all our computational experiments is taken from the database JASPAR [], including matrices that describe transcription factor DNA binding 
+preference as well as their corresponding DNA binding sites. All the calculations were performed in a Dell Optiplex 270 machine, which has an 
+Intel(R) Pentium(R) 4 CPU of 2.60GHz and 1.5GB RAM. 
+
+Selecting the optimal parameter
+As we discussed in the method section, the adjustable parameter c, affects the size of score sets, and therefore affects the operation time greatly, 
+where c = m+n, cϵZ+ and m, nϵZ+ represent the count of effective digits before the decimal point and behind the decimal point respectively of elements in 
+score sets. We must find the optimal value of c so as to determine the upper limit of time complexity of our algorithm O(Lx10c). In our computational experiments, 
+transcription factor DNA binding sites with various lengths in database JASPAR were used to compute the p-values and the result shows that c=4 is already good enough 
+for calculating p-values even when the p-value is more strict than 10-5.
+
+Comparison among different scoring schemes
+As we mentioned in the introduction, p-value calculation is also dependent on scoring schemes (see equation (1) in supplementary material). Many researchers proposed 
+their own scoring schemes [,,], 
+and whether different scoring schemes lead to different results of p-values has become of great interest to researchers. Authors of 
+software package MATCH, proposed an information theory based method for calculating scores for potential TFBSs is shown in equation (7) under .
+
+
+How it outperforms the conventional cumulative probability based scoring scheme is given in equation (8) (see ).
+
+Here we adopt two different score schemes to calculate the TFBSs from database JASPAR. The result shows there is no significant difference between each other in 
+.
+
+Besides, according to the p-value distribution in , we found that most of these p-values are around 10-4, thereby supplying a reference point for credible 
+p-values to transcription factor binding sites. 
+
+P-values serve as a better criterion to identify TFBS than the raw scores do
+In previous sections, we repeatedly mentioned that adopting p-value as a conventional way to define cutoffs for distinguishing the true TFBS from its background 
+sequences. Why bother to do so rather than simply adopting raw scores directly obtained from scoring schemes, as showed in formula 5, 7 and 8 (under ), 
+to define the cutoff? Another computational experiment gives a credible explanation to this question. We collected the true TFBS from database JASPAR as the positive 
+dataset, and some DNA sequence with the same length of those TFBSs from genome background as negative control. We calculated raw scores as well as p-values of the type 
+data. As results shown in , there is a blurred part between the true TFBS and the genome background when we adopt raw scores to distinguish them, whereas there 
+is a sharp distinction between true TFBSs and genomic background when we adopt p-values. It is the blurred part that is very likely to cause the error in the identification. 
+Therefore, we are able to conclude that p-values serve as a better criterion to identify TFBS than the raw scores do.
+
+Discussion
+Various statistical models have been developed to describe the transcription factor DNA binding preference, by which we identify putative transcription factor binding 
+sites according to scores assigned. Statistical significance of these scores play a critical role in assessing the efficiency of prediction. We developed an efficient 
+algorithm to provide precise calculation of the statistical significance. With regards to the time efficiency of our algorithm, our major improvement rests on two key points. 
+First, by calculating the scores of the overlapping part of sequences foremost, we reduced the total time consumption considerably. Further, instead of enumerating elements 
+in the sequence set, we performed our calculations with the more compressed score sets, thus we skillfully convert the time complexity of being a exponent in relation to 
+TFBS length L to that of a linear relation with L, which is a remarkable improvement. 
+
+Moreover, since our algorithm is generally based on the enumerating approach, the p-value calculated by our method is a precise solution, different from the result of 
+the sampling method, which is the approximate solution due to the nature of sampling strategy.
+
+Beside the speediness and preciseness of this algorithm, another positive point lies in its applicability. As an alternative to Probability-Generating-Function-based 
+methods, such as Staden's [] and Huang's methods [], 
+our method can be applied not only to the context of  independent identical distribution of relevant nucleotides, 
+like PWM models, but also to Bayesian Network models. In all, table 1 under  summarizes the properties of our method compared with others.
+
+Supplementary material
+Data 1
+The pseudo code of our method
+
+Comparison of p-values obtained based on different scoring schemes. The vertical axis in this figure depicts the −log(p-value) 
+and the horizontal axis of left two sub graphs depicts length of TFBS, while the horizontal axis of two sub-graphs (right) depicts the 
+frequency of different p-values. Each point in the two left sub-graphs represents the log of p-value corresponding to a certain TFBS. 
+The two right sub-graphs are the distribution of p-values by accumulating probability and MATCH score scheme. Although different scoring 
+schemes were used, p-value distributions not very different.
+
+p-value is better than the raw score for identifying TFBS. The vertical axis of the two upper sub-graphs depicts 
+the −log(p-value), while the vertical axis of the two lower sub-graphs depicts the raw score directly obtained from scoring schemes. The 
+horizontal axis in all sub-graphs depicts the various lengths of TFBS. The blue dots represent p-values of true TFBSs provided by JASPAR 
+whereas red dots represent p-values of DNA sequence fragments of various lengths from genome background. According to the two upper sub-graphs, 
+there is a sharp distinction between true TFBSs and genomic background for both the cumulative probability based scoring scheme and the MATCH 
+scoring scheme. However, in the two lower sub-graphs, blue dots and red dots appear fused together, indicating that raw scores are not 
+appropriately used as the criterion to identify TFBS
+

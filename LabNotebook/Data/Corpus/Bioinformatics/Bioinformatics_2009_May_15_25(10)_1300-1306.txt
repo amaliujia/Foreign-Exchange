@@ -1,0 +1,167 @@
+1 INTRODUCTION
+The use of data obtained from high-throughput technologies such as microarrays has become standard in systems biology. There are many ways in which these data are exploited, such as reverse engineering putative pathways and networks directly from the data e.g.(Lèbre, ; Opgen-Rhein and Strimmer, ), or inferring the values of unknown parameters in mechanistic models (e.g. Barenco et al., ; Swameye et al., ). The methods used to obtain the data are often subject to significant levels of measurement noise, and so we might expect repetitions of the experiments to yield quantitatively different datasets. However, the costs associated with high-throughput experiments usually mean that the number of technical replicates is restricted, and so it is difficult to quantify the effects of data uncertainty upon the inferences we draw. Clearly, if our aim is to attach biological meaning to our results (for example, by proposing putative pathways), then we need to have some degree of confidence that any conclusions we make are robust to the uncertainty in the data. That is, we need to be sure that what we infer (whether it be the rate constants of a biochemical reaction, the topology of a gene regulatory network or any other unknown quantity or reverse engineered model) is not specific to the particular noisy dataset that we happened to observe.
+
+Bootstrapping is a well-known resampling method that may be used to assess properties (such as the standard error) of an inferred quantity or statistical estimator (Efron, ; Efron and Tibshirani, ). The process that generated the data is estimated by an approximating distribution from which samples may be drawn. Bootstrap datasets are then obtained from this distribution, and the statistical estimator is calculated for each. This induces a sampling distribution over the estimator, from which we may assess, for example, its variance amongst all of the bootstrap datasets. Previous biological applications of bootstrapping include, to name a few examples, placing confidence intervals on phylogenies (Felsenstein, ), assessing the reliability of conclusions drawn from clustering expression data (Kerr and Churchill, ), and constructing ‘robust’ estimates of gene networks (Imoto et al., ).
+
+We here consider a parametric bootstrap for time-course data in which the time-dependent process that generated the data is modelled using Gaussian process regression (GPR). In recent years, this Bayesian non-linear regression technique has grown in popularity, and has been applied in several systems biology contexts (Gao et al., ; Lawrence et al., ; Yuan, ). To our knowledge, GPR has not previously been used as a method for bootstrapping time-course data. However, it would seem to be ideally suited to this task, since it provides a method for fitting a plausible probabilistic model that captures the time dependence of the data, and from which it is easy to draw bootstrap samples.
+
+We demonstrate GPR bootstrapping using two examples from the systems biology literature: estimating the parameters of an ordinary differential equation model for the STAT5 signalling pathway (Swameye et al., ); and inference of gene regulatory networks in Arabidopsis thaliana (Smith et al., ).
+
+Below, we first provide an overview of GPR and how it may be used in general as a bootstrapping method (), and then we describe how the approach may be applied (). In , we summarize our findings for two examples, and discuss the implications in . We conclude by highlighting the importance of bootstrapping in general as a method for assessing the effects of data uncertainty.
+
+2 APPROACH
+GPR is a Bayesian non-linear regression method, which has been used to good effect in a number of studies (Gao et al.,  Lawrence et al., ; Yuan, ). Formally, a Gaussian process (GP) is a collection of random variables, any finite number of which have a joint Gaussian (normal) distribution (Rasmussen and Williams, ). A GP is defined by a mean function and a covariance function, which specify the mean vectors and covariance matrices for each finite collection of the random variables. GP theory is discussed in more detail by MacKay () and Rasmussen and Williams (), but for completeness and convenience we present an overview of standard GPR theory in addition to our own contribution of how it may be used to perform a parametric bootstrap.
+
+2.1 Regression
+In a regression problem, we are interested in elucidating the relationship between a collection of covariates or inputs x1, …, xp, and a continuous dependent output variable, z. We assume that x1, …, xp, z are all real-valued, and we write the collection of covariates as a p-component column vector, x=[x1, …, xp]⊤ ∈ℝp. It is assumed that there is an unknown deterministic function, f, which wholly describes the relationship between z and x, so that z=f(x). Our aim is therefore to find the function, f.
+
+In practice, the methods by which measurements of z are obtained introduce experimental noise. We hence define a random variable, y, to represent the experimentally observable version of z. We assume that y may be written as y=z+ɛ, where ɛ is a noise term. For convenience, we also assume that ɛ ∼ 𝒩(0, σ2) and that ɛ is independent of x. For the time being, we consider the case in which the variance, σ2, is known, but shall return later to the problem of how it may be estimated.
+
+To summarize, we have,
+
+
+
+One way to approach the regression problem is to impose a fixed parametric form on f [such as f(x)=∑i=1Mβiφi(x), where the βi are parameters, the φi are a set of basis functions and M ∈ ℕ], and then to estimate its parameters from a set of experimentally obtained observations using methods such as ordinary least squares. An alternative is to recognize that the function, f, is unknown, and hence is itself a source of uncertainty; GPR provides us with a means by which to do this.
+
+GPR belongs to a class of approaches known as non-parametric Bayesian methods. Such methods can be viewed broadly as providing probability models on function spaces (Müller and Quintana, ). Apart from GPs, the other well-known non-parametric Bayesian methods are those based on Dirichlet processes (DPs). These were introduced by Ferguson () and Antoniak (), and provide a framework for the probabilistic modelling of unknown probability distributions. That is, rather than assuming that a given sample has been drawn from a probability distribution of known parametric form (but with unknown parameters), DP-based approaches model the uncertainty in the probability distribution itself. In contrast, GP approaches provide a framework for the probabilistic modelling of unknown functions rather than unknown distributions.
+
+2.2 GP priors
+In GPR, we assume a GP prior for f(x) with mean function m and covariance function k. This means the following:
+For any input, x* ∈ℝp, we regard the value taken by f(x) at x=x* to be a random variable. The notation f(x*) should now be understood to denote this random variable.
+
+Given a finite collection of covariate vectors, x1, …, xn, the random variables f(x1), …, f(xn) are assumed to be jointly distributed according to a multivariate Gaussian with mean m = [m(x1), …, m(xn)]⊤ and covariance matrix (K)ij=k(xi, xj).
+
+
+We thus write f(x) ∼ 𝒢𝒫(m, k).
+
+Note that if we assume the regression model of Equation (), the GP prior over f(x) induces a GP prior over the observable outputs y(x). That is, assuming Equation () and that f(x) ∼ 𝒢𝒫(m, k), it follows that,
+
+where l(xi, xj)=k(xi, xj)+σ2 δ(xi, xj). Here, δ(xi, xj) is the standard Kronecker delta function.
+
+2.3 From prior to posterior
+We now suppose that, having assumed a GP prior f(x) ∼ 𝒢𝒫(m, k), we proceed to obtain a set of output measurements y1, …, yr at the covariate vectors x1, …, xr. We are interested in determining how we may update our GP prior in light of these observed data. We show below that, given any finite collection x1*, …, xs* of covariate vectors, the joint conditional probability of the function values f(x1*), …, f(xs*) given the observations is again described by a multivariate normal. We hence obtain a GP posterior over f(x).
+
+We view y1, …, yr as realizations of the random variable y(x) at the inputs x. We know from Equation () that,
+
+where mo = [m(x1), …, m(xr)]⊤ and (Ko)ij=k(xi, xj)+σ2δ(xi, xj). For notational brevity, we henceforth write [y(x)]⊤ to mean [y(x1), …, y(xr)]⊤.
+
+Let x1*, …, xs* be another finite collection of covariate vectors. From our assumption of a GP prior over f, together with Equation (), it is straightforward to see that,
+
+where, m*=[m(x1*), …, m(xs*)]⊤, (K**)ij=k(xi*, xj*) and (K*)ij=k(xi,xj*).
+
+From Equations () and (), and using standard properties of Gaussian distributions (von Mises, ), it follows that the function values f(x1*), …, f(xs*) conditioned on the observed outputs y are also jointly distributed according to a multivariate normal. Specifically,
+
+where y=[y1, …, yr]⊤, and,
+
+
+Here, Ir is the r × r identity matrix.
+
+Since Equation () is true for any s ∈ ℕ, it follows that the function outputs, f(x), conditioned on the observations, y, define a GP, which is referred to as the GP posterior.
+
+2.4 Using the GP posterior
+Equation () provides the joint posterior distribution of the function values f(x1*), …, f(xs*), given the GP prior and the observations, y. Since the mean of a Gaussian distribution is also its mode, the maximum a posteriori prediction of [f(x1*), …, f(xs*)]⊤ is simply the mean vector mpost. Thus, GPR allows the prediction of f(x) at any finite collection of covariate vectors, x1*, …, xs*. The covariance matrix, Kpost, describes the variability of the distribution about the mean, and hence may be used to place confidence intervals around this prediction. A illustrates the use of GPR to make predictions and specify confidence intervals.
+Using a GP regressor to fit gene expression time-course data and draw bootstrap samples [data taken from the ‘arth800’ dataset of the R package ‘GeneNet’ (Schäfer et al., )]. (A) The red line shows the mean of the posterior process, while the grey region is a 99% credible interval around this mean. (B) The marginal distribution over the observable output values at each time point is univariate Gaussian, centred at the mean of the posterior process. The crosses represent samples drawn from the posterior, with blue crosses used to highlight one particular draw.
+
+
+
+
+In this article, we are concerned not only with fitting a regressor to the dataset, but also with sampling from the regression model in order to obtain bootstrap datasets. This is similar to the work of Kerr and Churchill (), who also generate bootstrap samples by first fitting a model to a set of time-course data (in their case, an ANOVA model). The advantages of GPR are its non-linearity, that it implicitly allows us to model the uncertainty in the underlying function, f, and that it is relatively easy to apply. Generating samples from our GP regressor is also fairly simple. We know that the joint posterior distribution of any finite collection, f(x1*), …, f(xs*), is a multivariate normal [as given in Equation ()], and hence we may simulate samples using standard methods for such distributions (Press et al., ).
+
+Since we are concerned with the generation of plausible datasets, rather than just plausible samples of the underlying function values, it follows that we are actually interested in y(x) rather than f(x). However, if we can sample function outputs, f(x), and if we know (or can estimate) the variance σ2, then we can use Equation () in order to obtain samples of y(x). Thus, in practice, we proceed by first sampling [f(x1*), …, f(xs*)]⊤ from the multivariate normal described by Equations (), () and (), and then adding Gaussian noise sampled from 𝒩(0, σ2Is).
+
+In this study, we generate bootstrap samples at the same points as those at which the data were observed (i.e. we choose s = r and set x1* = x1, …, xs* = xr). B provides an example of a number of bootstrap samples obtained using a GP regressor fitted to a gene expression time course.
+
+2.5 The mean and covariance functions
+In order to specify a GP prior, it is clearly necessary to provide a mean function, m, and a covariance function, k. The covariance function is the more important of these, as it describes how we believe the value of the function outputs, f(x), covary with one another, and hence allows us to express our beliefs about fundamental properties of f, such as how rapidly it changes. For the sake of simplicity and parsimony, the mean function is often chosen to be zero, and this is the approach we adopt here. This does not present a serious limitation: as we can see from the regressor in A, the mean of the posterior process (represented by the red line) is certainly not constrained to be zero, and we are able to obtain a good fit to the data. Of course, other mean functions may be chosen to express stronger prior beliefs about the underlying function. There are many possible choices for the covariance function, k, and we here consider two of the more popular options, the squared exponential covariance function,
+
+where | ·| denotes the Euclidean distance; and a standard Matérn covariance function,
+
+Here, the constants σg, σf, l1 and l2 are hyperparameters. Although its smoothness properties have been criticized as unrealistic (Stein, ), the squared exponential covariance function remains the most frequently used ‘default’ choice for GPR, largely because of its simplicity. There are many examples of covariance function (Rasmussen and Williams, , ch. 4), which allow the GP prior to be tailored to specific scenarios. In this article, we employ kSE and kM, as they are simple, yet sufficiently flexible to allow a good fit to the data.
+
+The hyperparameters of the covariance function provide us with another means to encode our prior beliefs about the nature of f. We can see, for example, that if l1 (or l2) is very large, then f(xi) and f(xj) will only tend to vary together if |xi − xj| is small: the value of the function at xi will only affect the value at xj if xi and xj are close together. Ideally, we would either use prior knowledge to specify the hyperparameters, or adopt a fully Bayesian approach and integrate them out. However, we are rarely able to express our prior beliefs so precisely, and while a full Bayesian approach is possible (using, for example, Markov chain Monte Carlo (MCMC)), the associated computational expense is often undesirable. This is certainly the case here: in the example presented in  (which we expect may represent a typical application), we are required to fit regressors to 800 gene expression time-course datasets, so we wish to minimize the costs of fitting the GPR model. An alternative and computationally cheaper method is to estimate the hyperparameters in order to maximize the (log) likelihood of the observed data. We also use this approach to estimate the variance of the noise term, σ2, in Equation (). From Equation () and the definition of a multivariate normal, the likelihood of y is given by,
+
+where θ is the vector of the covariance function's hyperparameters, det(·) denotes the determinant, and we write Ko(θ, σ2) to make explicit the dependence of Ko on the hyperparameters. Taking logs and removing constant terms, we deduce that the maximum likelihood values for θ and σ2 are given by,
+
+
+
+This optimization can be approached using standard methods for optimization (Press et al., ), such as the Nelder–Mead simplex method or gradient descent.
+
+3 APPLICATIONS
+In order to demonstrate the potential applications of the GPR bootstrap, we consider two examples from the literature: estimating the parameters of a model of the STAT 5 signalling pathway, and inferring a gene network.
+
+3.1 Parametric ODE modelling of signalling pathways
+The JAK-STAT pathway is a well-studied signalling pathway that describes a mechanism by which signals carried by cytokines may be transduced to the cell nucleus via STAT activation, dimerization and relocation to the nucleus (Aaronson and Horvath, ; Horvath, ). Swameye et al. () suggested a number of parametric ODE models to describe the JAK2-STAT5 signalling pathway, the parameters of which were estimated from experimental data. We consider one of the proposed models [taken from Swameye et al., ; Supplementary Material), and—using data from the original experiments—apply our GPR bootstrapping approach in order to assign confidence intervals to the parameter estimates.
+
+3.1.1 The Model
+The model we consider is as follows,
+
+
+
+Here, v1, v2 and v3 represent the concentrations of (respectively) unphos-phorylated STAT5, phosphorylated monomeric STAT5 and phosphorylated dimeric STAT5 in the cytoplasm. The variable v4 denotes the concentration of STAT5 in the nucleus, and D is an experimentally determined quantity (which varies over time) related to the amount of Epo-induced phosphorylation of the EpoR (Swameye et al., ). The ri's are parameters (see Swameye et al., ; Supplementary Material). The initial values of v2, v3 and v4 at time t=0 are assumed to be zero (since it is supposed that all STAT5 in the cell is initially cytoplasmic and unphosphorylated), while the initial concentration of unphosphorylated cytoplasmic STAT5, v1(t=0), is treated as an unknown parameter.
+
+The quantities v1, v2, v3 and v4 were not measured individually. Instead, the amount of phosphorylated STAT5 in the cytoplasm, y1, and the total amount of cytoplasmic STAT5 (phosphorylated and unphosphorylated), y2, were recorded. These can be written in terms of the vi's as follows,
+
+where r5 and r6 are two unknown scaling parameters, which must also be estimated. In total, there are thus six unknown parameters in this model [r1, r3, r4, r5, r6 and v1(0)].
+
+3.1.2 GPR bootstrapping and parameter estimation
+Swameye et al. () measured y1 and y2 at a number of discrete time points in order to obtain several sets of experimental data. We focus on just one of these datasets (the ‘DATA1_hall’ set, available from the original authors at http://webber.physik.uni-freiburg.de/~jeti/), which we use together with our GPR bootstrapping approach in order to obtain 1500 bootstrapped datasets. To define our GP prior, we choose a zero mean function and the squared exponential function of Equation ().
+
+In order to learn the hyperparameters and fit the GP regressor to the dataset, we make use of the gpml suite of Matlab functions accompanying Rasmussen and Williams (), available from http://www.gaussianprocess.org/gpml/
+
+For each of our bootstrapped datasets, we estimate the unknown parameters of the ODE system presented in Equation () using the stochastic ranking evolutionary strategy (SRES) of Runarsson and Yao (), as implemented in the libSRES C library (Ji and Xu, ). This allows us to find the parameter values which minimize the sum of squared differences between the data and the predictions made by the ODE model. This optimization problem is susceptible to the usual difficulty of becoming stuck in a local minimum. The evolutionary nature of SRES goes some of the way toward mitigating this difficulty, but to reduce the impact of becoming stuck in a local minimum yet further, we also run the algorithm for a large number of iterations and rerun eight times for each dataset (taking as our final estimate the ‘best’ amongst these eight runs). Before considering the bootstrapped data, we use SRES to estimate parameter values from the original dataset. The values so obtained are: v1(0)=0.996, r1=2.43, r3=0.256, r4=0.303, r5=1.27 and r6=0.944. For this ‘optimal’ set of parameters the model provides a reasonable fit to the observed data which is comparable with the fit obtained in the original paper (Swameye et al., ). The aim of our bootstrapping approach is to determine whether or not these parameter estimates are robust to the uncertainty in the data.
+
+3.2 Gene network inference
+When considering how our GPR bootstrapping approach may be applied in order to investigate the effects of data uncertainty on the reverse engineering of gene regulatory networks we consider only relevance networks (Butte et al., ) and graphical Gaussian models (GGMs). However, our method could just as easily be applied in order to assess the effects of data uncertainty on network inference methods (such as Lèbre, ) more generally. We consider temporal expression data for the 800 A.thaliana genes from (Smith et al., ) which are provided in the ‘arth800’ dataset of the R package ‘GeneNet’ (Schäfer et al., ).
+
+3.2.1 Gene relevance networks
+Butte et al. () introduced the idea of a gene relevance network—a type of graphical model in which vertices represent genes and in which we draw an edge between genes g1 and g2 if and only if the expressions of g1 and g2 are correlated. Thus, relevance networks provide us with a means to represent (linear) dependencies between genes. Correlations are calculated between genes in a pairwise fashion; it is decided whether or not to draw an edge between g1 and g2 without reference to the presence or absence of edges between any other genes. To determine whether or not to place an edge between genes g1 and g2, we first calculate the (in our case, Pearson) correlation between their gene expression time courses, square this value to obtain a score s, and then place an edge if s &gt; r for some prespecified threshold value r.
+
+3.2.2 Graphical Gaussian models
+GGMs are used to represent dependencies between genes that have been detected by partial correlations. In contrast to relevance networks (where a missing edge between two genes indicates marginal independence), the absence of an edge between genes g1 and g2 in a GGM means that g1 and g2 are conditionally independent. We use the R package ‘GeneNet’ in order to infer GGMs from time-course gene expression data according to (Opgen-Rhein and Strimmer, ), and make use of the package's capability to calculate an empirical posterior probability, pe(g1, g2) (Schäfer and Strimmer, ), for the existence of the edge between g1 and g2. If pe(g1, g2) &gt; τ, where τ is some prespecified threshold (cut-off) value for the probability, then an edge is drawn between g1 and g2.
+
+3.2.3 Bootstrapping the data
+We apply our GPR bootstrapping approach to the A.thaliana data. This dataset comprises measurements taken for 800 genes at 11 times, with two measurements at each time point (A illustrates the data for one of the genes). We proceed as in the previous example, but this time make use of the following covariance function,
+
+where kSE and kM are as previously described. Using the method of  we obtain 1000 bootstrap datasets, each one consisting of two measurements at 11 time points for 800 genes.
+
+4 RESULTS
+4.1 Parametric ODE modelling of signalling pathways
+For each of our 1500 bootstrapped datasets, we find the ‘optimal’ set of parameters using SRES. This induces a joint sampling distribution over the optimal parameters for the ODE model, whose marginals are represented by the histograms in .
+Histograms showing the marginal sampling distributions over the optimal parameter values. Although these distributions are generally quite narrow and centred about the parameter estimates obtained from the original dataset (vertical black dashed lines), note that for r3 there is a small amount of probability mass located at r3 ≈ 5 (shown as a red bar and ringed by a red circle).
+
+
+
+
+Note that the joint sampling distribution is conceptually very different to the joint posterior parameter distribution that might be sought using a Bayesian approach: in the former, we find a single parameter estimate for each of a large number of sampled datasets, whereas in the latter we first specify a prior distribution over the parameters and then seek to update this in light of observed data.
+
+ shows that the marginal sampling distributions are generally quite narrow. This can be quantified by calculating the coefficient of variation, cv, for each of the parameters, cv(v1(0))=0.0338, cv(r1)=0.175, cv(r3)=1.77, cv(r4)=0.214, cv(r5)=0.0914 and cv(r6)=0.0434. The coefficient of variation for r3 is significantly greater than for the other parameters. This is due to the influence of bootstrap samples for which the optimal estimate for r3 was ∼5 (see the red bar in ). Indeed, across all of the bootstrap samples, there appear to be two distinct sets of estimated optimal parameter values. The first (much larger) set comprises estimates centred around the values obtained from the original dataset. The second set comprises estimates for which r3 ≈ 5, and contains only 28 elements. Although obtained for just a small number of the bootstrap samples (≈2%), the parameter estimates in this second set still provide a good fit to the original data (see Supplementary Fig. 1). To quantify this, the average mean square error (MSE) obtained using parameter estimates from the second set was 0.10 for the fit to the y1 values, and 0.031 for the fit to the y2 values. By comparison, the MSE obtained using the parameter values estimated from the original data was 0.026 for the fit to the y1 values, and 0.0043 for the y2 values. This suggests that parameter estimates from the second set provide (on average) a slightly worse fit overall, but do a marginally better job of fitting y2 than those derived from the original dataset.
+
+4.2 Gene network inference
+We start by considering the inferred GGMs. Let NO(τ) denote the network inferred from the original dataset using threshold τ, and similarly let NB(i)(τ) be the network inferred from the i-th bootstrap dataset. To assess how similar the bootstrapped networks are to NO(τ), we calculate the proportion, ρ(i)(τ), of edges in the original network that also appear in NB(i)(τ). We hence obtain a sampling distribution over ρ(i)(τ) for a given τ. In addition to considering the data sampled using GPR bootstrapping, we also performed a non-parametric bootstrap of the data, and calculated a sampling distribution over ρ(i)(τ) based upon 1000 (non-parametric) bootstrap datasets. Histograms describing the sampling distributions obtained for different values of τ are presented in .
+Plots showing the sampling distributions over ρ(i)(τ) for different values of τ. Black: GPR bootstrap. White: non-parametric bootstrap.
+
+
+
+
+In each case, the sampling distribution is approximately normal. For smaller values of τ, the mean of the sampling distribution over ρ(i)(τ) is greater than for larger values. This is unsurprising: as τ gets smaller, the value of the empirical posterior probability required for an edge gets lower (until at the extreme case, τ=0, edges are drawn between all vertices, regardless of the data). Thus, for smaller values of τ, the sensitivity to the data is reduced. This has the effect of making the inferred network more robust to perturbations in the data, but unfortunately also makes the network increasingly meaningless. For more meaningful values of τ (say, of around 0.85 or above), the degree of similarity between the bootstrapped networks and NO(τ) [as measured by the mean value of ρ(i)(τ)] is disappointingly low. This suggests that the original inferred GGM is highly sensitive to uncertainty in the data.
+
+We repeated the above analysis for relevance networks, and obtained similar results (see Supplementary Material). To summarize, the mean values of ρ(i)(r) for r values of 0.95, 0.85, 0.75, 0.65, 0.55 and 0.45 were (respectively) 0.062, 0.18, 0.29, 0.42, 0.51 and 0.61. Yet again, these values are low, indicating that the topology of relevance networks is sensitive to uncertainty in the data (note that r and τ are not directly comparable, so it is difficult to compare the relative tolerance to data uncertainty of relevance networks and GGMs). Although the overall topology of the network seems to be sensitive to data uncertainty, there are individual edges that demonstrate a much higher degree of tolerance. For example, taking r to be 0.85, we may look for edges that appear in 100% of the networks obtained from the bootstrapped datasets. If we do this, then we find 16 edges connecting 13 vertices, as shown in . We can use this approach more generally to construct networks that have a required level of tolerance to data uncertainty, omitting any edges that do not appear in at least q% of the bootstrap samples. In this way, we can construct ‘high confidence’ relevance networks.
+A high confidence subnetwork constructed from the A.Thaliana data set. Edges drawn in blue appear in 100% of the bootstrap data samples; green edges appear in 99%; and red edges appear in 98%. Vertices have the same colour as whichever of their edges appears in the largest number of bootstrap samples.
+
+
+
+
+5 DISCUSSION
+Our results highlight the necessity of accounting for data uncertainty when trying to draw conclusions from experimentally obtained data. In the case of the parametric ODE model of the JAK2-STAT5 signalling pathway, we showed that in addition to the parameter estimates obtained from the original dataset, there is a second set of plausible estimates which (had stochastic effects provided us with a slightly different dataset) we may well have concluded were the ‘correct’ values. We believe that the presence of the distinct second set of plausible parameter estimates indicates that the error function (i.e. the sum of squared differences between the data and the model predictions) that was minimized in order to fit the model to the original data possesses a second (local) minimum. As well as demonstrating the importance of taking into account the noise in experimental datasets, our results could also be viewed as an endorsement for Bayesian methods, which do not seek to identify a single optimal parameter set, but instead approximate the whole posterior parameter distribution.
+
+The results from our network inference investigation perhaps provide an even better illustration of the effect that data uncertainty can have upon inference. Our approach demonstrates that the inference of an edge between two vertices is highly sensitive to the level of noise in the data, and hence it is likely that the false positive rate for each individual edge is high. We also showed how GPR bootstrapping may be used to construct ‘high confidence’ relevance networks for which we would expect the false positive rate to be lower.
+
+6 CONCLUSION
+Determining the effects of uncertainty in experimental data is imperative if we are to have any degree of confidence in the conclusions that we draw or the models that we reverse engineer from biological data. GPR bootstrapping is a widely applicable and easily implemented approach that allows us to investigate and quantify these effects. We have illustrated the use of GPR bootstrapping using two examples, and discussed the impact that data uncertainty has upon inference. Although we have here concentrated on time-course data, our approach could easily be applied in situations where the independent variable is something other than time. Given the current levels of noise in post-genomic data, approaches such as GPR bootstrapping are vital in order to allow us to make the most of currently available information and to provide us with a means to assess the conclusions we draw.
+
+Funding: Wellcome Trust (080713/Z/06/Z).
+
+Conflict of Interest: none declared.
+
+Supplementary Material
+[Supplementary Data]

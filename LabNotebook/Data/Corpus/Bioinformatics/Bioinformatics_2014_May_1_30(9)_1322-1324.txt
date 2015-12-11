@@ -1,0 +1,46 @@
+1 INTRODUCTION
+Knowledge of the spatial distribution of proteins is of critical importance to elucidate their role and refine our understanding of cellular processes. Mis-localization of proteins have been associated with cellular dysfunction and disease states (; ; ), highlighting the importance of localization studies. Spatial or organelle proteomics is the systematic study of the proteins and their sub-cellular localization; these compartments can be organelles, i.e. structures defined by lipid bi-layers, macro-molecular assemblies of proteins and nucleic acids or large protein complexes. Despite technological advances in spatial proteomics experimental designs and progress in mass-spectrometry (), software support is lacking. To address this, we developed the pRoloc package that provides a wide range of thoroughly documented analysis methodologies. The software includes state-of-the-art statistical machine-learning algorithms and bundles them in a consistent framework, accommodating any experimental designs and quantitation strategies.
+
+2 AVAILABLE FUNCTIONALITY
+pRoloc makes use of the architecture implemented in the MSnbase package () for data storage, feature and sample annotation (meta-data) and data processing, such as scaling, normalization and missing data imputation. We also distribute 16 annotated datasets in the pRolocdata package, which are used for illustration of different pipelines as well as algorithm testing and development. Algorithms for (i) clustering, (ii) novelty detection and (iii) classification are proposed along with visualization functionalities.
+
+2.1 Clustering
+The unsupervised machine-learning techniques are used, among other aims, as exploration and quality control tools. Several critical factors such as feature-level quantitation values, the extent of missing values and organelle markers can be overlaid on the data clusters as effective data exploration and quality control.
+
+2.2 Novelty detection
+An essential step for reliable classification is the availability of well-characterized labeled data, termed ‘marker proteins’. These reliable organelle residents define the set of observed organelles and are used to train a classifier. It is however laborious and extremely difficult to manually define reliable markers for all possible sub-cellular structures. As such, any organelles without any suitable markers will be completely omitted from subsequent classification. pRoloc provides the implementation for the phenoDisco novelty detection algorithm () that, based on a minimal set of markers and unlabeled data, can be used to effectively detect new putative clusters in the data, beyond those that were initially manually described ().
+Current state-of-the-art experimental organelle proteomics data analysis with pRoloc. On the left, we replicated the original findings from  on Drosophila embryos. On the right, we present results of the same data set obtained with pRoloc, utilizing the novelty discovery functionality (new color-coded organelles) and a class-weighted support vector machine (SVM) algorithm with classifier posterior probabilities (point sizes)
+
+
+
+2.3 Classification
+Since the development and refinement of spatial proteomics experiments, several classification methods have been used: partial least-square discriminant analysis (), SVMs (), random forest (), neural networks () and naive Bayes (), all available in pRoloc. In addition, other novel algorithms are proposed, such as PerTurbo (). We have compared and contrasted these algorithms using reliable marker sets and demonstrate in the package documentation that the driving factor for good classification is reflected in the intrinsic quality of the data itself, i.e. efficient cellular content separation, accurate quantitation (), etc. illustrating the minor importance of the classification algorithm with respect to thorough data exploration and quality control. While the exact algorithm might not be the major reason for a good analysis, it is essential to guarantee optimal application of the algorithm. A central design decision in the development of the classification schema was to explicitly implement model parameter optimization routines to maximize the generalization power of the results.
+
+3 A TYPICAL PIPELINE
+A typical pipeline is summarized below using data from Arabidopsis thaliana callus (). We first load the required packages and example data. The phenoDisco function is then run to identify new putative clusters that, after validation (the pd.markers feature meta-data), can be used for the classification using the SVM algorithm (with a Gaussian kernel). The algorithms parameters are first optimized and then subsequently applied in the actual classification. Finally, the plot2D function is used to generate an annotated scatter plot along the two first principal components ().
+library(pRoloc)
+
+library(pRolocdata)
+
+data(dunkley2006)
+
+res &lt;- phenoDisco(dunkley2006)
+
+p &lt;- svmOptimisation(res, fcol="pd.markers")
+
+res &lt;- svmClassification(res, p,
+
+    fcol="pd.markers")
+
+plot2D(res, fcol="svm")
+
+
+
+
+4 CONCLUSIONS
+The need for statistically sound proteomics data analysis has spawned interest in the proteomics community () for R and Bioconductor (). pRoloc is a mature R package that provide users with dedicated data infrastructure, visualization functionality and state-of-the-art machine-learning methodologies, enabling unparalleled insight into experimental spatial proteomics data. It is also a framework to further develop spatial proteomics data analysis and novel pipelines. Multiple organelle proteomics datasets illustrating various and diverse experimental designs are available in pRolocdata. Both packages come with thorough documentation and represent a unique framework for sound and reproducible organelle proteomics data analysis.
+
+Funding: European Union 7th Framework Program (PRIME-XS project, grant agreement number 262067); BBSRC Tools and Resources Development Fund (Award BB/K00137X/1); Prospectom project (Mastodons 2012 CNRS challenge).
+
+Conflict of Interest: none declared.
+

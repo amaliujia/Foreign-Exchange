@@ -1,0 +1,349 @@
+Background
+Supporting evidence has verified that glycans play crucial roles
+in cellular functions. However, the complexity in developing
+high-throughput techniques to characterize glycan structures
+poses one of the main obstacles to assess the structural elements
+responsible for specific functions. Thanks to the availability of
+glycan structure databases such as KEGG [] and the
+Consortium for Functional Glycomics (CFG) [], informatics
+techniques can be applied directly to glycan data to help
+researchers better understand the functions and structures of
+these complicated molecules.
+
+Compared to the linear structures of DNA and proteins, glycans
+are generally nonlinear polymers that can be represented by
+rooted ordered trees. Several approaches have been developed
+to mine structural features embedded in glycans 
+[,
+]. Support
+vector machines (SVMs) with tree kernels for analyzing glycan
+structures have been extensively investigated 
+[,
+]. In 
+[], 3-
+mers were used to represent the features for each glycan
+structure, where more weight was applied to the matching
+structures of the variable region (specifically, the non-reducing
+terminal structures of glycans) in constructing the kernel
+matrix. As for [], the kernel function was expressed as a sum of
+local kernels over all possible subtrees. One of the
+groundbreaking representatives is the q-gram method 
+[,
+]
+which considers the vector of the frequencies of all possible
+subtrees isomorphic to paths with q nodes as the q-gram
+distribution. Like the previously proposed kernels, the
+traditional q-gram method ignores the similarity between two
+different q-grams. Taking into consideration the similarity of
+geometric structures, monosaccharides and glycosidic bonds in
+q-grams, a new tree kernel was created [], resulting in a
+weighted q-gram method: LK-method. With this method, the
+classification performance was improved for some important
+glycan classes. However, one of the limitations of this method
+lies in the poor performance in extracting biologically relevant
+glycan substructures, the most important goal of our research.
+Our aim is to remedy the defects of the LK-method.
+
+Kernel methods work by embedding data instances into a
+feature space F. Due to their good performance in processing
+complicated data, kernel methods have gained increasing
+popularity in computational biology []. The Positive Semi-
+Definite (PSD) property [] of a kernel matrix is required to
+ensure the existence of a Reproducing Kernel Hilbert Space
+(RKHS) where a convex optimization formulation can be
+deduced to yield an optimal solution. However, in practice,
+similarity matrices can violate the PSD property. For example,
+in bioinformatics some popular functions evaluating pair-wise
+similarity between DNA and protein sequences produce non-
+PSD (or indefinite) kernel matrices. Unfortunately, the best way
+to use them in the SVM framework is not clear. The weighted qgram
+method avoids the problem of the non-PSD property by
+constructing the similarity matrix as to ensure the PSD property
+of the kernel matrix. The method performs well in terms of
+classification accuracy for the often-used leukemia data set, but
+it did not perform as well on other data sets. Furthermore, the
+feature selection results of this method were poor in that the
+biologically known motifs for specific data sets were not
+retrieved in the results.
+
+In order to obtain biologically meaningful results, we focused
+on the similarity matrix, which is symmetric and can be
+decomposed into S = X ⋅ P⋅ X T such that is the diagonal
+matrix of the eigenvalues sorted in ascending order. Here is an
+orthogonal matrix of the corresponding eigenvectors. The
+weighted q-gram method deals with the similarity matrix as
+ST S which is in fact X ⋅ P2 ⋅ X T . To some extent, we may
+consider different eigenvalues as representing the roles that
+each q-gram plays in classification. Furthermore, the kernel
+matrix used in training the SVM should, in principle, involve
+the similarity matrix S itself rather than ST S . In this context, a
+negative eigenvalue –λ (λ&gt;0) will then be squared, becoming λ2,
+the square of its original magnitude. This suggests a possible
+reason why this method cannot perform well in all of the data
+sets as the importance of those negative eigenvalues were
+magnified.
+
+Previous studies have presented methods that attempt to alter
+the spectrum of an indefinite kernel matrix in order to create a
+PSD one. Representatives include the denoising method which
+deems all negative eigenvalues as noise and replaces them with
+zero [], the flipping method which flips the sign of negative
+eigenvalues so as to form a PSD kernel matrix [], the diffusion
+method which takes the data distribution into account by
+replacing the eigenvalues with an exponential form [], and
+the shifting method which shifts eigenvalues to ensure the
+nonnegativity of all the eigenvalues []. The LK-method shares
+some similarity with the flipping method in that negative
+eigenvalues become the absolute values of themselves.
+Considering the fact that the denoising method, which neglects
+the negative eigenvalues, also yields good classification results,
+we propose a novel method treating eigenvalues in ascending
+order.
+
+Another problem with the previous model was that even
+though the weighted q-gram method considered the similarity
+between two different q-grams, the importance of the q-grams
+in the context of the whole glycan structures themselves was
+not taken into account. From a biological perspective, the
+variability of the sugars near the leaves is larger than those near
+the root []. Thus, employing the similarity matrix developed
+by the LK-method, we developed a biochemically-weighted
+kernel (BioLK-method) utilizing biological knowledge by
+adding weight based on the layer information li of q-grams
+with while e α l i ensuring the PSD property of the similarity
+matrix.
+
+The effectiveness of our BioLK-method was then compared
+with the LK-method, the representative of the weighted q-gram
+method in terms of predictive performance of glycan
+classification and motif extraction. Our newly developed
+method exhibited comparable classification performance, if not
+better, with the LK-method. Moreover, our new method could
+capture biologically meaningful glycan substructures through
+feature selection while the LK-method failed to do so.
+
+Methodology
+Our work incorporates two innovations. The first one is to
+perform a delicate transformation on the non-PSD similarity
+matrix constructed in one of the representatives of the weighted
+q-gram method: the LK-method. The second is to incorporate
+existing biological information when computing the kernel
+matrix. Major contribution of this paper is to propose a
+biologically significant kernel that is robust in classification as
+well as in motif selection. We first describe the similarity matrix
+construction method used for the LK-method that considers the
+similarity of layers, monosaccharides, glycosidic bonds and
+geometric tree structures among the q-grams. Based on the
+existing similarity matrix, a PSD similarity matrix using
+techniques of spectrum transformation is created. We further
+develop the novel kernel by combining the biological
+importance of different q-grams. Different experiments of
+binary classification and feature selection are performed on the
+new kernel with SVMs (See  for
+detailed description).
+
+Discussion
+Materials:
+Three sets of glycan data are used to evaluate the classification
+and feature selection performance of our developed method.
+They are illustrated in (, see supplementary material).
+Glycan structures in two of the data sets are retrieved from the
+KEGG/GLYCAN database [] with annotations from the
+CarbBank/CCSD database []. One pertains to leukemia
+consisting of 355 structures originating from four human blood
+components: leukemic cells, erythrocytes, serum and plasma,
+containing 162, 111, 85 and 73 examples respectively. Another
+data set pertains to cystic fibrosis, containing 89 glycans related
+to cystic fibrosis, 107 related to respiratory mucin and 101
+related to bronchial mucin. For these leukemia and cystic data
+sets, the total number of glycans is not the sum of each subclass
+because some glycans belong to several classes. In order to
+assess the generality of our kernel method in extracting
+meaningful substructures, we further utilized another data set
+obtained from the CFG []. We obtained O-linked and N-linked
+glycan profile data extracted from the brain of mouse strain
+C57BL/6 (Mouse Strain,
+http://www.functionalglycomics.org/glycomics/common/jsp
+/samples/searchSample.jsp/?templateKey/=1/&amp;12/=Tissue/&amp;operation/=refine), which consisted of 47 structures in Wildtype and
+50 structures in FucTIV+VII knockout mice.
+
+Classification and Feature Selection:
+The effectiveness of our BioLK-method was evaluated through
+comparison with the LK-method in terms of performance of
+both classification and feature selection. Because the BioLKmethod
+involves the determination ofα beforehand, a program
+was run to find an optimalα in a statistical sense. The
+optimalα for the leukemia data set was 0.1, with 0.35 for the
+mouse data set and 0.85 for the cystic fibrosis data set. These
+results were consistent with our previous analysis. Since for the
+leukemia data set, there are in total 6527 features involved, it is
+very sensitive to largeα , while for the cystic fibrosis data set,
+which contains only 1260 features, it is reasonable that the
+optimalα is relatively large. In the mouse data set, the number
+of features altogether was 4214, and the corresponding optimal
+also lies in α = 0.35 between.
+
+Classification Performance:
+Table's 2-4 lists the performance of the SVM classifier for the
+LK-method and the BioLK-method as tested on our three data
+sets. We employed the Area Under the ROC Curve (AUC)
+measured by five-fold cross-validation run 10 times to evaluate
+the performance. For each q (q = 1, 2,K,9) , the tables illustrate
+the average AUC value over the 10 runs with standard
+deviations. It is clear to see that both LK-method and BioLKmethod
+show comparable classification performance.
+
+For the leukemia data, the classification performance always
+achieves accuracy greater than 89%. In the cystic fibrosis data
+set, the classification accuracy decreases slightly, but still
+achieves around 80% on average. For q = 9 in this data set, the
+performance goes down to 53% which is reasonable since this
+data set is much less complex when compared to the other two
+data sets, reflecting the fact that the number of features
+involved in 9-gram classification are few. For the mouse data
+set, the classification performance is also high, achieving
+accuracies in the 80% range.
+
+Feature Selection:
+Both the direct usage of the similarity matrix and the
+incorporation of the BioWeight matrix in kernel construction
+enhance our confidence in extracting accurate features. The
+effectiveness of our BioLK-method in feature selection is
+assessed in comparison with the LK-method on the three glycan
+data sets. Figures 3-5 illustrate the top three features extracted
+by the LK-method and the BioLK-method. For better
+illustration, the corresponding figures of the features can be
+accessed (available with authors).
+
+As shown in , the top-scoring features extracted by the
+BioLK-method is the trimer structure ‘NeuAcα2-3Galβ1-
+4GlcNAc’ found at layer 5. This precisely corresponds to the
+substructure in previous works [,
+]. The substructure with the
+second highest score is the monomer structure ‘Neu5Ac’ found
+at layer 7, which is also consistent with the literature []. In
+contrast, the LK-method captures the features in reverse order.
+In fact, our results are more reasonable due to the fact that
+A.cylindracea galectin (ACG) is known to specifically bind to the
+trimer structure, whereas sialic acid is known to appear in
+many tumor cells. Thus ‘Neu5Ac’ is considered to be a more
+generalized result, whereas the trimer is more specific.
+
+ lists the top three motif candidates extracted by the
+LK-method and the BioLK-method in the cystic fibrosis data set.
+The highest score using the BioLK-method is achieved by a
+dimer ‘NeuAc2-3Gal’ at layer 2, which is often found at the
+non-reducing end of glycan structures. Although this is slightly
+different from the result predicted by [] which captures this
+structure as the second highest score, it is acceptable since in
+their method, information indicating root and leaf nodes is
+incorporated directly into the q-gram data. Our method is still
+consistent with the result that the top scoring CF-related
+structure is α2-3 sialylated structures, which corresponds with
+the literature [,
+]. It is also consistent with the result that the
+top scoring features extracted included monomers and dimers.
+We note that the top three structures captured by the BioLKmethod
+are all α2-3 sialylated structures which are consistent
+with the literature as well. However, the features captured by
+the LK-method are structures which include the root, which
+may indicate that it is overfitting to the data. Biologically
+speaking, one would also assume that the structures at the
+terminal end, and in particular the non-reducing end, are those
+that would be considered to be drug targets, as opposed to the
+larger structures containing common core structures. Indeed,
+the results of the LK-method all contained a common O-glycan
+core structure, whereas the BioLK-method extracted the
+common terminal structure from the non-reducing end of these
+results.
+
+In order to show the robustness of our method in feature
+extraction, we tested it on glycan profile data of mouse brain
+collected from FucTIV+VII knockout mice, as provided by the
+CFG. We then compared the feature selection results as
+performed by the LK-method and the BioLK-method. The top
+three features extracted by both methods are listed in .
+The feature with the top score extracted by the BioLK-method
+was ‘NeuAcα 2-3/6Galα
+1-4(Fucβ1-3)GlcNAc‘ at layer 5, which
+is sialyl-Lewis, a previously discovered motif for this sample
+[]. 
+On the other hand, the LK-method always captured larger
+structures from the core. Similarly to the cystic fibrosis sample,
+the top results of the BioLK-method contained the common
+non-reducing end structure of the top results of the LK-method,
+thus indicating that the LK-method is probably overfitting to
+the data, whereas our method produced precisely the unique
+substructures (features) of the target data set.
+
+Conclusion
+In this work, we developed a new tree kernel based on the
+linkage kernel constructed using the weighted q-gram method,
+but we included two major novelties that enabled us to obtain
+highly accurate results, which previous methods were unable to
+obtain. First, the techniques of direct usage of the non-PSD
+similarity matrix to form a positive one largely aided in
+maintaining the biological properties of the data. Many kernels
+developed in bioinformatics ignore this important property in
+kernels, and we show that this is indeed important. Secondly,
+the incorporation of weighted layer information of q-grams
+together enables high accuracy in discriminating between
+classification groups as well as in the correct detection of glycan
+motifs with flexible size. This confirms the necessity of
+including weighted layer information of q-grams in order to
+construct more biologically meaningful tree kernels.
+
+Indeed, our results were shown to correspond well with known
+glycan motifs obtained through experimental results, whereas
+the previous methods were unable to obtain the same results.
+Thus, we claim that our new kernel contributes greatly to the
+field of glycoinformatics to obtain a greater understanding of
+glycan functions in various areas of biological research.
+
+Authors contributions
+JH came up with the idea. JH and KFA designed the research.
+KFA gave invaluable suggestions and created q-grams of the
+data sets. JH performed the research and analyzed the results.
+WKC supported the provided guidance on how to conduct the
+research. JH, KFA and WKC wrote the paper. All authors read
+and approved the final manuscript.
+
+Supplementary material
+Data 1
+Research supported in part by GRF Grant, HKU Strategy
+Research Theme fund on Computational Sciences, National
+Natural Science Foundation of China Grant No. 10971075 and
+Guangdong Provincial Natural Science Grant No.
+9151063101000021.
+
+Citation:Jiang et al, Bioinformation 7(8): 405-412 (2011)
+
+Glycan structure with layer information: Root layer is
+defined as 0.
+
+q-gram decomposition of glycan in : q=1, 2, 3
+
+Top 3 features on the leukemia dataset. The topscoring
+features extracted by the BioLK-method are the trimer
+structure ‘NeuAcα 2-3Galβ1-4GlcNAc’ found at layer 5. The
+substructure with the second highest score is the monomer
+structure ‘Neu5Ac’ found at layer 7. In contrast, the LK-method
+captures the features in reverse order.
+
+Top 3 features on the cystic dataset. The highest score
+using the BioLK-method is achieved by a dimmer
+‘NeuAcα 2-3Gal’ at layer 2, which is often found at the nonreducing
+end of glycan structures. The top three structures
+captured by the BioLK-method are allα 2-3 sialylated structures
+which are consistent with the literature as well. However, the
+features captured by the LK-method are structures which
+include the root, which may indicate that it is overfitting to the
+data.
+
+Top 3 features on the mouse_fuc dataset. The feature
+with the top score extracted by the BioLK-method was
+‘NeuAcα 2-3/6Galβ1-4(Fucα1-3)GlcNAc’ at layer 5, which is
+sialyl-Lewis X, a previously discovered motif for this sample
+[]. On the other hand, the LK-method always captured larger
+structures from the core.
+

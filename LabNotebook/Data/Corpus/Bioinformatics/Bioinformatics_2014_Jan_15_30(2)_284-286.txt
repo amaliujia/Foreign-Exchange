@@ -1,0 +1,42 @@
+1 INTRODUCTION
+DNA enrichment methods are widely used for genome-wide identification of many different kinds of epigenetic marks. These techniques include chromatin-immunoprecipitation for localizing transcription factor binding sites or for revealing the genomic distribution of different histone modifications. Methylated DNA Immuno-Precipitation (MeDIP) () and methyl-CpG binding domain (MBD) protein capture () are similar techniques, but target the enrichment of DNA fragments containing methylated cytosines. Similarly, 5-hydroxymethylcytosines can be detected by antiserum specific to cytosine-5-hydroxymethylenesulfate (CMS) after treatment with sodium bisulfite (). It can be expected that further affinity methods will be developed for immunoprecipitation (IP) of known or novel kinds of epigenetic marks. To provide a general framework for efficient genome-wide differential coverage analysis of IP-sequencing data, we have improved the user-friendly MEDIPS package. In contrast to the previous version, the MEDIPS update is capable of processing an arbitrary number of replicates or samples per condition. Furthermore, MEDIPS now integrates an elaborated statistical framework developed for the digital nature of count data, which includes a model for biological variation across replicates (), and has greatly reduced runtime and memory requirements.
+
+2 MEDIPS WORK FLOW
+The MEDIPS package provides functions for the quality control and analysis of data derived from IP-seq samples. It starts with the aligned reads (typically bam files) and can be used for any genome of interest.  gives an overview of a typical work flow.
+The MEDIPS work flow
+
+
+
+2.1 Preparation
+In the first step, the alignment files (single- or paired-end) are imported, and the fragments overlapping previously specified genomic regions are counted. These regions can be either genome-wide windows of regular width or any given regions of interest. To control for polymerase chain reaction artifacts, MEDIPS optionally replaces reads with the same position and orientation by one representative.
+
+2.2 Quality control
+The saturation analysis helps to verify whether the given set of mapped reads is sufficient to generate a saturated and reproducible coverage profile of the reference genome. This is done by extrapolation of the correlation of subsets (see C).
+
+To assess the effectiveness of the MeDIP/MBD enrichment, a function to calculate overall CpG enrichment is provided. MEDIPS identifies the fraction of CpGs in the reference genome covered by the sequencing data and evaluates their depth of coverage.
+
+2.3 CpG density normalization
+It has been reported by  that methylation levels obtained from MeDIP/MBD experiments and bisulfite sequencing cannot be compared directly. Therefore, MEDIPS maintains its normalization function based on the concept of CpG coupling analysis () to calculate the relative methylation score (see D and E). It has been shown by  that this normalization can improve the correlation to bisulfite data.
+
+2.4 Differential coverage analysis
+The main task for comparative epigenetic analyses is detection of regions with differential coverage between conditions. Variability, which can emerge from technical and biological variation, has to be estimated and modeled, and the statistical test has to consider the discrete nature of the count values. For this purpose, we make use of the edgeR package, which has been developed in the context of RNA-seq by . It provides functions to estimate the biological variability from low number of replicates and models the count data using negative binomial distribution.
+
+Alteration in copy number (CNA) are known to locally influence the MeDIP signal (). To control for this interference, alterations in copy number are evaluated and can be considered in further analysis.
+
+To help with the functional interpretation of genomic regions identified by the differential coverage analysis, MEDIPS provides the functionality to annotate these regions with any provided set of annotations. The features can be imported from custom files, or from online databases, accessible from Bioconductor.
+
+3 APPLICATION
+To demonstrate the functionality of the MEDIPS package, we processed recently published MeDIP-seq data () that was generated to assess genome-wide epigenetic changes in mouse intestinal adenoma. For this study, differential methylation was inferred for the sample groups by calculating Wilcoxon rank tests for the normalized count values (reads per million, rpm) of each window. Differentially methylated regions (DMRs) were determined by applying filters for P-values, minimal coverage and ratios ().
+
+Here, we process the same data but by using the presented MEDIPS package version 1.12.0. The commented R script, showing the function calls of this analysis, can be found in the Supplementary Material. From the five adenoma and seven normal control mouse samples, 14–22 M MeDIP-seq reads were uniquely mapped to the mouse reference genome (NCBI37/mm9) using bowtie (), of which ∼93% remain after replacing reads with the same position and orientation by one representative. The saturation analysis indicates sufficient sequencing depth, and the CpG coverage indicates an effective MeDIP enrichment (see C and Supplementary Figs S1 and S2). Comparison of the normalized relative methylation score values with bisulfite validation showed a good overall correlation of 0.69–0.79 with a set of bisulfite validation assays previously performed by  on the same genomic samples (see E and Supplementary Fig. S3). The edgeR test for differentially methylated regions finds 51.722 DMRs (P &lt; 0.01), which correspond to 0.5% of the genome. Correction for multiple testing leads to 110 regions at 10% false discovery rate (FDR). F shows the methylation logFC versus average log methylation (MA-plot). DMRs are depicted as orange points (P &lt; 0.01) and red crosses (FDR&lt;0.1). The result table containing the DMRs can be found in Supplementary Table S1. About 60% of the DMRs identified by  overlap with the DMRs identified by MEDIPS 1.12. A detailed comparison between the two approaches can be found in the Supplementary Material.
+
+Although the overall number of hypo- and hypermethylated regions is balanced, preferential hypermethylation was found in functionally important subgenomic regions, such as promoters and CpG islands. In particular, CpG-rich promoters showed a substantial enrichment of hyper- over hypomethylation (5:1; see G). The identification of CpG-rich promoters as preferential targets for hypermethylation may provide important leads for further wet lab experiments. For instance, the analysis can be helpful to identify binding patterns of epigenetic modulator complexes and can be suited to identify candidate genes for epigenetic transcriptional silencing.
+
+The processing of the aligned reads took ∼90 min on an AMD Opteron 6380 2.5 GHz computer, using 1 CPU core and allocating a maximum of 20 GB RAM.
+
+Funding: German Federal Ministry of Education and Research with the grant EPITREAT (No. 0316190A) and by the Max Planck Society with its International Research School program (IMPRS-CBSC). Feodor Lynen postdoctoral Research Fellowship from the Alexander von Humboldt Foundation (to L.C.).
+
+Conflict of Interest: none declared.
+
+Supplementary Material
+Supplementary Data

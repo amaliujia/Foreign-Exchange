@@ -1,0 +1,282 @@
+Introduction
+Medical background
+Epilepsy is a chronic neurological disorder with a prevalence of 0.7 % (Hirtz et al. ) and is characterized by the recurrence of unprovoked and unpredictable seizures. The seizures can be described as a frequently recurring temporary occurrence of hyper-synchronous activity within relatively large areas of the cortex that severely disturbs normal brain function. Often, the pathological synchronous activity (synchronizations) starts at a small, localized brain area within the gray matter and then spreads to its immediate vicinity recruiting more and more parts of the neural network. In the case of generalized epilepsy, the synchronous neural firing can affect the whole cortex, in the case of focal epilepsy only parts of it, the so-called epileptogenic area is affected (Baumgartner ).
+
+About one-third of epilepsy patients suffer from therapy-resistant seizures, i.e., seizures cannot be controlled with anti-epileptic drugs (Engel ). Epilepsy surgery has become a valuable treatment option for some of these patients rendering 70–80 % of them seizure-free and providing them with the opportunity for a satisfactory life (Clusmann et al. ). The aim of epilepsy surgery is removal of the epileptogenic brain region, whereby a complete removal of the epileptogenic zone is essential in order to abolish the seizures. At the same time essential brain regions like, e.g., primary motor and sensory cortex, as well as brain areas supporting language and memory functions have to be spared in order to avoid neurological deficits caused by the surgery (Lüders ). Thus, the exact localization of the epileptogenic zone and of essential brain regions are crucial for the successful surgical treatment of seizures which can only be accomplished during a thorough presurgical evaluation. This examination comprises prolonged video-EEG recording, high resolution brain imaging, and neuropsychological tests.
+
+Especially in patients with seizures arising adjacent to essential brain regions, invasive electroencephalogram (EEG) recordings with chronically indwelling subdural strip and grid electrodes (termedelectrocorticogram, ECoG) or depth electrodes have to be applied in order to increase spatial resolution (Behrens et al. ; Zumsteg and Wieser ). However, even with these invasive techniques the epileptogenic zone cannot be localized adequately in about 20 % of patients (Pondal-Sordo et al. ). Thus, these patients cannot be offered a surgical therapy and the electrodes have to be removed without resective surgery.
+
+In order to localize the epileptic zone and analyze the propagation of the seizure, visual inspection of raw ECoG data is performed by clinicians. This is a difficult and time-consuming task, but still regarded as gold standard (compare Götz-Trabert et al. ; Jenssen et al.  for two recent studies). Therefore improving the analysis of the initial seizure propagation using mathematical models is clinically desired: Identifying the spatio-temporal dependencies in ictal ECoG recordings could fulfill this task.
+
+Technical background
+For localizing the onset zone of the epileptic activity, we want to visualize coupling effects of the multivariate ECoG signal. For this purpose, we calculate dependency measures and depict them in a graph, whose vertices represent the components of the signal, and edges indicate dependencies different from zero. This approach yields an intuitive graphical representation of coupling effects in multivariate time series (cf. e.g., Dahlhaus ; Dahlhaus and Eichler ; Eichler ).
+
+A wide variety of different coupling indicators for neurophysiological data has been published: Pereda et al. () give an overview of common nonlinear approaches to the analysis of neurophysiological data. Among them, similarity measures have recently been used by Hedge et al. () for tracking spatio-temporal dependencies in ictal ECoG recordings.
+
+Winterhalder et al. () discuss dependency measures in the linear framework of autoregressive (AR) modeling. Two important directed coupling indicators are the directed transfer function (DTF) and the partial directed coherence (PDC), both distinguishing between source and target by indicating a direction of the dependency. DTF and PDC are based on a common linear approach to EEG analysis in the literature (Franaszczuk et al. ; Sanei and Chambers ; Tong and Thakor ): To model the ECoG signal as a multivariate AR process. Once the AR model has been identified, spectral properties directly follow (Marple ). The spectrum is the basis for the measurement of linear couplings in the frequency domain, which reveal relations between electrodes. These inter-dependencies are interpreted as indications for epileptic synchronous activity.
+
+The DTF was proposed by Kaminski and Blinowska () for quantifying dependencies in neural signals. However, when Franaszczuk et al. (), Franaszczuk and Bergery (), and Ge et al. () used DTF for epileptic seizure analysis, a manual selection of narrow frequency bands always had to be performed in order to achieve satisfying results.
+
+Wilke et al. () proposed a time-variant version of DTF for epileptic EEG analysis, which shows promising first results. Recently, Kim et al. () combined the usage of DTF with a spatio-temporal source localization algorithm in order to analyze the propagation of epileptic activity in ECoG signals.
+
+As DTF is not capable of distinguishing between direct and indirect influences, Korzeniewska et al. () proposed an extension termed direct directed transfer function (dDTF), which only indicates direct coupling effects and ignores indirect ones.
+
+The PDC is another prominent coupling indicator realizing this distinction between direct and indirect influences. It is directly based on the Fourier-transformed coefficients of the AR model. As the relation between Granger causality—a concept of directed dependency developed by Granger ()—and DTF is controversial (Eichler ; Kaminski et al. ), Baccala and Sameshima () proposed PDC in order to provide a frequency-domain picture of Granger causality.
+
+In the last years, there has been an increasing interest in this dependency measure: PDC has often been applied to the analysis of neural interactions (e.g., Sameshima and Baccala ; Astolfi et al. ), and various extensions to the initial form of PDC have been proposed: First, Baccala et al. () generalized their original definition in order to provide a scale-invariant form. Recently, Takahashi et al. () established a link between a slightly redefined form of PDC and the mutual information rate (MIR), an information-theoretic consideration of couplings. Finally, Faes and Nollo () considered an extended version of PDC for the modeling of instantaneous dependencies between EEG channels.
+
+Motivation
+Our aim is to analyze synchronization effects in multichannel ECoG data of epileptic patients and to identify these coupling effects with a high degree of automatism: Unlike the methods mentioned above, we neither want to manually preselect ECoG input channels nor explicitly consider specific frequency bands. Our contributions to epileptic seizure analysis are twofold.
+
+In order to avoid numerical problems resulting from the high number of ECoG channels, we suggest an automatic channel selection prior to computing dependency measures. This idea is detailed in Sect. .
+
+Furthermore, we propose a different approach to the identification of synchronous activity: Contrary to a spectral analysis, as it is performed by DTF or PDC, we directly consider couplings in the time domain. In order to assure a (neuro)physiological interpretation of our methodology, we search for a coupling indicator with a clear physical interpretability. For this purpose, we introduce a novel dependency measure termed extrinsic-to-intrinsic power ratio (EIPR) initially defined by Hartmann et al. (), which is discussed in Sect. .
+
+The method is tested on neural signals for the localization of the epileptic seizure onset zone. A method based on these results might be used in the future in order to provide neurologists with a tool yielding a seizure onset zone localization which supports them in a clinical environment.
+
+Materials and methods
+Definitions and assumptions
+In our analysis of multichannel ECoG data, we deal with multivariate signals  ( denoting the time index), which consist of  real-valued components . We call the components channels, representing sampled ECoG recordings at a sampling frequency . Fourier-transformed signals are denoted by their respective capital letter [e.g.,  becomes , see Marple () for details].
+
+In order to process the recorded data, we use a window of length , therefore containing  samples. Within this data window, we assume the channels to be zero-mean and stationary, i.e., we have time-invariance of the first- and second-order statistics. In the remainder of this paper, we will refer to time indices relative to a data window by  (therefore we have  in each window).
+
+We use common mathematical abbreviations: We denote the expectation by  and the variance by . Furthermore, the complex unit is symbolized by .
+
+Autoregressive model
+For an introduction to multivariate time series analysis, in particular to multivariate AR modeling, we refer to (Lütkepohl ) and (Hannan and Deistler ).
+
+The proposed method starts with the definition of a stable multivariate AR model of order , defined bywhere  is white noise with regular covariance matrix . This model is decomposed component-wise into the separated contributions of all channels: We define the partial contribution aswith  the (k,l)-element of the coefficient matrix  in (). This allows to write the AR model () for each channel  asIn order to shrink the regression model, we only consider partial contribution terms  which significantly differ from zero. The explicit choice of inputs yields a model of the formHere  is an extrinsic channel set, which can be a subset of , allowing for a reduction of the number of parameters of the AR model. A strategy for such an order reduction is proposed in Sect. .
+
+Thus each  in Eq. () reflects the contribution from (the past of) the respective channel  to channel . As we differentiate between the channel  and the other  in Eq. (), we introduce the following specification: For , we call  is the intrinsic contribution; for ,  is the partial extrinsic contribution. As the term  in Eq. () is the sum of all partial extrinsic contributions, it symbolizes the total amount of inflow to the channel  and is therefore denoted by total extrinsic contribution.
+
+A more general definition of the autoregression in the partial contribution term (), as proposed by Hartmann et al. (), would allow a more flexible lag usage, e.g., permitting non-causal modeling.
+
+Solution of the normal equations
+Under the assumption of short-term stationarity, the solution of the normal equations (within the data window) yields the estimated model coefficients  in the sense of ordinary-least-squares (OLS). Second-order statistics needed for their solution have to be estimated from the data. For this reason, it is important that the length of the data window is chosen neither too short nor too long. An appropriate choice has to establish a good trade-off between estimation errors due to instationarity and inaccuracy due to a too small number of samples.
+
+In particular, in case of neural data such as ECoG recordings their highly instationary character requires the use of short data windows.
+
+Dynamic input channel selection
+The estimation of the model coefficients  in the normal equations poses numerical problems, as we deal with a large number of ECoG channels which are highly correlated both in time and in the cross-sectional dimension. In order to avoid this situation, the idea is therefore to automatically reduce the number of channels in a subset containing all information important for the regression.
+
+For this reason, we introduced the extrinsic channel set  in Eq. (), which defines—per channel —the  relevant for the AR model. The advantage arising from this approach is that we do not have to choose  (as it would be the case in the AR model (), but can shrink it to a reduced set of channels. We only consider the channels , and this selection assures that the estimation of the model coefficients yields numerically stable results: The correlation matrix of the small subsystem is well conditioned and can be inverted without further numerical problems.
+
+We propose an iterative procedure for an automatic selection of an extrinsic channel set  for each , which is described in pseudo code in Fig. .Automatic channel selection algorithm. The bottom–up construction of the extrinsic channel set  is given in pseudo code
+
+
+
+The main idea is to iteratively add channels in a bottom–up fashion until the Bayesian information criterion (BIC) is minimized: In this context, it is defined as (Penm and Terrell )whereis the residual sum of squares andwithHence  is the total number of parameters to be estimated.
+
+Using this criterion our algorithm works as follows: We start with an empty extrinsic channel set . Then, we add the channel  of the  other ones which is best in the sense that it leads to the smallest BIC value (). In the next step, we again select the “best” out of the remaining ones and so forth till we cannot decrease the value of the bracket expression in criterion () any more by adding channels. This (local) minimum determines the extrinsic channel set  to be used for coefficient estimation. Coefficients  of channels  which were not selected by this iterative procedure are set to zero.
+
+We expect the algorithm to select extrinsic channels which contribute significantly to the explanation of the respective intrinsic channel. We will illustrate this behavior in Sect.  in detail.
+
+Note that the bottom–up approach of our proposed algorithm is similar to the An algorithm published by An and Gu (), which is however limited to a regression model without any temporal lags.
+
+Partial extrinsic power
+The aim of the proposed method is to identify directed dependencies of the multivariate signal , which are expected to indicate synchronization and coupling effects of brain regions during epileptic seizures. For similar problems, numerous alternative measures based on a spectral analysis have been proposed in the literature (compare Sect. ). However, instead of regarding spectral properties of the AR model (), we propose to directly consider the partial contribution term () in order to gain information on the influence of channel  to channel .
+
+The variance of the partial contribution term  can be written as, using (),where  is the autocorrelation function of channel .
+
+The partial contribution term  represents the directed influence of channel  onto  by construction, see model (). Its variance is a natural measure of the strength of the influence from  onto . Therefore, we expect it to gain importance in ictal periods due to the increased synchronous activity mentioned in Sect. . For , we speak about the intrinsicpower, for  about the partial extrinsic power.
+
+Note that although the sum of all partial extrinsic contributions  gives the total extrinsic contribution (i.e., the inflow from all channels  onto channel , ), the sum of all partial extrinsic power terms  does not equal the total extrinsic power , unless all cross-correlations are zero.
+
+Thus, considering the variance () of the respective partial contribution term for all channel combinations , we expect to obtain an indication for the directed coupling of each channel  onto each channel  in scalar form. We can finally represent this  matrix of coupling information in a graph.
+
+Extrinsic-to-intrinsic power ratio (EIPR)
+A problem with the variance () of the partial contribution term is its scale-dependence. It is desirable to normalize this measure appropriately such that it is independent of the signal power.
+
+It is not obvious how to perform this normalization. One could, for example, normalize with respect to all target channels, as done by the PDC, as introduced below. However, this approach renders the measure dependent of all channels involved in the regression (cf. Schelter et al. ). This will be detailed in the next subsection.
+
+This motivates our search for an alternative normalization which is not affected by this kind of limitation. We propose to use the EIPRwhich was initially defined by Hartmann et al. (). We assume that the variance of the intrinsic contribution term in the denominator in () is bounded below by a positive constant. This assumption was fulfilled in the considered ECoG recordings (Graef ).
+
+EIPR defined in this way quantifies coupling effects of channel pairs , taking large values for large partial extrinsic variance and small intrinsic variance. This is the case when channel  contributes significant information to the explanation of channel . On the other hand, EIPR shows only small values for weak influence of  to .
+
+Comparison of EIPR and PDC
+The PDC is based on the Fourier-transformed AR model coefficients (Baccala and Sameshima )For frequency  is obtained aswhere  are the coefficients of the multivariate AR model (), and  denotes the identity matrix.
+
+As mentioned in Sect. , PDC provides a “frequency-domain picture” of Granger causality: In particular  implies that channel  does not Granger-cause channel ; compare (Baccala and Sameshima ).
+
+One important difference between EIPR and PDC is in their respective normalization. As mentioned in the previous subsection, PDC is normalized with respect to all target channels which renders the measure dependent of all channels involved in the regression (cf. Schelter et al. ). For an illustration consider any arbitrary three-dimensional AR model showing the dependencies depicted in Fig. a. When we study the coupling between two specific channels of our AR system, say  and , PDC is influenced by channel , which is not of direct interest to us. This is easily seen from the denominator of PDC: Changing the value of the AR model coefficient  affects the denominator of PDCNormalizing with respect to all source channels rather than to all target channels, as proposed by Schelter et al. (), causes similar problems.Dependency graphs of AR models. a illustrates a normalization problem of the PDC as discussed in Sect. ,  affects . b shows the dependence structure of signal model () used for the assessment of EIPR
+
+
+
+A particular situation where a normalization either to all source or all target channels involved may lead to misleading interpretations is as follows: Assume that a seizure focus is located in the middle below three electrodes. The signals recorded depend of course on their exact position on the cortex. When studying the brain activity between two of them, our result is influenced by the position of the third electrode, which we cannot adapt to our needs (as it is implanted).
+
+EIPR avoids this problem, as its denominator is only based on the statistics of the intrinsic (currently regarded) channel, compare (Graef et al. ).
+
+Furthermore, it is interesting to note that the variance () of the partial contribution term is closely linked to PDC. Let us write this variance () as integralwhere  denotes the spectral density of the partial contribution term . By transforming the partial contribution term () into the frequency domain, i.e.we obtain its spectral densitySubstituting expression () into the spectral representation (), we obtain the representationof the variance of the partial contribution term  [cf. () for its definition].
+
+Hence, under the assumption that  the left-hand side of () is zero if and only if PDC  for all frequencies . Thus, under this assumption  being Granger-causal for  is equivalent to . In particular EIPR vanishes for Granger non-causality.
+
+Let us finally compare PDC and EIPR in the spectral domain, which underlines the reflections regarding normalization. When expressing EIPR () by the spectral densities of the partial contribution terms and using expression (), we obtainIf we represent the PDC () by means of expression (), we obtain
+
+Signal model
+As a test case for EIPR and the channel selection algorithm, we consider a simulation based on an example proposed by Winterhalder et al. (). This is an AR system of order with the covariance matrix of the noise set to identity. We simulate 100 s assuming a sampling frequency of  Hz (for consistency with the ECoG data, compare the next subsection). Note that in this artificial case we process the stationary five-dimensional signal in one single data window of length . The imposed dependency paths of the AR model () are shown in Fig. b. This structure was successfully retrieved by application of PDC; compare (Winterhalder et al. ).
+
+As it is unlikely in applications that one observes values of EIPR exactly matching zero, one has to statistically test whether values of EIPR are significantly different from zero. As no exact distribution of EIPR is available yet, we make use of bootstrapping in order to numerically derive significance thresholds. The idea of the so-called surrogate data method (see e.g., Kaminski et al. () for an application to DTF) is to resample the original data independently for each channel  for  times, thus destroying the inter-channel dependence structure. This repetition gives empirical distributions of each EIPR  under the null-hypothesis of non-causality (), namely  realizations of each . Here, we use the leave one-out method (LOOM) introduced by Schlögl and Supp () for the re-sampling process and subsequent statistical t test, as it yields reliable results in causal analysis (cf. Florin et al.  for a comparative study). EIPR values  significantly indicate dependency ifwhere  denotes the empirical mean and  the empirical standard deviation of the EIPR values  based on the re-sampled data.  is the quantile of the Student distribution with  degrees of freedom and .
+
+ECoG data
+The ECoG data in this study are taken from four female patients between 31 and 61 years of age suffering from therapy-resistant temporal lobe epilepsy. The data were recorded at the Vienna General Hospital, Department of Neurology, in the course of a presurgical investigation.
+
+In order to test our method on neural signals, a total of 12 seizures of these patients was analyzed. Two out of four patients had to be excluded due to strong signal artifacts and spike–wave complexes during the seizures, respectively. As our method is based on the detection of synchronization, it is not suitable for the analysis of spike–wave complexes. The remaining two patients underwent presurgical evaluation for 8 (patient A) and 7 (patient B) days, respectively. For patient A, aged 59 years, ECoG was recorded from 28 electrodes grouped in 4 individual stripes. The X-ray scan of the head of patient A in Fig.  details the positions of the four subdural strip electrodes: Stripes A and B are situated below the left temporal lobe, C and D below the right one. In case of patient B, aged 61 years, ECoG was recorded from 32 electrodes grouped in 5 individual stripes: similar to patient A, stripes A, B, and C are situated below the left temporal lobe, D and E below the right one.X-ray image of patient A in frontal view indicating electrode positions of the four strip electrodes: A and B below the left temporal lobe, C and D below the right temporal lobe
+
+
+
+In all cases data were recorded with a sampling frequency of 256 Hz using an IT-med recording system. After recording, the ECoG data were preprocessed in Matlab: Line interference was removed with a Notch filter at 50 Hz, and the signals were low-pass-filtered at 64 Hz in order to avoid aliasing and then downsampled to 128 Hz.
+
+Table  summarizes the clinical findings for the seizure onset time of the two patients. This information was given by the clinicians based on a visual inspection of raw ECoG signals and will be used in Sect.  in order to evaluate the results of our method (cf. Sect. ). As seizure three of patient B was primarily generalized, we do not evaluate it and thus consider six seizures in total (Table a–f).
+
+Note that the recordings of patient A reveal different lateralization (cf. the X-ray image in Fig. ): In case of seizure 1, onset of epileptic activity is on the left hemisphere, whereas in case of seizures 2, 3, and 4 the right hemisphere is initially involved.Onset zone and initial propagation of the analyzed seizures according to the visual inspection by clinicians. (a)–(d) show the clinical findings for seizures 1–4 of patient A, (e)–(g) the ones for seizures 1–3 of patient B
+
+Time	Electrodes affected	
+(a) Patient A, seizure 1	
+03:04:36	B1–B3	
+03:04:57	B1–B5	
+(b) Patient A, seizure 2	
+12:45:51	D6, D7	
+12:45:52	C1–C6, D1, D4–D7	
+(c) Patient A, seizure 3	
+12:31:41	D6, D7	
+12:31:52	B4, B5, D6, D7	
+(d) Patient A, seizure 4	
+15:21:42	C1	
+15:21:47	C1, D4–D7	
+(e) Patient B, seizure 1	
+07:02:02	E1, E2	
+07:02:03	D1, D2, E1, E2	
+(f) Patient B, seizure 2	
+08:06:34	E1, E2	
+08:06:35	D1, D2, E1, E2	
+(g) Patient B, seizure 3	
+08:55:41	Immediately generalized	
+Values of EIPR for signal model (). Imposed dependencies (bold values) are correctly recognized, 99 %-significance thresholds are indicated in italic between brackets
+
+					
+	1.00000	0.18039 (0.05877)	0.00005 (0.00126)	0.00001 (0.00194)	
+	0.00066 (0.00141)	1.00000	0.00064 (0.00090)	0.75701 (0.24812)	
+	2.09681 (0.12395)	0.26936 (0.04652)	1.00000	0.00003 (0.00133)	
+	0.00019 (0.00031)	0.00008 (0.00017)	0.00014 (0.00025)	1.00000	
+
+
+Results
+Signal model validation by EIPR
+In order to show the ability of our method to detect dependencies, we first apply EIPR to the AR model (). Here, we disable the automatic channel selection algorithm described in Sect.  in order to assure that the entire coupling information contained in the multichannel signal is used.
+
+We compare our findings to the result of PDC as reported by Winterhalder et al. (). For each source channel  and target channel  with , Winterhalder et al. () show a frequency plot of PDC . These frequency plots are arranged in a -matrix plot, where the columns indicate the source channels and the rows the target channels (compare Fig.  in the discussion). Thus, the (k, l)-subplot quantifies the influence from  to . If , one can conclude that there is no direct dependency from  to . However, as it is unlikely in applications that one observes values of PDC exactly matching zero for all frequencies, one has to use a statistical test. Thus, Schelter et al. () derived an asymptotic frequency-dependent confidence interval: For each frequency , PDC values below the respective threshold indicate the absence of any direct coupling.Couplings at time of seizure onset in patients A and B. Each plot represents the frontal view onto the patient’s head according to the surgeon’s draft. a–d represent the four seizures of patient A at the respective time of seizure onset, plots (e), (f) two seizures of patient B. In each illustration, the thick line symbolizes the cranium, and implanted electrode stripes are indicated in light gray color. Circles represent the corresponding electrode positions, arrows indicate high EIPR values. Electrodes which are part of the seizure onset zone according to Table  are represented by filled circles. The areas of highest EIPR values coincide well with the respective seizure onset zones
+
+PDC matrix plot of the signal model (), confer (Winterhalder et al. ). The plots on the diagonal show the spectra of the respective channels (x-axis: frequency in Hz, y-axis: spectrum in dB scale). A subplot on position  (x-axis: frequency in Hz, y-axis: PDC) visualizes the influence of  to  measured by . The imposed dependencies are correctly identified
+
+
+
+In contrast to PDC, EIPR condenses the coupling information from  to  in one scalar value. Therefore, the coupling information [EIPR and significance threshold ()] can be represented in a table: In complete analogy to PDC, the (k, l)-element of the table quantifies the influence from  to , and the columns indicate the source channels, the rows the targets.Step-wise behavior of the channel selection algorithm for signal model (). Channels with imposed dependencies are selected. Minima of the BIC values of each step are set in bold-face type for better traceability
+
+	Step	Initial regression: channels, BIC	Extended regression: additional channel, BIC	Step result	
+	1	: 0.811	: 0.019	Choose 	
+: 0.783		
+: 0.755		
+2	: 0.019	: 0.016	STOP	
+: 0.016		
+	1	: 0.623	: 0.624	Choose 	
+: 0.625		
+: 0.011		
+2	: 0.011	: 0.015	STOP	
+: 0.015		
+	1	: 1.165	: 0.377	Choose 	
+: 0.592		
+: 1.143		
+2	: 0.377	: 0.001	Choose 	
+: 0.348		
+3	: 0.001	: 0.005	STOP	
+		
+	1	: 0.014	: 0.018	STOP	
+: 0.018		
+: 0.018		
+
+
+As detailed in Table , which is constructed in this way, our measure correctly identifies the imposed dependencies illustrated in Fig. b: The ones which are induced by the signal model () are set in bold-face type. Similar to PDC, we do not expect to observe EIPR values exactly matching zero in case of non-causality. We rather have to decide whether EIPR  significantly differs from zero by exceeding 99 % significance thresholds (detailed in italic between brackets behind the respective EIPR values in Table ).
+
+Analysis of the channel selection algorithm
+In a next step, we analyze the dynamical channel selection algorithm by applying it to the AR model () without subsequent calculation of EIPR. As stated in Sect. , we expect our algorithm to select the extrinsic channels which contribute significantly to the explanation of the respective intrinsic channel. The simple structure of signal model () allows to verify this design: In this artificial case, the imposed signal model dependencies (cf. Fig. b) exhaustively define the important extrinsic channels for each intrinsic one. Unlike in the case of ECoG recordings, we do not have any additional weak dependencies here which we want to single out for numerical reasons.
+
+Table  illustrates the results of this simulation. As expected, the algorithm builds up the extrinsic channels sets in accordance with the imposed dependencies.
+
+First, consider channel , which is only influenced by . The algorithm sets , as in the first step the BIC value of the extended regression using channels  and  is minimal. In the second step, a further increase of the number of regressors does not lead to a decrease of the information criterion any more, and the algorithm stops returning .
+
+Next, consider channel . Similarly to the previous case, it is only influenced by one channel, namely , and we obtain .
+
+The situation is different in case of channel  which is influenced by  as well . In a first step, the algorithm selects the channel with the strongest influence [AR coefficient of 0.6, cf. model ()], . In a second step,  is chosen (AR coefficient of 0.4). In a third step, the information criterion cannot be reduced, and the algorithm stops returning .
+
+Finally, we obtain an empty extrinsic channel set for , as the regression based on  alone minimizes BIC.
+
+Application to neural data
+We apply our proposed methodology, i.e., regression with dynamically selected channels and subsequent calculation of EIPR, to ECoG recordings from epilepsy patients in order to localize the seizure onset zone. Its identification is based on the analysis of the dependency measure calculated in the initial seconds of the seizure, given the exact seizure onset time (cf. Sect. ).
+
+The ECoG data used for this purpose were acquired as described in Sect.  and include a total number of six epileptic seizures, four of patient A and two of patient B. Data were processed within windows of 4 s, as this value turned out to be a good trade-off for the estimation quality of the correlation matrix between estimation errors due to instationarity and inaccuracy due to a too small number of samples. An AR model order of  was chosen. This allows for the modeling of a spectrum with three peaks (e.g., in the -band and two others) and slowly changing components (Marple ). This choice is in good accordance with simulations yielding the optimal model order (Graef ).
+
+The results obtained with EIPR within the first window after seizure onset are illustrated in Fig. . In each subplot, the frontal view onto the patient’s head is symbolized (compare Fig.  for the corresponding X-ray scan of patient A). In each of these six illustrations, the cranium is symbolized by a thick line according to the surgeon’s draft. Light gray lines indicate the implanted subdural stripes, and circles represent the exact electrode positions. Electrodes which belong to the seizure onset zone according to the visual inspection are symbolized by filled circles. For easier comparison of Fig.  with the clinical findings detailed in Table , important electrodes are labeled with their respective identifier.
+
+Plots (a)–(d) represent the four seizures of patient A at the respective time of seizure onset, plots (e)–(f) two seizures of patient B. An arrow from electrode  to electrode  indicates that  exceeds a threshold, i.e., indicates strong direct coupling from  to . These two electrodes are associated with an area of increased coupling activity.
+
+For patient A, the indicated areas comprise electrodes on both hemispheres. In case of seizure 1 (plot a), the electrodes B2 and B3 show the highest EIPR on the left hemisphere. At the onset time of the three subsequent seizures, the respective area of highest EIPR values is located on the right hemisphere: electrodes C2, C3, D6, and D7 for seizure 2 (plot b); C1, C4, D5, and D6 for seizure 3 (plot c); C1, C3, C4, D5, D6, and D7 for seizure 4 (plot d). As for patient B, EIPR identifies the electrodes E1 and E2 on the right hemisphere for seizures 1 (plot e) as well as 2 (plot f). The third seizure of patient B is not shown, as it immediately generalizes (cf. Sect. ).
+
+For both patients, the areas of increased coupling activity as indicated by EIPR coincide well with the respective seizure onset zones specified by the clinicians (compare Table ). In case of patient A, our results are in good accordance with the visual inspection detailed in Table . Note that our methodology correctly indicates the increased couplings on the left hemisphere for the first seizure and on the right hemisphere for the three subsequent seizures. Thus EIPR correctly identifies the different lateralization of the initial epileptic activity in patient A. Considering patient B, our results are in very good accordance with the clinical findings. For both seizures, we identify increased couplings between the two electrodes which show initial epileptic activity according to the visual inspection.
+
+Discussion
+EIPR as coupling indicator
+In this paper, we introduce a novel approach to the quantification of directed couplings. The proposed dependency measure EIPR indicates Granger causality (as does the PDC), but has the advantage of a clear physical interpretation as a power ratio, compare expression (). As mentioned in Sect. , its normalization assures that the measured coupling strength between two channels is not influenced by others. This behavior is in contrast to the one of PDC (Graef et al. ) whose confidence level depends on all neighborhood channels in order to compensate for the normalization effect (Schelter et al. ).
+
+Due to its construction, EIPR successfully validates the signal model (). It retrieves the imposed dependencies (compare Table ), as does PDC (compare Fig. ). In both cases, the couplings  (position (3,1) in the scalar matrix / matrix plot) and  (position (2,4) in the scalar matrix / matrix plot) are predominantly indicated.
+
+Here, we want to discuss three additional aspects regarding the comparison of EIPR and PDC.
+
+First, we observe an interesting behavior of EIPR: The statistically significant values in Table  exceed the non-significant ones by a factor of 100. Even at a first glance at such an EIPR table (without comparing the EIPR values to their respective significance thresholds) we would obtain an idea about the underlying dependence structure. Note that the PDC matrix plot in Fig.  creates a similar impression, but in case of EIPR the tendency to separate significant from non-significant values is stronger. This is a result of the normalization discussed above.
+
+Second, the EIPR values in Table  range between 0 and 2, PDC is normalized between 0 and 1. The reason for the scatter of the EIPR values is the following: The variance of the extrinsic contribution term in the nominator of EIPR represents the power of the extrinsic contribution, which is the integral of the corresponding power spectral density over all frequencies [compare expression ()]. In the nominator of PDC the same integrand shows up, but for a single frequency [compare expression ()]. Therefore, EIPR takes large values for couplings where PDC is increased over a wide frequency range, compare Fig. . In particular, this is the case for the two couplings mentioned above,  and . Vice versa, PDC vanishing over a large frequency band results in very small EIPR values (e.g., coupling ).
+
+Third, an advantage of EIPR is its compact representation in the form of a matrix of (physically meaningful) scalar values as in Table . This allows for a simultaneous comparison of the individual EIPR values with their respective significance thresholds even in case of large scale differences. In contrast, a PDC matrix representation has the drawback of being difficult to interpret. One has to consider the respective subplot and compare PDC to the significance threshold for all frequency points. However, as mentioned in Schelter et al. (), this point-wise comparison is not straight-forward. Consider for example the significant couplings  and the non-significant ones  for both measures. Comparing the EIPR values  and  with their respective significance thresholds is easily performed in Table . In case of the PDC matrix plot in Fig. , this simple evaluation is not possible. Small PDC values and significance thresholds are not easily visible due the large scale differences. In order to allow for a clear visualization of the PDC values and their thresholds in each subplot (simultaneously visible), each subplot would have to be scaled differently. Compare Fig.  for an illustration, where the scaling of the two subplots of couplings  and  is performed in this way. Here, the PDC values and significance thresholds of both couplings are visible, at the price of a scale difference of factor 100. This would render the comparison of the PDC values between different subplots in a matrix plot such as Fig.  difficult.
+
+We want to conclude this part of the discussion with two comments on the interpretation of EIPR.
+
+EIPR is not normalized between 0 and 1, which is a drawback in comparison to PDC. In particular, this impairs the comparison between different systems, as equal EIPR values might not indicate the same coupling strength in distinct multichannel signals.Zoom into two subplots of the PDC matrix plot in Fig.  (x-axis: frequency in Hz, y-axis: PDC). a zoom of the subplot on position (3,2) indicating the dependence , b zoom of the subplot on position (4,3) indicating the dependence . PDC values are illustrated by solid lines, significance thresholds by dotted lines. For each plot, a different zoom factor is necessary to allow for a simultaneous visualization of PDC values and significance thresholds. A direct comparison between the different plots is difficult
+
+
+
+On the other hand, EIPR allows for an interpretation similar to the signal-to-noise ratio (SNR): Given a signal  consisting of meaningful information  and background noise , the SNR is commonly defined (using the logarithmic dB scale) asThus EIPR can be intuitively interpreted: The extrinsic contribution takes the roles of the information we are interested in, and the intrinsic contribution is seen as background noise. This interpretation underlines the influence of the extrinsic information for quantifying the coupling strength, which is in particular important in the dependence analysis of epileptic ECoG recordings. We will discuss this setting in Sect. .
+
+Behavior of the channel selection algorithm
+As demonstrated in Sect. , the dynamic channel selection algorithm behaves as expected in simulations, selecting channels with influence and discarding the others: Applied to the signal model (), it builds up the respective extrinsic channel sets in accordance with the dependencies imposed. Moreover, it is capable of prioritizing extrinsic channels with strongest influence.
+
+This behavior strengthens our hypothesis that the algorithm performs well in ECoG data: Here, we encounter many influences with few important ones (representing epileptic activity): The order according to which the extrinsic channel set is built up is important, as the proposed forward-selection procedure does not search through the whole parameter space. Due to the simulation results discussed above, we are confident that the algorithm’s focus on strongest influence selects the important channels first, thus including the channels of interest in the extrinsic channel set. This assures that EIPR can be calculated and visualized between highly coupled channels in the subsequent step.
+
+Seizure onset zone localization
+In this paper, we assume that the area of highest EIPR values in the initial seconds after seizure onset indicates the seizure onset zone. Our reasoning is the following: As mentioned in Sect. , in case of focal epilepsy the pathological synchronous activity starts at a small localized brain area. Departing from this seizure onset zone it spreads to its immediate vicinity recruiting more and more parts of the neural network. This leads to a hyper-synchronous behavior of the observed channels. One could imagine a “focus” located in the seizure onset zone driving the surrounding channels by imposing its oscillatory frequency in the course of the recruiting process. This could be interpreted as a kind of information transfer: Imagine one electrode in the focus, say , influencing the behavior of the surrounding electrodes, say  and , in the initial phase of the seizure. Then, sticking to this image of information transfer, we expect the extrinsic contributions from  to  and  to show high values and the intrinsic contribution terms of  and  to be small. This results in high EIPR values  and , we observe increased directed coupling activity symbolized by arrows. By limiting our representation to the highest EIPR values within each analysis, we focus on these pathological synchronizations and do not regard others (e.g., weak physiological ones).
+
+In the course of the recruiting process, we obviously expect feedback mechanisms within the seizure onset zone due to the excessive synchronous activity. Therefore, we expect to see two different kinds of arrows: Besides unidirectional information out-flow from the seizure onset zone into the surrounding areas we will typically observe arrows pointing from one electrode to another within the seizure onset zone. In both cases, the associated electrodes are the ones we aim to identify.
+
+We believe that the results presented in Sect.  strengthen this hypothesis and would like to discuss two aspects regarding the quality of our findings.
+
+The first interesting aspect is the indicated direction of information flow. Consider seizure 4 of patient A in Fig. d. We observe a clear path of information flow departing from the electrode C1 (marked as seizure onset zone by the clinicians) to D5 and onwards to D6. In plots (a), (b), (e), and (f), we encounter the second type of expected arrows, information flow within the seizure onset zone. These cases exactly meet our expectation. However, in plot (c) the direction of information flow is opposite. An arrow points from C1 to the seizure onset zone, which is due to the fact that electrode C1 shows strong anteceding rhythmic activity. This pattern was not classified as epileptic by the clinicians but contributes to the explanation of D6 in the regression model.
+
+The second aspect we want to mention is the temporal delay between EIPR indications and clinical findings. Consider seizure 2 of patient A in Fig. d, which shows coupling activity between D6 and D7 and C2 and C3. In this case, EIPR indicates the seizure onset zone as well as the initial subsequent propagation: According to Table , the seizure onset zone comprises electrodes D6 and D7 at 12:45:51, but the synchronization swaps over to others within 1 s (12:45:52). As the employed data window of 4 s comprises data from 12:45:51 to 12:45:55, these fast spectral changes influence the regression. The situation is slightly different in the case of seizure 4 of patient A in plot (d). The seizure onset zone comprises the electrode C1 on the right hemisphere at 15:21:42, which is correctly indicated by the EIPR. However, the electrodes D5, D6, and D7 are also highlighted, but are only affected 5 s after seizure onset (15:21:47). We thus observe an anticipation of 5 s, which is outside the employed window of 4 s. Thus, the question arises whether EIPR might be able to identify slow spectral changes of the signal which are difficult to detect by visual analysis of the raw ECoG recordings.
+
+In all investigated seizures, the indicated area of highest EIPR values is well correlated with the seizure onset zone as indicated by the clinicians. In particular, we are able to track the different lateralization of patient A (onset of seizure 1 on the left hemisphere, onset of seizures 2, 3, and 4 on the right hemisphere). We would like to point out that in these cases the achieved spatial accuracy of our method is in the range within 1–2 cm (the distance between the electrodes is 1 cm, compare the X-ray image in Fig. ).
+
+Concluding remarks
+In this paper, we proposed a novel dependency measure which is capable of reliably measuring coupling effects in multivariate signals as well as an automatic channel selection algorithm. In particular, we are able to identify synchronization effects in ictal multichannel ECoG recordings which allows us to draw conclusion on the localization of the seizure onset zone in the given examples. We want to conclude this discussion with two side-remarks detailing alternatives.
+
+First, the temporal lag order of the regression is kept constant. As a potential drawback, this might lead to under- or over-fitting of the AR model and consequent erroneous dependencies. In order to avoid this situation one could extend the regression to a model with variable temporal lag order [determined by means of an extended version of the BIC criterion ()]. In this case, the model would better reflect the spectral properties of the EEG (Marple ), but at the price of a higher computational effort: As a function of the data-driven model order a dynamic window length (which is currently fixed) would have to be defined such that a sufficiently reliable estimation of the necessary AR parameters is possible.
+
+Second, in this paper we use a dynamic channel selection algorithm (cf. Fig. ) to overcome the estimation issues due to the high correlation in the cross-sectional dimension. Another approach which might be appropriate for this task is penalized regression, e.g., LASSO as introduced by Tibshirani (). Here, one is confronted with the solution of a convex problem instead of the linear normal equations. Only recently, Chiang et al. () successfully applied this approach to neural data, calculated PDC, and visualized the indicated brain connectivity of participants taking part in a virtual-reality experiment.
+
+Concluding, we believe that the aspects discussed in this section strengthen our hypothesis of EIPR being a useful measure for the characterization of neurophysiological dependencies. Therefore, we think that our methodology has the potential to assist clinicians in the presurgical evaluation of epilepsy patients by objectivating the visual ECoG examination: Tracking the synchronization effects over time might indicate the seizure onset zone as well as the initial propagation of the epileptic activity.
+
+As the well-known Akaike information criterion (AIC) tends to overfit, we use BIC introduced by Schwarz (). Statistical properties are discussed in Hannan and Deistler ().
+
+The case of  would imply that the past of  does not contribute to the explanation of  in the present, i.e., the chosen  (alone) explain  optimally. This is highly unlikely in ECoG data, which was empirically shown in (Graef ).
+
+Simulation of this model was done with the help of the Matlab package ARFIT developed by Schneider and Neumaier (). In order to avoid initial transient effects, we generate 13,800 samples and discard the first 1,000.
+
+This study was supported by the Austrian Science fund FWF (Grant P22961). We thank Susanne Pirker from the General Hospital Hietzing with Neurological Center Rosenhgel for helpful discussions.
+

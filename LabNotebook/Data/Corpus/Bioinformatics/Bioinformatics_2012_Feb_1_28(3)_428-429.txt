@@ -1,0 +1,46 @@
+1 INTRODUCTION
+Methylation at position 5 of cytosines is a major epigenetic modification, which has an important impact on transcriptional and regulatory processes of DNA (). It is a stable modification of the genome which can be inherited from one generation to the next, even though it can also be dynamically changed by environmental influences. There are several methods based on high-throughput sequencing, such as methylated DNA immunoprecipitation sequencing (MeDIP-seq), methylated DNA capture by affinity purification (MethylCap-seq) and BS-Seq, which can provide good-quality genome-wide DNA methylation data ().
+
+Methods that currently provide genome-wide methylation patterns at single base resolution make use of bisulfite conversion and high-throughput sequencing. The treatment of DNA with sodium bisulfite has no effect on methylated cytosines, but it specifically converts unmethylated cytosines to uracils, which are converted to thymines during subsequent polymerase chain reaction amplification. As a result of bisulfite conversion, the Watson and Crick strands of bisulfite-treated DNA are no longer complementary to each other, they become essentially different genomes. This fact leads to an enlarged alignment reference space. The prevalence of T's that have replaced C's leads to reduced complexity in bisulfite sequences, which increases the bioinformatics challenge of BS-Seq analysis. Bioinformatics tools for BS-Seq have generally fallen into two categories: (i) methylation-aware alignment tools, which consider cytosines and thymines as potential matches to genomic cytosine positions and (ii) tools which convert any residual cytosines in bisulfite sequences and all cytosines of the reference genomes into thymines.
+
+2 COLORSPACE BISULFITE SEQUENCING
+Due to the two-base encoding of SOLiD sequencing, in silico conversions of any residual bisulfite read cytosines into thymines, which can be carried out in basespace data to avoid bisulfite-mismatches during alignment, cannot be performed on bisulfite colorspace sequences, because sequencing errors would lead to the incorrect translation of colorspace to basespace (Supplementary Fig. 1). There are ways to align bisulfite colorspace sequences with methylation-aware alignment approaches, which convert bisulfite colorspace sequences to basespace and index all theoretically possible alignments by creating a hash table. Such an approach is implemented in SOCS-B, which is based on the iterative version of the Rabin–Karp algorithm (). Even though SOCS-B turns out to be an accurate tool for the analysis of colorspace BS-Seq datasets, it becomes very computationally intensive for complex genomes such as the human genome (~ 150 000 CPU hours for the analysis of 500 Million sequences). Therefore, it is not efficient for huge datasets like those produced in genome-wide methylation analyses with average coverage depths ≥10X and genome size ≥1000 MB.
+
+Here, we present B-SOLANA, a tool which performs sequence alignment and methylation calling for colorspace bisulfite sequencing. It is based on the established short-read aligner Bowtie () and SAMtools utilities for manipulating alignments (). B-SOLANA is divided into four individual steps: (i) indexing, (ii) mapping, (iii) determination of best alignment and (iv) methylation calling.
+
+The idea of B-SOLANA is to use Bowtie to uniquely align bisulfite sequences to two different conversions of the reference genome and determine best alignments from the combined set of results. The analysis of whole methylomes of 23 eukaryotic organisms shows a variable percentage of methylation at CpG dinucleotides, whereas the percentage of methylated CHG and CHH is always lower (). The approach of B-SOLANA reduces the number of bisulfite-induced mismatches by considering the prevalence of methylated cytosines in their different sequence contexts.
+
+In order to identify CpG and non-CpG methylation sites, B-SOLANA aligns bisulfite sequences to two in-silico conversions of the reference genome (Supplementary Fig. 2). In the first modified reference genome, all cytosines in a non-CpG context are converted to thymines (Conversion I). In the second, all cytosines, irrespective of their sequence context, are converted to thymines (Conversion II). After alignment to these converted genomes, B-SOLANA determines the best alignment for each bisulfite sequence in the following way: bisulfite sequences that are aligned to different genomic positions in Conversions I and II are assigned to the position with the lowest number of mismatches. Reads with the same number of mismatches at different positions are ignored. In its final step, B-SOLANA determines methylation levels. B-SOLANA is compatible with 50 bp directional single-end libraries and allows a simple adjustment for the upcoming read lengths.
+
+B-SOLANA was designed to generate accurate results for methylomes with a low percentage of methylation in non-CpG sites (&lt;5%). This includes most eukaryotic organisms, with mammalian genomes typically having methylation levels of &lt;3% in CHG and &lt;1% in CHH context ().
+
+A detailed test of B-SOLANA was performed for genomic DNA extracted from a human lymphoma cell line. The library was prepared using a protocol for single-end SOLiD BS-Seq () and sequencing of the bisulfite-converted DNA was performed using SOLiD versions 3 Plus and 4. This generated 2.79 billion bisulfite reads of which ~ 52% were mapped uniquely (genome build hg19/NCBI 37). The methylation results obtained by B-SOLANA were then compared to the Illumina Infinium HumanMethylation450 BeadChip (450 k) assay, an established methylation analysis method, as a quality control (Supplementary Fig. 3). We observed high concordance between the results of the two independent methods (99% of 450 k sites were also represented in the B-SOLANA results) and the methylation levels of cytosines, which were assayed by both methods displayed a very high correlation (Pearson correlation r &gt; 0.93). As a proof of principle, we also generated different simulated datasets, reflecting varying CpG and non-CpG methylation levels. Encouragingly, the results generated by B-SOLANA closely match the expected methylation degrees (Supplementary Table 1).
+
+The 485 990 920 SOLiD BS-Seq reads (50 bp), taken from SRR204024 (), were analyzed with B-SOLANA and MethylCoder (one mismatch allowed) B-SOLANA exhibits a high correlation with the results of Hansen et al.
+
+	Hansen et al.	B−SOLANA	MethylCoder	
+Uniquely mapped reads (%)	37.83	49.84	19.23	
+CpG positions: % C	69.84	72.83	67.07	
+CpG positions: % T	30.03	26.97	32.93	
+Non-CpG positions: % C	0.20	0.22	0.69	
+Non-CpG positions: % T	99.76	99.70	99.31	
+aIncluding post-processing quality control.
+
+bOnly cytosine and thymine base calls are included.
+
+A further approach for the analysis of colorspace BS-Seq was published with the tool MethylCoder (). MethylCoder applies a conversion of any residual bisulfite read cytosines into thymines, which leads to erroneous alignments, as discussed above. Therefore, we compared B-SOLANA and MethylCoder (one mismatch allowed) by analyzing 485 990 920 SOLiD BS-Seq reads (50 bp), taken from SRR204024 (). We found a high concordance between methylation calls of Hansen et al., analyzed by their yet unpublished and unavailable approach, and B-SOLANA. Moreover, B-SOLANA turns out to have a significantly higher mapping efficiency.
+
+As a platform-independent benchmark, we demonstrate that the analysis of colorspace BS-Seq data of the fibroblast cell line IMR90 is comparable to methylome data published by ), who used a BS-Seq approach on the Illumina platform (Supplementary Information 1).
+
+3 CONCLUSIONS
+We present an efficient tool for the analysis of large colorspace BS-Seq data. B-SOLANA provides a fast and accurate all-in-one approach, including alignment and methylation calling. It is easy to use and generates an intuitive output, which can be used for genome-wide DNA methylation analysis.
+
+Supplementary Material
+Supplementary Data
+ACKNOWLEDGEMENTS
+We thank Ole Ammerpohl for helpful discussions (Institute of Human Genetics, Kiel), Gavin Meredith (Life Technologies, Foster City CA, USA) for providing SOLiD BS-Seq data of IMR90 cells and the sequencing facility at IKMB for helpful discussions and support.
+
+Funding: Start-up grant from the Medizinausschuss Schleswig Holstein, the National Genome Research Network (NGFN) of Germany (BMBF-funded); DFG cluster of excellence ‘Inflammation at Interfaces’ (infrastructure support); BMBF in the framework of the ICGC MMML-Seq project (to R.S. and J.R.).
+
+Conflict of Interest: none declared.
+

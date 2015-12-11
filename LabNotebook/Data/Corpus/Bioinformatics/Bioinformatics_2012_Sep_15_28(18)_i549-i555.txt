@@ -1,0 +1,163 @@
+1 INTRODUCTION
+Existing methods to model the spatial–temporal dynamics in signal transduction can be grouped into (i) partial differential equation (PDE) methods (; ); (ii) spatially resolved Markovian population models, often simulated with the SSA/Gillespie method (; ; ) or other lattice-based methods (; ) and (iii) particle-based methods such as Smoldyn (), Greens function reaction dynamics (GFRD) () and others (; ; ; ).
+
+Naturally, more detailed methods are computationally much more demanding, which requires careful selection of the right method for the biological problem in focus. Note that particle numbers and parameters are very heterogeneous in biological systems: molecule abundances range from 1 (gene) to several thousands of proteins of each class, similarly the size of the molecules and structures ranges from atoms/ions (&lt; 1nm) to molecular complexes (2–25nm) and further to cellular sub-compartments and cytoskeleton structures (50+nm), whereas chemical interaction rate constants cover several orders of magnitude (). Hybrid methods can be employed to optimize the use of the computational resources in such a multi-scale environment ().
+
+The present article aims at coupling a Brownian dynamics particle tracking method with the spatial Gillespie method to preserve the stochastic nature of the underlying signaling processes. Low-abundance species should for instance be always tracked as individual particles and high abundance species on the Gillespie level. Similarly subvolumes in focus of the simulation, e.g. receptor clustering on the plasma membrane, should be on the particle level. These two switches both on the species and the simulation volume level have to be accommodated in one simulation accordingly.
+
+2 SYSTEM AND METHODS
+We consider a reaction system consisting of M molecular species and K reaction channels with rate constants k = (k1,...,kK)T. The reactions take place in reaction compartment Ω (the cell or a sub-compartment thereof). In the following, we describe how the time evolution of this system can be modeled either on the particle or the population level as well as the relation between the levels.
+
+On the particle level, we track the position xj(t) of the jth molecule 
+
+, where the particles follow Brownian dynamics. The species map s(j) = i indicates that the jth molecule is of species i.
+
+For a more coarse grained description, Ω can be subdivided into U subvolumes of volume V1,...,VU. We denote the number of particles in subvolume ν with Nν (t) = (N1ν (t),..., NMν (t))T. Time evolution on this population level follows Markovian dynamics in our simulator.
+
+For conversion from particle level to population level of the ith species in ν we have to count all particles with corresponding properties: 
+
+. Reversely, the underlying assumption of the population dynamics model is that the Niν (t) molecules are uniformly distributed in Vν.
+
+In our hybrid simulation, we denote for every volume ν which species is modeled in particle or population mode. Let us denote the subset of species tracked on the population level as Ñν (t). For every reaction j within ν, its waiting time τjν is distributed exponentially with parameter aj(Ñν (t)), called the propensity of reaction j within ν. The waiting time τν for any reaction to occur in ν is exponentially distributed according to parameter a0(Ñν) = ∑j=1K ajÑν). Starting from a given time t, the next event of reaction j in ν is according to  at
+
+Diffusion of species i with diffusion coefficient Di into another volume μ is translated into a first-order transport reactions with propensity ai(Ñν) = kiν→μ Niν. The corresponding rate constant can be expressed as follows:
+
+where Sν,μ is the surface/interface area of the cubic subvolumes. For convenience, we include these rates in k and thus a0(Ñν). A transport reaction into μ at time t′ causes a state change Ñμ (t) → Ñμ (t′), which according to Gillespie's algorithm would require updating the precomputed waiting times t–μ in μ.  proved that the remaining fraction of the time to the next reaction can simply be stretched according to the changed propensity
+
+
+The remaining subset of Nν (t) is given by counting the individually tracked particles that currently reside in ν. Diffusion of the jth particle is modeled according to Brownian dynamics as a random walk
+
+with ξ a three-dimensional zero mean Gaussian random variable with unit variance. In the present algorithm based on () the particles of radius ri are allowed to overlap because signaling molecules normally are of low abundance, so that these rare events can be omitted. Modeling of a physiologically crowded cytoplasm with non-overlapping molecules is computationally much more demanding (). Obviously steps into cellular structures (plasma membrane, nucleus, cytoskeleton, etc.) are rejected (). Particles can interact with each other if their distance is smaller than their collision radius σij = ri + rj [cf. Algorithm (1)], and a reaction based on the bimolecular rate constant kij will be executed with probability ()
+
+
+The time tj to its first order reaction is calculated for each molecule individually when it is created based on  with the single molecule propensity aj1 (aj1 = kj1 × 1, where kj1 is the sum of all first-order rate constants involving that species). The sequence of events of all molecules is then ordered, stored and updated as necessary , ; ,. All first-order reactions up to current time t will be executed in that sequence (). The actual reaction i that has to be executed out of the aggregate kj1 is found based on the probabilities ki/kj1.
+Equivalence of waiting times on the particle and population level (here assuming a first-order reaction like exponential decay)
+
+
+
+
+Note the following equality: The minimum of the waiting time of N molecules, where each waiting time is calculated based on Exp(1), is Exp(N) (cf. ). Thus, the individual method on the particle level and the global method on the population level are equivalent. On the population level, each of the identical Niν molecules would be the one with minimal waiting time with probability 1/Niν. More generally, suppose that the waiting time for j-th reaction, τjν, is distributed as Exp(aj), j = 1,...,K. Then the reaction i has the minimum waiting time with probability ai/a0. To see this observe that the required probability is given by
+
+Here, fk and Fk, respectively, denote the probability density function and the cumulative distribution function of Exp(ak).
+
+3 ALGORITHM
+With respect to coupling of Gillespie volume and individual particle tracking, we decided to partition the reaction set as follows:
+First order reactions are stored on the species aggregation level, which is also used on the particle level for each species in each subvolume, i.e. one waiting time for each species. If no first-order reaction exists for species i, the waiting time τjν = ∞ (reaction times tjν, j = 1,...,M).
+
+Diffusion jumps are stored individually for each species in each subvolume (reaction times tjν, j = M + 1,...,2M).
+
+Higher order reactions are stored for each of the R2 higher order reactions in each subvolume (reaction times tjν, j = 2M + 1,...,2M + R2).
+
+
+
+These three groups match the behavior of the particle level, where first-order reactions are tracked along the molecules (of a species), diffusion jumps are triggered by the random walk process, and higher order reactions are triggered by (diffusion driven) collisions of molecules.
+
+If we convert a subvolume from particle to Gillespie at t, all diffusion jump times and higher order reaction times will be initialized based on . First-order reactions are treated differently, because each particle carries its next reaction time. The next reaction time of each species is therefore simply found by the minimum reaction time of all respective particles (cf. ). The converted particles are then deleted.
+
+The reverse conversion from Gillespie to particle creates Niν particles uniformly distributed in the volume of the subvolume ν with individual properties inherited from the species properties. All predefined diffusion jump times and higher order reaction times are deleted because they will be triggered by the random walk of the molecules. The first-order reactions are, however, preserved in the following way:
+Arbitrarily, the first new particle of species i inherits the next reaction time tiν. Note that all particles of one species are identical, so the term ‘first particle’ just refers to the memory location.
+
+
+
+Algorithm 1: Second-order (bimolecular) reactions on the particle level
+
+
+
+Algorithm 2: Update scheme for the next first-order reaction after a jump from ν to μ, where the exponentially distributed waiting time is calculated by the indicated number of particles: either the remaining particles in ν or the one jumping from ν to μ
+
+All other particles of that species initialize their next reaction times as tj = tiν + τ(ajν) because their reaction has to be after the reaction of the first molecule accordingly.
+
+
+
+The same approach is also followed for partial conversions of subvolumes, if not all but just a subset of the species is converted between the methods. All affected jump/higher order reaction waiting times on the Gillespie level are then updated based on .
+
+To be compatible with the above conversion approach, diffusion jumps also can carry the next first-order reaction time from subvolume ν to the new subvolume μ. The next time tiν belongs to the jumping particle of species i with probability 1/Niν. If a random number 
+, then the jumping particle is the next reacting particle. Algorithm 2 describes the executed process. The transferred time becomes the new time in the target volume μ if it is the minimum time. All affected jump/higher order reaction waiting times in both volumes on the Gillespie level are again updated based on .
+
+If particle i walks into a Gillespie level subvolume μ, then the next first-order reaction time there is likewise obtained by tiμ ← min(tiμ, ti). And if the diffusion jump out of Gillespie subvolume ν leads into a particle volume, then accordingly a particle is created which obtains the next reaction time tiν with probability 1/Niν and otherwise calculates its time as in Algorithm 1. However as the target subvolume is particle based, no global waiting time is tracked there.
+
+Especially, if we have just one particle in the system, its initially assigned first-order reaction time will be preserved throughout the simulation. This approach also ensures that frequent switching between particle and Gillespie volume tracking do not require too many re-initializations of the waiting times. Otherwise frequent switching could accumulate to a substantial error in the reaction rate if the switching intervals are in the range of the waiting times.
+
+Thus, the suggested tracking and updating method on the Gillespie level ensures the compatibility with the particle tracking level but is not necessarily optimal with respect to its own performance due to the large number of stored reaction times and the time necessary to access and order them. As the Gillespie level still integrates time much faster than the particle level, this performance loss is, however, not relevant for the overall performance of the simulation.
+
+Eventually also bimolecular reactions across the levels might occur in the simulation: let us assume that Njν molecules of species j are in the Gillespie subvolume with volume Vν and we have a bimolecular reaction with rate constant kij with species i, which is tracked on the particle level. Concentration-based mass action kinetics requires that the reaction rate is kijcjci = (kijNjν / Vν)ci, so the reaction can be treated as a first-order reaction with rate constant ki,ν = kijNjν / Vν. As this rate ‘constant’ depends on the time varying Njν, we simulate these quasi first-order reactions in the classical particle-based scheme [cf. ; ]: each molecule i in the volume ν reacts with probability
+
+in every timestep. This means, that a random number  is compared with Pi,ν for all molecules in every time step. This scheme also resembles the scheme of bimolecular reactions, where the probability is given by , and  have extended it for dependent bimolecular reactions in a scaffold accordingly.
+
+
+
+Algorithm 3: Algorithm of the Gillespie block. Note that particle conversions into Gillespie also change Nν, which requires to update reaction times and the position of the volume in the ordered list. The exponentially distributed waiting time can be simply computed as τ(aj) = 1/aj log(1/ξ) using 
+
+Algorithm 4 gives an overview of the complete simulation. Note that the steps (1)–(4) could be executed in any order. Visualization of the particles/volumes was done with BioInspire from ScienceVisuals, Lausanne, Switzerland () and POVray (www.povray.org).
+
+4 IMPLEMENTATION AND PERFORMANCE
+The method is implemented in Fortran, integrated into the functionality of the previously published particle-based methods (, , ). This includes first order (A → ...) and second order (A + B → ...) mass action kinetics reactions, Michaelis–Menten enzyme kinetics (E + S → E +...) and binding and dissociation to/from plasma membrane, cytoskeleton and the nucleus. In particle mode, molecules can diffuse along the plasma membrane, the nucleus, through the cytoplasm or walk along the cytoskeleton. So far the simulation is not parallelized, but a parallel version in C/C++ is in preparation.
+
+Here, we show the testcase A + B → 0, where A starts from the plasma membrane and B from the nucleus with 20 000 molecules each in . We run the simulation with both species in particle mode, both in the population-based Gillespie mode, and A as particle, whereas B is in Gillespie mode.  shows no differences between the simulations however, the larger figure in the supplementary material shows that the particle-based simulation leads to slightly faster reaction rates in the initial mixing phase around 1.5 s. This could be an effect of local fluctuations that do not cancel out due to the nonlinearity and nonstationarity of the mixing process. More test cases and performance numbers are presented in the supplementary material, testing the different reaction schemes and combinations of the particle- and Gillespie-based molecules. Further performance numbers (for the system discussed in the next section) are given in .
+Testcase with A + B → 0, where A starts from the plasma membrane and B from the nucleus. The grid shows the discretization in x direction used for evaluation of the spatial distribution
+
+
+Performance of the hybrid simulation for the model system
+
+MAPKpp	Phosphatase	Volumes (U)	Tcpu	
+Always particle	Always particle	5592 (L = 20)	174 min	
+Always particle	Always Gillespie	872 (L = 10)	94 min	
+Always particle	N/A 	5592 (L = 20)	41 min	
+Particle at membranes	Always Gillespie	17 488 (L = 30)	49 min	
+Particle at membranes	Always Gillespie	5592 (L = 20)	13 min	
+Particle at membranes	Always Gillespie	872 (L = 10)	15min	
+Tested on a Win 7 Pro Intel i7 2600K at 3.5 GHz, 8GB RAM.
+
+aDephosphorylation is modeled by a first-order reaction with kp′ = 1.0 s−1 instead, which is the effective rate of the bimolecular reaction. This shows that the pair finding of the bimolecular reaction dominates TCPU.
+
+bBecause of the more coarse grained grid, a bigger volume fraction along the plasma membrane was in particle mode, compared with the settings with more subvolumes.
+
+
+
+
+
+Algorithm 4: Overview of the simulation steps
+
+5 DISCUSSION
+Spatial and temporal effects can play a major role in signal transduction (). This holds especially for the transport of active signaling molecules from the plasma membrane where the signal is detected by receptors toward the nucleus, where it has to trigger gene activation. A common motive in signal transduction is the mitogen-ctivated protein kinase (MAPK) cascade, where the receptor and upstream components cluster together at the plasma membrane, and MAPK enters the nucleus. The active, phosphorylated form of MAPKpp is constantly deactivated in the cytoplasm. The fraction of active molecules reaching the nucleus, therefore, depends on the relationship between the speed of transport (diffusion) and the speed of the deactivation (reaction) ().
+
+We simulated this process in a spherical cell with diameter 10μm with a spherical nucleus (diameter 3μm, located in the cell center) A total of 10 000 MAPKpp molecules start initially from the plasma membrane with DMAPK = 10μm2/s and can enter the nucleus with a rate constant of 1.8μm/s (given the ‘concentration’ of the nuclear membrane in the cytoplasm, this leads to an effective nuclear import rate constant of 0.1s−1). A total of 30 577 phosphatase molecules ([P] = 1 × 10−7 M) dephosphorylated MAPKpp→MAPK with kp = 1 ×107 M−1 s−1. We simulated this process for 10s with Δt = 2.6 × 10−5s for various combinations and discretization levels (L = 10, 20 or 30 subvolumes along the cell diameter) of the hybrid particle and Gillespie method (cf. ). The results are shown in . Depending on the size/number of the Gillespie subvolumes, the runtime could be reduced by more than 90%. However, large subvolumes propagate the molecules slightly faster in the initial phase (). The improved performance of the hybrid simulation allows us to compute the distribution of the fraction of active signaling molecules that entered the nucleus (). The discretization error is also visible in the distribution, which is shifted to higher particle numbers for lower L. The area close to the nucleus was always modeled in particle mode.  shows that also the hybrid Gillespie simulation leads to the correct concentration there.
+(A) Mean of the MAPKpp molecules that reached the nucleus. (B) Initial phase of (A). (C) Spatial distribution of the MAPKpp molecules—counting only the particle molecules (the conversion from cubic areas to the spherical symetric radial distribution hides the sharp cutoff from the particle to the Gillespie area). (D) Distribution of the number of MAPKpp molecules that reached the nucleus within 10s
+
+
+
+
+With respect to other works, analyzing the importance of receptor clustering and the spatial organization at the membrane for signaling (; ; ), our method allows to focus the computational resources to the membrane, whereas still the complete cell is tracked in 3D (). similarly, our method allows including membrane trafficking and recept-mediated endocytosis ().
+Visualization of a slice of a cell with particle tracking along (1) plasma membrane and (2) nucleus and (3) in an extra section of the cytoplasm, while (4) the remaining cytoplasm is simulated in Gillespie mode (rendered with POVray)
+
+
+
+
+In the following, we want to analyze how far molecular crowding can be modeled on the Gillespie level. This was also investigated by ,  and . Let ϕ denote the free volume fraction of the cytoplasm (i.e. the fraction which is accessible to the molecules of interest). Crowding leads to ϕ &lt; 1 and the reactants in the remaining volume Vν′ = Vνϕ have an effectively higher concentration, such that they react in bimolecular mass action kinetics with a faster rate (; ). This effect is correctly included in our simulation, because bimolecular rate constants given in [M−1s−1] have to be divided by Vν′ anyway for the Gillespie level (and an additional factor to convert from the liter in M = mol/l to the used length scale and single particles). For substrates h and i and length in μm
+
+
+Diffusion, in contrast, is reduced by crowding. The jump rate constant on the Gillespie level [] likewise contains the properties of the volume. If the size of the obstacles becomes much smaller than l, such that the objects are uniformly/homogeneously distributed in the volume, however, both Vν and Sν,mu will be scaled by the same ϕ. Thus, the effect cancels in . Only if we go to a fine discretization of space, such that Sν,mu becomes a random number with mean l2ϕ, then the crowding effect becomes visible in the resulting diffusion (cf. ). These networks and the resulting diffusion can also be analyzed with percolation clusters ().
+A Obstacles in the cell (from Transmission electron microscopy image) and simulation grid. B Resulting graph/network of the diffusion system, where the node and edge weight corresponds to the local free volume fraction. Note that the diffusion rate constant is given as the fraction of edge/source node weights, such that it can be different in the two directions along an edge. C Limit cases depending on the chosen discretization: all nodes/edges have the same (average) weight, e.g. if l is much larger than the length scale of the obstacles, or the resulting network becomes binary with weights 1 or 0 respectively if the obstacles have the same size like l
+
+
+
+
+We tested this in an intracellular environment as shown in , where the total diameter of 4.928μm was divided into 94 subvolumes in each direction (4 million subvolumes in the sphere, requiring 1 GB of memory in the simulation). At this scale [l = 52nm, which is 3 pixel of the original binarized transmission electron microscopy (TEM) image of ] we see a reduction in diffusion (cf. ). Still, the diffusion is only reduced to Deff = 0.9D0, whereas with particle tracking, we find Deff = 0.7D0 (). The strong deviations in  arise from the locally varying Vν, apparently at x = 3μm a big object reduces the available volume. This result underlines the fact that the reduced diffusion originates from the tortuosity of the structured volume: the particles do not move slower but have to go longer ways around the obstacles, which delays their arrival ().
+A Based on the statistics of binarized Transmission electron microscopy (TEM) images from () B realistically looking intracellular obstacle geometries were generated (). C shows a 3D section of a generated volume, which looks similar like other 3D observations of membrane enclosed compartments like e.g. ER or Golgi (rendered with BioInspire from ScienceVisuals). D Diffusion through such a structured volume, simulated on the Gillespie level. Apparently at x = 3μm a high obstacle density leads to a lower particle density
+
+
+
+
+Finally, it should be noted that reactions can be diffusion controlled (; ). Molecules cannot react faster than kD = 4π σ D (where D is the sum of both diffusion coefficients). If kj is close to kD, the observed rate is determined by the rate of collisions. Thus, if the subvolumes of the Gillespie method are too small, the method will not find enough pairs and underestimate the true reaction rate ().  calculated the necessary correction factor.
+
+In this low concentration and diffusion-controlled regime, particle-based methods still give correct results (; ). Therefore, we are planning to introduce a controller which switches from Gillespie to particle if the local concentration falls below the threshold. Note that particle tracking also is not expensive if just a few molecules have to be tracked, whereas the mean jump frequency grows with 1/l [cf. ], making high-resolution spatial Gillespie simulations even more expensive.
+
+In addition, we will develop a user interface to allow a better control of the simulation. This will also include interactive visualization of the molecules in the simulation (; ).
+
+ACKNOWLEDGEMENT
+We thank Pablo de Heras Ciechomski, Martin Falk and Preetam Nandy for valuable discussions.
+
+Funding: M. Klann acknowledges funding by SystemsX.ch initiative and Swiss Confederation's Commission for Technology and Innovation (CTI) project 12532.1 PFLS-LS. H.Koeppl. and A. Ganguly acknowledge the support from the Swiss National Science Foundation, grant no. PP00P2_128503.
+
+Conflict of Interest: none declared.
+

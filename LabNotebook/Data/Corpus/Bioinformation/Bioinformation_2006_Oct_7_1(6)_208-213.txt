@@ -1,0 +1,133 @@
+Background
+Accurate and reliable prediction of protein structure has long been a principal challenge for bioinformatics. Of particular importance is the prediction of membrane
+protein structure, as, unlike soluble and fibrous proteins, membrane proteins remain poorly tractable targets for the main experimental methods of structure
+determination: X-ray crystallography and multidimensional nuclear magnetic resonance (NMR) spectroscopy. [] The seriousness of this problem is
+highlighted by the observation that 20% of most genomes encode membrane proteins [], yet the number of solved membrane protein structures is 
+approximately 2% of the Research Collaboration for Structural Bioinformatics (RCSB) Protein Data Bank (PDB). [,]
+
+Membrane proteins fall into two structural classes: α-helical and β-barrel. α-helical membrane proteins are responsible for interactions between most cells and their
+environment. Transmembrane (TM) helices are typically encoded by stretches of 17-25 residues, which provide sufficient length to cross the membrane. [] A
+compositional bias towards hydrophobic residues is apparent in the TM helices, as they must make complementary interactions with the hydrophobic lipid
+bilayer. α -helical proteins vary in topology, from single TM regions to “serpentine” structures consisting of over 20 TM helices, which are separated by hydrophilic
+regions that loop alternately in and out of the extracellular space and the cytoplasm. [] At present, the only
+known location for TM β-barrels is the outer membrane of Gram-negative bacteria. The SCOP database classifies TM β-barrels into 6 structural superfamiles: OmpA-like, OmpT-like, OmpLA, porins,
+TolC and Leukocidin (α Haemolysin). []
+
+When considering algorithms that target problems in membrane proteomics, relatively few address the issue of distinguishing alpha helical transmembrane, beta
+transmembrane, and non-membraneous proteins. HUNTER [], for example, specifically addresses this
+issue: the algorithm has been tested on Gram-negative genomes with good accuracy for well- and partiallyannotated proteins.
+
+This paper describes an alignment-free prediction methodology that can distinguish between membrane and non-membrane proteins. These methods are based on
+Bayesian Networks (BNs), a form of machine learning that has been used very successfully in a number of biological applications in recent years. 
+[,] BNs are considered especially suited to computational biology, as
+they provide a flexible and powerful framework for statistical inference, and learn model parameters from data. []
+
+Methodology
+Data-set
+In compiling the membrane-class predictor data-set, the only requirement was for proteins of known sub-cellular location rather than accurate topologies. 
+			[] The β-barrel set was smaller than the α-helical set owing to the lack of solved 
+			structures. The β-barrel set was taken from the PSORT-B complete data-set, version 1.1. [] 
+			Non-membranous sequences were extracted from the Reinhardt and Hubbard data-set 14. [] The number of 
+			sequences used from each compartment is listed in .
+
+Bayesian Network construction
+A static full Bayesian model was used since such a model, compared with a naïve network model, outputs a probability that is not a product of 
+			probabilities from each descriptor but rather associates one probability with combinations of descriptors. Thus, overall performance is at least as good 
+			as that of the best individual descriptor.
+
+We define the output prediction node of the network as O, the individual scale nodes are defined as S1, S2, etc., individual scale 
+            node values are designated x1, x2, etc. The network models the joint probability distribution of all individual descriptor nodes. 
+            Predictions are made using Eqn 1: as given in the 		
+			
+          
+
+Membrane protein class prediction method
+The membrane class predictor seeks to classify membrane proteins and their structural class. Three classifications can be made: α-helical membrane protein,
+β-barrel membrane protein and non-membranous protein. Accordingly, the network is trained on α-helical, β-barrel and non-membranous sequences. Instead of
+attempting to classify local regions, this algorithm considers the whole protein using amino acid pseudocomposition. Pseudo-amino acid composition is used in
+preference to simple amino acid composition, as it attempts to model sequence-order effects, and hence more information about the sequence is used. Exploiting
+such additional information may prove useful, as proteins show different residue preferences in different parts of the sequence.
+
+Pseudo-amino acid composition
+Consider a protein of L residues: as given in the  
+
+Assessing Prediction Accuracies
+Accuracies were assessed using two methods of crossvalidation: leave-one-out (LOO) and five-fold crossvalidation. LOO cross-validation removes one protein
+from the data-set, trains the network on the remaining proteins and then tests the removed protein. The test is repeated, removing and testing different proteins, until
+all proteins have been tested. Five-fold cross-validation randomly extracts 1/5 of the data-set and then retrains the network on the remaining 4/5 and tests the removed
+1/5. This is repeated 4 times, each iteration excluding proteins that were previously included; therefore, each individual protein is included in the test set only once.
+
+Results and Discussion
+A BN was constructed and then trained on membrane proteins, both α-helical and β-barrel, and nonmembranous proteins for a variety of sub-cellular
+compartments. The sequences (with the obvious exception of the β-barrels) were of mixed eukaryotic and prokaryotic origin. As shown in , the results are
+of good accuracy, α-helical proteins being the most successfully identified (94.4%/96.5%), β-barrel proteins proving harder to classify, with accuracies of
+72.4%/72.1%. To test whether amino acid pseudocomposition [] provides a significant increase in
+accuracy from a BN trained on simple amino acid composition, we also trained networks using amino acid proportions only. See . These results indicated
+that networks based on pseudo-composition were significantly more accurate classifiers.
+
+The most significant difference between pseudo and simple composition is in the Matthews Correlation Coefficient (MCC), which decreases by 0.110 when
+predicting “all classes”. This change is mostly the result of an increased rate of false-positive detection. A 0.036 fall in α-helical protein predictions was observed, and a
+0.186 fall in β-barrel MCC owing to increased falsepositives. Thus results for the protein-class predictor display considerable differences between the accuracies
+for the different locations. There are several possible explanations for this variance. The method relies on the use of pseudo-amino acid composition to discriminate
+compartments. It is thus probable that sequences that mimic the composition of membrane proteins will be predicted as membranous. This is a problem particularly
+common in proteins that are secreted, as has been observed by other researchers, and is often attributed to the N-terminal signal sequence. [] The signal sequence
+has a hydrophobic core and averages 20-30 residues in length, making it highly similar to a TM α-helix, which often causes problems for α-helical membrane protein
+topology predictors. [] This problem is best addressed by using specific signal sequence prediction methods,
+which have high degrees of accuracy. [] Other false predictions were found to result from stretches of
+hydrophobic residues that fold inside globular proteins, but this was only observed in 2 cases. False-positive α-helix predictions are much less prevalent using machinelearning
+methods, such as described here, than when using simple hydrophobic plots, but still represent an area for future improvement.
+
+Of special note is the observation that no false-positive β-barrel predictions were made. As β-barrel proteins often have varied compositions, being exposed to a range
+of environments in different segments of the proteins, one might assume that they would likely possess amino acid characteristics that partially imitate other subcellular
+compartments or have no overall characteristic composition. Our results show that the opposite is true. This may indicate that the exposure of β-barrels to a
+range of environments produces a more characteristic amino acid composition than expected. To further investigate this, we examined the simple amino acid
+compositions of all proteins used. As expected, a skewed bias towards hydrophobic amino acids is observed in the α-helical membrane proteins; the non-membranous
+proteins present a generalised composition, as expected from their different locations and functions; and the β-barrel composition differs from both, but shows no
+simple, overall pattern of preference. This suggests that this apparent complexity is captured well by pseudocomposition, giving the network its predictive power.
+
+To assess the ability of the protein-class predictor to aid genome annotation, the predictor was used to classify all proteins of known sub-cellular location from both the
+human and E. coli genomes. The proteins were obtained from Swiss-Prot release 42, and only proteins of unambiguous location were used. From the human
+genome, 5568 proteins were tested, of which 2416 were membranous. The protein-class predictor correctly identified 90.54% of the membrane proteins and 82.58%
+of the non-membranous proteins. For E. coli, the results were of higher accuracy, 97.68% of the 689 membranous proteins being correctly classified, and 91.89% of the
+non-membranous proteins. These results indicate that the protein-class predictor is a powerful tool for genome annotation, able to differentiate protein class with a high
+level of confidence. The higher rate of accuracy for E. coli proteins probably reflects their over-representation in the training-set.
+
+Conclusion
+The method described here represents an important advance in the computational determination of membrane protein structural class and topology. It
+provides an accurate tool for the alignment-free classification of proteins into TM α-helical, TM β-barrel or non-TM. Although many predictors can
+distinguish between α-helical membrane proteins and other proteins, few have been reported that can reliably predict β-barrel membrane proteins, and fewer
+still have been produced that combines both functions. The protein-class predictor provides both a means of annotating the location of novel proteins and an in
+silico tool to aid the discovery of drug and vaccine targets. Thus, the method offers a useful approach for the analysis of membrane proteins for a wide range of
+possible applications.
+
+Supplementary Material
+Data 1
+Data 2
+PDT wishes to thank the MRC for a priority area studentship. The Jenner Institute (Formally, The Edward Jenner Institute for Vaccine Research) wishes
+to thank its sponsors: GlaxoSmithKline, the Medical Research Council, the Biotechnology and Biological Sciences Research Council, and the UK Department of Health.
+
+Figures and Tables
+Numbers of sequences used in the protein-class predictor
+Protein class	Number of sequences	
+Eukaryotic membranous	432	
+Eukaryotic non-membranous	2106	
+Prokaryotic inner membrane	268	
+Prokaryotic outer membrane	352	
+Prokaryotic non-membranous	997	
+Performance of the protein-class predictor when trained on pseudo- composition
+	LOO cross-validation	Five-fold cross-validation	MCC	
+All classes	85.2	82.4	0.915	
+α -helical	94.4	96.5	0.932	
+α -barrel	72.4	72.1	0.835	
+Non-membranous	85.9	84.6	0.868	
+Performance of the protein-class predictor when trained on simple amino-acid composition
+	LOO cross-validation	Five-fold cross-validation	MCC	
+All classes	74.84	75.72	0.805	
+α -helical	88.68	85.89	0.896	
+α -barrel	48.97	51.23	0.629	
+	
+Non-membranous	81.68	79.99	0.816	
+
+      Citation:Taylor
+            et al., Bioinformation 1(6): 208-213 (2006) 
+

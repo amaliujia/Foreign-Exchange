@@ -1,0 +1,153 @@
+Introduction
+Almost 20 years ago, Koenderink, van Doorn, and Kappers () published a key study on quantifying the perceived 3-D structure of a pictorial surface. Their experimental task was to adjust the attitude of a gauge figure probe. The gauge figure consists of a circle with a rod that sticks out perpendicularly from the middle. Observers are instructed to manipulate the 3-D orientation of this probe such that the disk appears to lie flat on the pictorial surface, while the rod consequently sticks out in the normal direction. Since then, numerous researchers have used this paradigm to study visual perception or 3-D shape. Yet the community of scientists using this method has been limited to those who understand the underlying mathematics and are able to experimentally implement this method. Detailed documentation has never been published in a complete fashion. This article will explain in detail all steps of the procedure. Furthermore, software written for PsychToolbox (Brainard, ; Pelli, ) is made available that covers all of these steps and should lead to an easily usable procedure, by means of which any user of PsychToolbox can conduct gauge figure experiments.
+
+Method
+The procedure for running an experiment is visualized in Fig. . Each of the steps can be described as follows.
+Illustration of the four procedural steps
+
+
+
+Contour selection
+After selecting a stimulus image, the experimenter needs to select which part of the pictorial surface is to be used for the experiment.
+
+Triangulation
+Within the contour, measurement samples need to be defined. This is done using a triangulation grid.
+
+Experiment
+After it is set up, the experiment can be conducted. The gauge figure probe should be rendered in the picture, and the observer should be able to manipulate its attitude.
+
+3-D reconstruction
+On the basis of the observers’ settings, the 3-D surface can be reconstructed. These data are the final result; further analysis will depend on the specific research question, and should thus be designed by the experimenter.
+
+These four steps will now be explained in detail.
+
+Contour selection
+First, an image is needed. Some shape should be visible, preferably a smooth one. In previous research, only an outer contour was defined. The method presented here also allows for defining a hole and inner contours. These three types of contours are visualized in Fig. . The experimenter can define the contour manually by selecting contour sample points that form a polygon that approximates the actual contour. The distance between the contour sample points can have approximately the same size as the triangulation faces. A sampling of contour points, as shown by the red dots in Fig. , is thus sufficiently detailed.
+Definition of the three types of contours
+
+Visualization of the algorithm that tests whether a point is within the closed contours
+
+
+
+The output of the contour procedure consists of three sets of coordinates, for the outer, inner, and hole contours, which can be written in n-by-2 arrays. A point on the contour can be written as , where q defines the contour type by the letter o, h, or i (for outer, hole, or inner contour), and j is the index. For example, the first inner contour point is . For the outer and hole contours, the last element (say, n and m, respectively) equals the first:  and .
+
+Triangulation
+Based on the contour data, the triangulation can be defined. To this end, a triangular grid is used that in principle covers the whole screen. However, only points within the outer contour that are not within the hole contour should be used and displayed (at this stage, inner contours are neglected). This requires an algorithm to test whether a point is between the outer and hole contours.
+
+Contour-enclosed points filtering
+As can be seen in Fig. , a simple rule can be defined to assess whether a point pi is within the closed contours: When a horizontal line is drawn in the positive x direction, it intersects a number of times with the closed contour. If this number is odd, pi is within the closed contours. Thus, the number of intersections needs to be calculated.
+
+First, we need to select contour point pairs whose y-coordinates enclose the y-coordinate of the point. In Fig. , these pairs are {ci, ci  +  1} and {cj, cj  +  1}. Now we can define straight lines through these point pairs. A straight line through two subsequent contour points ci = (xi, yi) and ci + 1 = (xi + 1, yi + 1) can be defined as y = ax + b, with a = (yi + 1 – yi) / (xi + 1 – xi) and b = yi – axi. The x-coordinate of the intersection point  can now be calculated (the y-coordinates of the points p1 and  are obviously the same): . Since the rule states that only intersections from the point in the positive x direction are to be counted, only  is counted as an intersection.
+
+When this procedure is performed for all points, we get one intersection for p1 (odd, and thus this point is inside the closed contours), two intersections for p2 (outside), and so forth. Testing whether a point is within the closed contours is computationally laborious. Therefore, the procedure may include an initial selection of the triangulation positions that are within the rectangle defined by the width and height of the outer contour, as is shown by the outer dotted line in Fig. .
+
+Adjusting the triangulation grid size and position
+It can be useful for the experimenter to adjust the grid size and position of the triangulation in real time. This can be done using the procedures described above, which are also implemented in the supplemental software. In the software, the position can be adjusted with the mouse and grid size by the arrow keys, as is illustrated in Fig. , but other types of implementations may be equally user friendly.
+a An initial triangulation is shown at startup. The experimenter can adjust the position with the mouse and can increase (up arrow) or decrease (down arrow) the triangle size. b When the experimenter is satisfied with the settings, the final version can be shown with barycentres and additional cuts in the mesh by the inner contour (see the Calculating Faces and Barycentres and Performing Final Point Filtering section)
+
+
+
+Calculating faces and barycentres and performing final point filtering
+Up to now, only points that span the triangular grid have been used, without explicit face numbering. However, the reconstruction algorithm requires explicit information about the vertex numbers that constitute the triangles. Each face (triangle) is defined by three vertices, so a definition of all faces comprises an m-by-3 matrix, with a set of three numbers in each row that refer to the vertices. Note that the number of faces does not equal the number of vertices.
+
+The faces can be calculated with a brute-force method, which is why this algorithm is not used during the real-time adjustment of grid size and location. Having defined the individual triangles, we can calculate the barycentres of the faces, which are the actual sample points where the gauge figure will be rendered.
+
+Lastly, triangles crossing the inner contours need to be filtered. To this end, a line intersection algorithm is needed. The basic question is, do the lines between two point pairs {p1, p2} and {p3, p4}, as shown in Fig. , coincide? This can simply be calculated by parameterizing vectors through these lines v12(t) = t(p2 – p1) + p1 and v34(s) = s(p4 – p3) + p3. When 0 &lt; t &lt; 1, v12(t) lies between p1 and p2, and the equivalent holds for the parameter s. The intersection parameters can be found by solving v12(t) = v34(s). If both intersection parameters are between zero and one, the lines intersect.
+Illustration of two intersecting lines
+
+
+
+As can be seen in Fig. , it can happen that a triangle line crosses the hole, which is unwanted. To overcome this problem, the hole contour should be included in the last filtering procedure. When the experimenter is satisfied with the triangulation parameters, the points (vertices), faces, and barycentres should be saved. A screen shot of the final result from the supplemental software is also exported, for later reference (see Fig. ).
+
+The experiment
+During the experiment, a gauge figure is subsequently presented at all barycentres, in random order. In Fig. , a screen shot of the experiment is shown. The 3-D rotation of the gauge figure can be implemented as follows. The circle of radius r is defined by a polygon of n points that lie in the (x, y) plane centered at the origin. The rod has length r and sticks out in the z direction. Although the circle and rod are defined in 3-D coordinates, only the x- and y-coordinates are used for the actual rendering (orthographic projection). Changing the slant and tilt of the gauge figure can be achieved by rotating all coordinates around the y- and z-axes, respectively (the order is evidently important, since rotations do not commute). Rotations can be implemented by using rotation matrices.
+The experiment. On the left, a typical setting of the gauge figure during the experiment is shown. In the middle, the slant and tilt are defined. On the right, the relation between the mouse position and the slant/tilt parameters is explained
+
+
+
+The observer needs control over the attitude—that is, the slant and tilt of the gauge figure. A simple interface for this control is to use the mouse position, as is illustrated in Fig. . The location (x, y) of the mouse is tracked with respect to the middle of the screen. The tilt τ is defined by arctan(y / x), and the slant σ is defined by the distance , where g denotes a gain to tune the sensitivity of the mouse. To prevent confusion about where the mouse position starts, it is recommended that the gauge figure start at the (τ, σ) = (0, 0) position.
+
+Surface reconstruction
+The data from the experiment are attitudes that can be interpreted as depth gradients: the local change of depth in the x and y directions. This can be easily seen by noting the following. The gauge figure can be regarded as the normal vector on a local plane (the triangle is a small plane) and can be written as a function of slant and tilt: n(τ, σ) = (cos τ sin σ, sin τ sin σ, cos σ). This normal vector defines a plane, as is illustrated in Fig. . The equation for this plane is nxx + nyy + nzz = d, where d is some unknown depth offset. It can be readily understood from this equation that the relative depth difference between two points is (z2 – z1) = −[nx(x2 – x1) + ny(y2 – y1)] / nz. Similarly, the depth difference (z3 – z1) can be calculated, while the depth difference (z3 – z2) evidently follows from the other two depth differences and is thus omitted. Thus, one experimental setting results in two depth differences.
+Left: A single triangle with depth difference that is based on the depth gradient from the gauge figure. Right: Vertex numbering of the triangle faces
+
+
+
+A system of linear equations from these depth differences is needed. The basic idea is that a matrix M should be constructed that fulfills the equation Mz = ∆z, in which ∆z is a vector with all of the depth differences and z are all depth values. This can be done by using the matrix in Eq. .
+
+
+To reconstruct a continuous surface, one needs to constrain all triangles to be connected with their neighbours. This means that triangle edges that connect two triangles [e.g., (3, 5) in Fig. ] result in two equations with possibly different depth differences, one resulting from the depth gradient of triangle (2, 3, 5), and the other from triangle (3, 5, 6). This needs to be accounted for in the system of equations from Eq. . To ensure that the reconstructed surface has zero average depth (depth offset is irrelevant, anyway), add a last row to the matrix consisting of all 1 s. This boundary condition implies that ∑ zi = 0. The reconstruction can now be calculated by taking the pseudo-inverse of the matrix M: . The output of the software gives a 3-D plot of the reconstructed surface (as shown in Fig. ) and the 3-D vertices as a text file, which can be used for the analysis. A different version of the reconstruction algorithm has previously been published by Nefs ().
+Resulting 3-D relief superimposed on the picture
+
+
+
+Discussion
+This article gives a complete description of the implementation of the gauge figure method. This does not mean that it does not need some additional input by the user. To start with, users should be cautious using large holes or inner contours in the stimuli. As may have become clear, the reconstruction algorithm integrates the depth gradients, and the stability of this integration depends on the sampling. Some noise from observer settings is automatically filtered, because the reconstruction algorithm imposes an integrable surface: The shared edges of the faces are joined—that is, the surface is “continuous.” An example of a shared edge is (5, 3) from Fig. , while (5, 2) is an outer edge. When there are relatively few shared edges, such as in the arm of the bodybuilder in Fig. , the integration may get unstable. Instead of averaging out, the observer noise is integrated and may yield unstable results.
+Example of a stimulus in which the integration may get unstable
+
+
+
+Two potential issues have been raised by researchers using the gauge figure method. Firstly, “the gauge orientation task suffers from several limitations. First, there is no way to distinguish between errors due to misunderstanding the orientation of the shape and errors due to misunderstanding the orientation of the gauge” (Cole et al., ). These authors imply that the mental image of the stimulus contains attitude information that is matched to the attitude information of the mental image of the gauge figure. However, the mental image is (evidently) in the mind, and therefore whether it contains attitude information is unknown. As Koenderink, van Doorn, Kappers, and Todd () pointed out, “pictorial relief can only be defined operationally”; that is, the perceived attitude can only be defined through a task. In physics, a ruler measures distance, and a clock measures time. There is no way of distinguishing the time on the clock and the actual time, because time is operationally defined by the clock. Similarly, the perceived attitude is operationalized by the gauge figure probe. Hence, the point raised by Cole et al. () does not seem to be an issue, in the context of Koenderink et al. (). The second issue was raised by an anonymous reviewer: “When confronted with a reconstruction of the shape that they [the observers] reported using the gauge figures, they quickly identify locations where the reported shape does not correspond to the shape that they actually intended to report.” Indeed, this can be an issue, but only with respect to the reconstruction itself, and not with respect to the task. It is debatable whether one should let observers view a real-time reconstruction of the pictorial relief while doing the task. One may as well let observers use 3-D modeling software to reproduce pictorial shapes, or perform a shape discrimination task. All of these tasks may be useful to study vision, but they ignore the concept of operationalizing pictorial relief by using a (i.e., any) gauge figure probe.
+
+It should also be noted that there exist more experimental tasks to measure pictorial surface structure (Koenderink et al., ). However, the gauge figure task is the most used and seems to be the most intuitive task for the observers. Using different methods may be worthwhile, since the gauge figure task is essentially based on first-order (orientation) estimates. Using tasks that probe zeroth- (Koenderink et al., ) or second-order information may give different insights into pictorial relief. Furthermore, pictorial surfaces are just one geometric facet of pictorial space. Recently, a method to quantify the spatial layout of objects in pictorial space has been developed (Wijntjes &amp; Pont, ). In this method, observers were instructed to use a pointer to point from one object to another. These data were then used to reconstruct the relative depth differences in pictorial space. The combination of pictorial surface and spatial layout methods should increase our understanding of pictorial space.
+
+The analysis of the results is to be defined by the user of the method described in this article. There is much literature that can serve as background material, and essentially, the way that the data are analysed depends on the specific research question. The method described in this report merely provides the means to start with a picture and arrive at the 3-D reconstructed relief.
+
+Author Note
+This work was supported by a grant from the Netherlands Organization for Scientific Research (NWO). Supplemental materials may be downloaded from the author’s website: www.maartenwijntjes.nl/gaugefigure.
+
+Open Access
+This article is distributed under the terms of the Creative Commons Attribution Noncommercial License which permits any noncommercial use, distribution, and reproduction in any medium, provided the original author(s) and source are credited.
+
+Appendix
+The algorithms described above have been implemented in ready-to-use software written with PsychToolbox for MATLAB. Visit the PsychToolbox webpage (http://psychtoolbox.org) for installation instructions. It is recommended that new users familiarize themselves with the PsychToolbox demos to understand the general structure of the toolbox, although it should not be necessary to use the gauge figure software that is described here. The supplemental software package, an instruction movie, and the documented instructions can be downloaded from www.maartenwijntjes.nl/gaugefigure. For practical instructions, the instruction document is recommended.
+
+The software package consists of four main .m files, one for each of the four procedural steps shown in Fig. .
+
+Contour creation
+The contour can be manually defined my registering mouse clicks on the contour. The mouse position is tracked by . After clicking the mouse, the positions are appended to the  matrix ( stands for outer contour, in this case):
+
+
+The  stands for irrelevant code. The nested  loop checks whether the new location is within a threshold distance from the start location, which is indexed as the third location . If this is true, the  means that the outer contour is finished, and the program will continue with the other contours.
+
+Triangulation
+The triangulation starts by generating a triangular grid, which is done by the auxiliary .m file genPoints.m (stored in the  folder):
+
+
+The input parameters are the width () and height () of the screen in pixels, the latter of which is given by  from  in triangulation.m. Furthermore, the grid distance is defined by , and a translation is supplied through  and . This function is called in triangulation.m by  where  and  are the mouse positions, and  can be adjusted with the arrow keys:
+
+
+The triangulation points have to be filtered for being inside the contour. This is done by the auxiliary file pointsInContour.m. This file first filters the points from the smallest rectangle that encloses the outer contour  and puts the contour points in pairs . Then it does the final filtering to :
+
+
+The first nested  selects the contour pairs that enclose the y value of the  using betweenY.m. The second  it performs the intersection test described in the Contour-Enclosed Points Filtering section. Lastly, this program tests whether the number of intersections is odd, with the code 
+
+After the filtering, the inner points should be connected by mesh lines, which is done by meshit.m, which basically searches for point pairs that have a distance equal to the grid distance defined by . Up to now, point filtering has been done in real time, so that the experimenter can see the triangulation while adjusting the grid size and translation manually. When the experimenter is satisfied with the triangulation, the faces are calculated by facit.m. Then these faces are filtered for triangles that intersect with the inner contours, as described in the Calculating Faces and Barycentres and Performing Final Point Filtering section:
+
+
+Experiment
+In the experiment, the gauge figure has to be rendered at (randomly ordered) barycentres. The gauge figure is defined in three dimensions, which makes it easy to rotate. Here, the disk (called ) and rod are defined:
+
+
+During a trial, the mouse position () defines the slant () and tilt ():
+
+
+The sensitivity of the slant can be tuned by . These parameters then define the rotation matrix :
+
+
+The location of the barycenter is . Since the gauge figure is still three-dimensional,  is used instead of . In the  loop, the  is rotated and translated to the barycenter. The same is done for the .
+
+Reconstruction
+The experimental data (n trials) are in the form of an n-by-4 matrix, with the first two columns for the barycentres and last two columns for the slant and tilt. The first thing that reconstruction.m does is transform these data into normal vectors, and then into gradients:
+
+
+These depth gradients need to be converted to relative depth differences, as described in Eq. . For each triangle, the depth difference between the first vertex and the other two vertices is calculated.
+
+
+Note that a zero is appended to the  vector to satisfy the boundary condition ∑ zi = 0 (overall depth is zero). Now, the matrix M has to be defined. This is done as follows:
+
+
+Again, note the appending of a row of ones to satisfy ∑ zi = 0. Finally, the depths are calculated through the pseudo-inverse of M: . The remainder of reconstruction.m writes the 3-D vertices to a data file and produces a visualization of the results.
+
+This assumption is met when the curl of the normal vector field vanishes identically (Koenderink et al., ). In most (if not all) studies, the integrability assumption was justified, but this evidently depends on the stimulus. It is not unthinkable that for some visual stimuli, the vector field will be nonintegrable.
+

@@ -1,0 +1,44 @@
+1 INTRODUCTION
+The emergence of next-generation sequencing platforms (Holt and Jones, ; Shendure and Ji, ) imposes increasing demands on the bioinformatics methods and software used for analysis and interpretation of the vast amounts of data generated using these technologies (Pop and Salzberg, ). In addition to methods for sequence mapping (reviewed in Trapnell and Salzberg, ), assembly (Simpson et al., ; Zerbino and Birney, ) and various downstream applications such as SNP discovery and detection (Huang et al., ; Li,R et al., ), structural variant detection (Korbel et al., ; Hormozdiari et al., ) and ChIP-seq peak calling (Ji et al., ; Fejes et al., ), an important part of the analysis pipeline is the ability to view and manually interact with the data in an intuitive and straightforward manner.
+
+The fast pace of development and increasingly shorter half-life of sequencing platforms furthermore introduces additional demands on software generality, flexibility and extensibility. In order to avoid a lag between sequencing technology development and available analysis methods, it is a great advantage if existing tools are sufficiently general and easy to modify for fast re-adaptation to appearing technologies.
+
+Recently, tools specifically designed for visualizing next-generation sequencing data have been introduced (Bao et al., ; Huang and Marth, ). While these applications go a long way toward fulfilling the visualization needs of next-generation sequencing projects, they lack either in generality, flexibility or extensibility—they have strong couplings to specific sequencing platforms or limits in the amount of data they can handle, they offer limited means of editing and manipulating data, and their source code are either closed source or lack a well-defined application program interface (API).
+
+We introduce NGSView (Next Generation Sequence View), an open source alignment editor and visualization tool, designed to address the issues mentioned above. It provides generality in being able to handle sequence data of any format and virtually any size, flexibility in allowing extensive editing options in addition to visualization and extensibility by being released under an open source license with a well-documented API. Using NGSView, it is possible to very quickly go from a zoomed in sequence level view, to a zoomed out view of an entire chromosome, and editing operations can be performed on any subset of reads defined by the user.
+
+2 METHODS
+NGSView is an extension of DNPTrapper (Arner et al., ), our previously developed alignment editor designed for analysis of Sanger reads from complex repeat regions. The code has been extensively refactored in order to meet the requirements of next generation sequencing data. It is implemented in C++ using the Qt (http://www.qtsoftware.com/) GUI toolkit for visualization and Berkeley DB (http://www.oracle.com/) as the back end database. The RAM required to run the software is low and independent of project size. This is achieved by reading data from disk at request rather than keeping data cached in the main application; a layered database design also ensures that disk access lag is kept at a minimum. Compared with other software (Huang and Marth, ), the added element of database construction makes initial import of data into NGSView more time consuming. However, this import cost is compensated for on subsequent visualization runs of the data, as NGSView opens instantaneously once data have been imported. Benchmarks of loading times are provided at the web site.
+
+The software has been developed and tested on Linux Fedora, Ubuntu, Debian, openSUSE and CentOS 32 and 64-bit platforms. The underlying components are open source and available on a wide range of additional platforms, which enables straightforward porting of NGSView to other platforms in the future, should interest arise.
+
+A native XML format is used as input to NGSView. A standalone, all purpose, column-based parser (implemented in Perl) is also included in the package to enable easy conversion of many common formats including Eland, MAQ and Corona. Converters from SAM (Li,H et al., ) and ACE (http://www.phrap.org) formats are also provided. Additional strategies for converting other formats to NGSView XML are listed at the software web site.
+
+3 RESULTS
+Here, we introduce the key elements of NGSView. Additional detailed documentation including screen shots is available at the software web site listed above.
+
+3.1 Generality
+NGSView is a general sequence viewer in the sense that it assumes very little about the sequencing platform(s) used in a project, and simultaneously can handle sequence data of a wide range of sequence lengths and types. For basic visualization functionality, the only assumed property of a sequence is that it has a spatial occupation in an alignment, meaning that it has a start, an end and a row. All additional information about the sequence—including but not limited to the nucleotide sequence (or color space sequence in the case of SOLiD data), quality values, SNP locations, mate pair information and meta data—are stored as feature data coupled to the sequence, with general and configurable methods for how to visualize different categories of feature data. This means that anything with spatial properties that can be expressed in terms of row, start and end (with optional additional features), can be visualized and manipulated in the software.
+
+Additional generality is provided in the amount of data that NGSView can handle. The use of Berkeley DB as back end allows for very fast disk retrieval and enables scrolling through millions of reads with no lag at a zoomed in level, as well as visualization of millions of reads simultaneously at a zoomed out level.
+
+While NGSView is not intended to replace genome browsers like UCSC (Kuhn et al., ) and Ensembl (Hubbard et al., ), the general capability of displaying spatial data described above enables analysis of sequencing data in the context of annotation data. The included all purpose parser, which includes GFF parsing capability, facilitates inclusion and visualization of various types of annotation data into the viewer.
+
+3.2 Flexibility
+In NGSView, each element in the viewer is a bona fide object which can be selected and manipulated independently or in combination with other elements present in the same view. Different highlighting, browsing, scrolling and sorting operations are available (based on, e.g. SNP content, mate pair information, expression or other annotation data) for any subset of sequences selected, as well as other types of data manipulation and editing, and exporting to different file formats. NGSView also includes a user-configurable feature data type, which can be accessed by general sorting and highlighting methods available in the viewer.
+
+In contrast to other next-generation viewers, NGSView provides additional flexibility in allowing editing operations such as cut, copy and paste, as well as dragging and dropping of sequences into any position. It is possible to create new contigs from subsets of the data as the user sees fit, thus enabling a sand box approach where different editing operations can be tried out without compromising the integrity of the original alignment.
+
+3.3 Extensibility
+As mentioned above, NGSView includes a user-configurable feature data type, allowing users to include additional feature data types into the NGSView input XML in a straightforward way. The package also comes with a documented API, including a framework for adding data types and operations in a well-defined manner. Details about extending the program, including skeleton code, are available at the NGSView web site. By releasing the source code under an open source license, we hope that additional members of the bioinformatics community will feel encouraged to contribute to further development of the software and API.
+
+3.4 Additional features
+NGSView can handle gapped alignments. Differential expression of reads, e.g. from case/control or time course experiments, can also be visualized.
+
+ACKNOWLEDGEMENTS
+The authors wish to acknowledge Erik Sjölund, who provided implementations and designs of key parts of the previous version of this software (DNPTrapper).
+
+Funding: Research Grant for RIKEN Omics Science Center from MEXT (to Y.H.).
+
+Conflict of Interest: none declared.
+

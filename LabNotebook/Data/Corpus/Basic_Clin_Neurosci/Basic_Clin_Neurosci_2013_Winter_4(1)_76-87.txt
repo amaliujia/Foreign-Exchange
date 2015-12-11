@@ -1,0 +1,551 @@
+1. Introduction
+Many diseases such as Amyotrophic Lateral Sclerosis (ALS) can destroy neuromuscular channels which help the brain to communicate with the body. A simple solution for that problem is to provide new communicational way for brain not relying on muscles. Namely, a brain-computer interface that transfers brain messages to the external world.(Wolpow, Birbaumer, McFarland, Pfurtscheller&amp; Vaughan, ).
+
+In most previous studies that used Electroencephalogram (EEG) signals for motor imagery in frequency domain, extracted features were composed of µ and β bands. (Ramoser, Muller-Gerking &amp; Pfurtscheller, ; Muller-Gerking, Pfurtscheller &amp; Flyvbjerg, ; Kwang-Eun &amp; Kwee-Bo, ; Schloegl, Neuper &amp; Pfurtscheller, ; Heung-II &amp; Seong-Whan, ; Acar, ). Among brain frequency bands, α overlaps µ band in 8-12 Hz. Although µ band is dedicated to movement imaginations, α band is produced in resting times or when the eyes are shut and it is not related to movement imaginations or activities. Among all frequency bands, only µ, β and γ are related to movement imaginations and activities (Niedermeyer &amp; DA Silva, ).
+
+Since γ frequency band has a wider frequency range, it is mostly used in ElectroCorticoGraphic (ECoG) Recording method. It has shown that γ band provides more information than µ and β bands in 35-50 Hz and 75-100 Hz using ECoG Recording method in movement imaginations. (Crone, Miglioretti, Gordon &amp; Lesser, ).
+
+It is seen that during movement imaginations using ECoG Recording method, µ and β amplitudes are decreased whereas γ band is increased simultaneously. Furthermore, γ band can reflect small and tiny movements while µ and β bands do not contain important information for these types of movements. (Aoki, Fetz, Shupe, Lettich &amp; Ojemann, ). It is also shown that subjects can control a cursor movement in both up and down directions up to 70-100% accuracy rate using µ, β and γ bands in ECoG Recording method in less training time than EEG method. (Leuthardt, Schalk, Wolpow, Ojemann &amp; Moran, ). High γ band power is increased during arbitrary motions without any visual cues in invasive recordings in epilepsy patients. (Ball, Nawrot, Schulze-Bonhage, Aertsen&amp;Mehring, ; Miller et al., ; Oharaet al., ;Pfurtscheller, Graimann, Huggins, Levine&amp;Schuh, ).
+
+In healthy people, EEG Recording method could detect motor activities in γ bands over 30Hz as invasive recording methods, in epilepsy patients. (Ball et al., ).
+
+This paper aims to show using combination of µ, β and γ bands would have better performance than using µ and β. To do so, 8-30Hz, 8-40Hz, 8-50Hz and 30-50Hz frequency ranges are separated using Fourier Transformation and Band Pass Filtering. Next, Common Spatial Pattern (CSP) is used as feature extractor and Multi Layer Perceptron (MLP), Radial Basis Function (RBF), Linear Discriminant Analysis (LDA), Support Vector Machine (SVM) and K-Nearest Neighbor (KNN) are used as classifiers.
+
+In this study, dataset 2a from BCI competition IV was used in which 9 healthy subjects performed left hand, right hand, foot and tongue motor imagery.
+
+2. Methods
+2.1. Preprocessing and Feature Extraction
+Database
+We used dataset 2a from BCI competition IV which was provided by Graz University in 2008. It consists of EEG signals from 9 healthy subjects who have 4 tasks: left hand (class 1), right hand (class 2), foot (class 3) and tongue (class 4). The signals were recorded in two sessions on different days with 6 runs separated by short breaks in each day. Each run contains 48 trials (12 trials for each class), making a total of 288 trials in each session. To record the EEG singles, 22 silver/silver chloride (Ag/AgCl) electrodes where used which were placed in a 3.5 cm distance from each other. The signals were sampled with 250 Hz. Next, they were filtered between 0.5 Hz and 100 Hz using Band Pass filter. For each subject, 288 train samples and 288 test samples were considered. Experimental models are displayed in  and .
+
+Timing scheme of the paradigm
+
+Electrode positions in Dataset 2a from BCI Competition IV.
+
+In this stage, the suitable frequency intervals are separated using Discrete Fourier Transform (DFT) and Band Pass Fourier filter.
+
+In DFT approach, data is transformed into the frequency domain by the following formula. (Dym &amp; McKean, 1985; Yosida, )
+
+
+
+k=0,…,N-1
+
+
+Where z[n] is the input signal and N is data length.
+
+2.2. Common Spatial Pattern (CSP)
+CSP is a binary method in which variance of one class is increased whereas the variance of the other class is decreased in order to classify data more accurately. There are several approaches for multi class CSP. We used One Versus Rest (OVR) method. In this method, spatial patterns are found for one class versus the others. (Wu, Gao, X., &amp; Gao, S.,).
+
+CSP is based on simultaneous diagonalization of two covariance matrixes. In this paper, we kept the first and last rows of spatial filters as our first pair, the second and the (n-1)th rows as our second pair and the third and (n-2)th rows as our last pair and omitted the rest rows. (Ramoser, Muller-Gerking &amp; Pfurtscheller, ).
+
+2.3. Classification
+2.3.1. K-Nearest Neighbor (KNN)
+K-Nearest Neighbor classifier is one of the simplest classifiers. To classify a new data sample, we compute its distance to all of its k nearest neighbors. This sample is assigned to the class in which most of these k neighbors are located. By distance we refer to Euclidean distance. (Denoeux, )
+
+2.3.2. Linear Discriminant Analysis (LDA)
+In this method, the main idea is to find a hyper plane which separates data of two classes and maximize between class distances and minimize inter class distances. Thus, the optimized separation is guaranteed.
+
+In LDA, data distribution is assumed to be Gaussian with equal covariance matrices for both classes. (Balakrishnama &amp; Ganapathiraju, ). Middle and inner class scattering are obtained from the following formulas.
+(1.3)
+
+Where Sw is the within-class scatter and Sb is the between-class scatter, pi is prior probability, covj is the covariance of class j.
+
+µ is the total average of classes and µj is the average of class µj. The aim is to find a measure which maximize the between class scatter and minimize the within class scatter which is defined as .
+
+
+Thus, LDA tries to maximize this criterion. (Balakrishnama &amp; Ganapathiraju, ).
+
+2.3.3. Support Vector Machine (SVM)
+Supporting Vector Machine is a classifying method proposed by V.Vapnik. (Cortes, &amp; Vapnik, ). This method is a powerful tool in solving different problems. The main idea of this method is mapping the nonlinear input vectors to a high dimensional feature space in which a hyper plane exists that separates features linearly.
+
+Let {(χi,yi) ∣ i = 1,…,l} be the training data. xi is a train sample and ٬ yi{-1,1} is the label of sample i.
+
+A hyper plane can be defined as follows.
+
+
+Where w is a vector perpendicular to the hyper plane, x is one point on the hyper plane and b is the bias. If w.χi+b ≥ + 1, xi is assigned to class +1 and if w.χi+b ≤ -1, xi is assigned to class -1. The optimized hyper plane is the one which maximize the margin value. The optimized margin is the one with this property that all samples of class -1 are located on one side of it and all samples in class 1 are located on the other side.
+
+As we have m = 2/|w| (where m stands for margin), so |w| should be decreased to produce an optimized hyper plane (Lodder, ).
+
+In this paper we used, LIBSVM toolbox or linear kernel function (Chang and Lin, ).
+
+2.3.4. Multi-Layer Perceptron (MLP)
+Multi Layer Perceptron (MLP) consists of several layers of neurons or computational nodes: an input layer, one or more hidden layers and an output layer. Learning rule in this network is based on Back Propagation (BP) algorithm. In this approach, input value is multiplied by neuron weights in order to calculate the output value. Next, the output value of network is subtracted from the desired output value and an error value is computed. Finally, the weights of the network are updated. (Bishop, ; Haykin, ).
+
+Activation function of neurons is a nonlinear function known as sigmoid:
+
+Where vj indicates weighted summation of all synaptic inputs added to bias of neuron j and yj is the output of the neuron. To update weights of network, MLP uses the following formulas.
+
+
+
+Where η is learning rate, t is the desired output (target) and oh is the output of hidden layer neurons and x is the input of the network.
+
+2.3.5. Radial Basis Functions (RBF)
+This neural network uses a nonlinear function for mapping input data into a higher dimensional space. This process is done based on the Cover Theory. According to this theory, data would be linear separable in a higher dimensional space. This network consists of one input layer, one hidden layer, and an output layer. Mapping from input space into output space is done using the following formula.
+
+
+Where  and w
+i is the synaptic weight connecting hidden layer neuron to output layer. (Haykin, ).
+
+3. Results
+To find the best classifier among MLP, RBF, LDA, SVM and KNN, each classifier is performed on 3-6 seconds time interval and 8-30 Hz frequency interval and the results are shown in . All results are obtained by 4-fold cross validation process.
+
+
+Determination of the best classifier among MLP, RBF, LDA, SVM and KNN with time interval of 3-6 sec and frequency range of 8-30 Hz. In this experiment, classification accuracies were computed by 4-fold cross validation process.
+
+Subjects	MLP(%)	RBF(%)	LDA(%)	SVM(%)	KNN(%)	
+
+1
+	72.82	70.57	75.34	72.22	67.36	
+
+2
+	41.92	46.70	59.72	61.45	61.11	
+
+3
+	80.20	75.60	76.38	74.65	67.36	
+
+4
+	40.36	44.70	52.77	58.33	49.65	
+
+5
+	48.26	33.85	39.58	40.27	48.95	
+
+6
+	44.44	34.37	45.83	45.48	37.84	
+
+7
+	76.73	64.84	71.53	68.75	57.63	
+
+8
+	80.20	62.41	75.34	77.08	61.80	
+
+9
+	70.83	63.54	66.66	68.40	67.01	
+
+Rank
+	
+2.33
+	4.22	2.44	
+2.33
+	3.66	
+4. Fold Cross Validation
+To obtain the accuracy rate of a classifier, first it is trained using training data and then it is tested using validation data. In this approach, data is divided into n different parts and (n-1) part of it is used as training data and the remaining part is used as validation data. This process is repeated on all n different parts of data so that each part is used as validation data once and (n-1) times as training data. Finally, the average of all computed accuracies is considered as the final accuracy rate.
+
+In this study, we used 4-fold cross validation process. In the other words, we divided data into 4 parts and each classifier was trained 4 times. Finally the computed accuracies are averaged.
+
+The classifiers are being compared according to their ranking results. So ranks 1,2,3,4 and 5 are given to the best, the second, the third, the forth and the fifth classifier, respectively. Finally, the ranks of all classifiers are cumulated. The lowest rank belongs the best classifier. As it can be seen in , the best rank is assigned to MLP and SVM.
+
+Since MLP and RBF classifiers have several parameters to be set in their learning process, some experiments are done to find out the optimum parameters.
+
+To find the appropriate number of nodes in the hidden layer of the MLP classifier, we performed the classifier with 1 to 60 nodes in its hidden layer on the validation data and calculated its accuracy rate each time. The best accuracy rate belongs to the MLP with the optimized number of neurons in its hidden layer.
+
+After setting the nodes and their optimized corresponding weights in the hidden layer, MLP is performed on test data. In this classifier, the learning rate is set 0.2 and weights are initialized randomly. Also, the algorithm used for updating weights is based on Back Propagation. To make this clear, accuracy rates gained by MLP classifier for the first subject are plotted in order to find the optimized number of neurons in the hidden layer. The desired case is determined in the .
+
+The classification accuracy rates(%) of MLP( vertical axis) and the Optimized number of hidden layer neurons( horizontal axis) computed for the first subject.
+
+Then, for the detected optimum number of hidden layer neurons, the experiment was repeated 1 to 100 epochs as it is shown in .
+
+Determination of the optimum number of epochs for MLP classifier based on BP algorithm for Subject 1. Horizontal axis: number of epochs, vertical axis: classification accuracy (%).
+
+To find the appropriate number of centers in the RBF classifier, we varied them from 1 to 60 centers. The RBF was performed on validation data with different number of centers and the accuracy rate was computed each time. The number of centers corresponding to the best accuracy rate was set as the number of centers of the RBF classifier. Next, RBF was performed on the test data.
+
+In this classifier, we used K-means algorithm to find out the location of each center as follows. First, we initialized centers using data randomly. Then, each data was classified according to its distance from all centers. When all data were classified, the mean of each class was computed and was set as its new center.
+
+The classification process was performed several times till no significant changes to were found in centers locations. For example, the accuracy rates of the RBF classifier performed on first subject's data is plotted in .
+
+Determination of optimized number of centers in RBF for the 1st subject. Horizontal axis: number of centers, vertical axis: classification accuracy (%).
+
+Then, for detected optimum number of centers, the experiment was repeated 1 to 100 epochs as it is shown in .
+
+Determination of the optimum number of epochs for RBF classifier using k-means algorithm for Subject 1. Horizontal axis: number of epochs, vertical axis: classification accuracy (%).
+
+Since each person's brain functionality is unique, his response to stimulus shown on the screen might be different from others. For the same reason, each subject responses in specific time and frequency intervals which might be different from the others (Wolpow, Birbaumer, McFarland, Pfurtscheller &amp; Vaughan, ).
+
+Thus, in this paper, we examined different time and frequency intervals for each subject and determined his proper time and frequency intervals. This procedure is called Calibration in BCI system. (Wolpow, Birbaumer, McFarland, Pfurtscheller &amp; Vaughan, )
+
+To find out the best time intervals each subject who performed motor imagery, different time intervals were examined with CSP feature extraction method and MLP classifier. Performances obtained in different time intervals are displayed in .
+
+
+Determination of the best time intervals (CSP feature extractor and MLP classifier with optimum number of hidden layer neurons and epochs and learning rate = 0.2) (S1 to S9 stand for Subject1 to Subject9). Classification accuracies of all time intervals from 2 to 7 seconds were computed by 4-fold cross validation process. The best accuracy rates were bolded.
+
+Time Intervals (Sec)	S1 (%)	S2 (%)	S3 (%)	S4 (%)	S5 (%)	S6 (%)	S7 (%)	S8 (%)	S9 (%)	
+
+2-7
+	
+74.47
+	48.52	72.30	3038	38.19	46.87	63.19	62.84	64.93	
+
+2-6
+	73.95	48.61	
+80.38
+	50.00	53.81	47.22	70.13	73.95	77.08	
+
+2-5
+	74.30	51.38	71.52	
+62.84
+	53.12	
+47.56
+	79.51	73.95	
+78.81
+	
+
+2-4
+	63.88	42.27	65.27	61.02	48.61	45.13	78.81	65.27	78.47	
+
+2-3
+	44.96	40.01	42.70	54.07	
+57.63
+	43.05	69.79	66.31	56.59	
+
+3-7
+	63.02	
+58.15
+	77.86	29.51	46.52	46.18	58.33	68.75	51.38	
+
+3-6
+	72.82	41.92	80.20	40.36	48.26	44.44	76.73	
+80.20
+	70.83	
+
+3-5
+	59.89	51.21	73.95	50.00	53.81	40.27	
+79.86
+	76.38	72.22	
+
+3-4
+	58.42	40.71	68.66	46.52	50.69	38.54	65.97	63.88	68.75	
+
+4-7
+	59.20	50.95	68.92	27.34	42.01	44.44	50.69	63.19	46.17	
+
+4-6
+	62.58	53.55	68.57	30.29	39.93	42.70	65.97	65.62	57.98	
+
+4-5
+	57.63	46.87	61.63	42.70	40.97	39.23	67.36	63.88	64.58	
+
+5-7
+	52.77	38.62	58.50	26.90	36.11	38.19	46.52	44.79	31.59	
+
+5-6
+	58.50	47.56	59.72	26.04	40.62	35.06	60.41	48.95	36.80	
+
+6-7
+	39.49	46.61	43.22	26.47	34.02	32.63	47.91	44.09	29.51	
+Then, 8-30 Hz (µ,β), 8-40 Hz (µ,β and 10 Hz of γ), 8-50 Hz (µ,β and 20 Hz of γ) and 30-50 Hz (20 Hz of γ) were separated by Discrete Fourier Transform (DFT) and Band Pass filter on the best obtained time interval.
+
+To demonstrate the meaningful differences between using combination of µ and β and combination of µ, β and γ frequency bands we used t-test which is a statistical test. The results are shown in .
+
+
+t-values and p-values from t-table with 18 degrees of freedom.
+
+p_value	t_value	
+0.05	2.10	
+0.01	2.88	
+0.001	3.92	
+Calculated t-values in t-test. (S1 to S9 stand for Subject1 to Subject9).
+
+Frequency Intervals (Hz)	S1	S2	S3	S4	S5	S6	S7	S8	S9	
+
+(8-30) and (8-40)
+	1.81	9.19	2.04	2.06	13.81	8.75	4.52	8.76	2.15	
+
+(8-30) and (8-50)
+	7.06	5.66	17.65	0.56	9.28	7.89	8.65	0.60	35.67	
+
+(8-30) and (30-50)
+	87.54	31.27	191.26	84.61	44.80	28.17	77.03	52.34	32.55	
+
+(8-40) and (8-50)
+	4.34	36.98	24.33	2.43	21.77	3.44	12.87	8.89	46.28	
+
+(8-40) and (30-50)
+	82.34	50.40	271.68	74.98	53.26	13.92	89.31	35.47	38.04	
+
+(8-50) and (30-50)
+	82.66	81.33	256.78	77.73	36.69	3.02	55.37	50.51	5.55	
+To do so, first, the best time interval was selected for each subject separately. Then, we separated different frequency intervals (i.e. ranges 8-30 Hz, 8-40 Hz, 8-50 Hz and 30-50 Hz). The MLP was performed on each of those frequency intervals with optimized number of hidden layer and epochs, iterated 10 times. Finally, we compared them two by two and the t-values were found. The degree of freedom was computed 18.
+
+As it can be seen, in all cases there exist meaningful differences among different bands. For the first subject, there is no meaningful difference between 8-30 Hz and 8-40 Hz frequency bands. However, t-values for other bands are much higher than the t-value with the p-value equal to 0.0001 which shows that there are meaningful differences among bands with the accuracy rate 99.9% gained by the used classifier.
+
+For numbers 2, 5 and 7, the computed t-values are higher than the t-value with the p-value equal to 0.0001.
+
+For the third subject, a meaningful difference is seen between 8-30 Hz and 8-40 Hz bands (i.e. p-value &lt; 0.05) and the accuracy rate is 95%. The rests have 99.9% accuracy rate.
+
+There are no meaningful differences between 8-30 Hz and 8-50 Hz bands for the fourth subject. But the computed values for t in 8-30 Hz and 8-40 Hz are higher than the t-value with the p-value equal to 0.05 as well as t-values for 8-40 Hz and 8-50 Hz bands. For the remaining bands, meaningful difference can be seen with 99.9% accuracy rate.
+
+For subject 6, the accuracy rate for 8-40 Hz and 8-50 Hz (p-value &lt;0.01) is 99% as well as 8-50 Hz and 30-50 Hz frequency bands. For the other frequency bands it is calculated (p-value &lt; 0.001) 99.9%.
+
+There is no meaningful difference between 8-30 Hz and 8-50 Hz frequency bands for subject 8. However, t-values for other frequency bands are higher than the t-value with the p-value equal to 0.001.
+
+The accuracy rate of 8-30 Hz and 8-40 Hz frequency bands is 95% (p-value &lt;0.05) and for the other frequency bands it is (p-value &lt; 0.001) 99.9% for subject 9.
+
+Then features are obtained by CSP feature extraction method and classification accuracy are obtained by MLP classifier. Results of this experiment are displayed in .
+
+As you can see in , for 8-50 Hz for subjects 1 and 4, 8-40 Hz for subjects 2 &amp; 3 and 8-30 Hz for subjects 6, 8 and 9, MLP had the best performance. 8-30 Hz and 8-40 Hz for subject 7 showed the same performance. However, 8-40 Hz for subject 6 and 8-50 Hz for subject 8 had about 1% difference in performance.
+
+
+Determination of suitable frequency ranges using CSP feature extraction method and MLP classifier with optimum number of hidden layer neurons and epochs. The best accuracy rates were bolded. (S1 to S9 stand for Subject1 to Subject9). 8-30 Hz is µ and β frequency ranges and 30&lt; Hz is γ frequency range.
+
+Frequency Intervals (Hz)	S1 (%)	S2 (%)	S3 (%)	S4 (%)	S5 (%)	S6 (%)	S7 (%)	S8 (%)	S9 (%)	
+
+8-30
+	74.47	58.15	80.38	62.84	57.63	
+47.56
+	
+79.86
+	
+80.20
+	
+78.81
+	
+
+8-40
+	75.00	
+70.48
+	
+83.33
+	70.83	
+63.54
+	46.52	79.86	77.77	71.18	
+
+8-50
+	
+78.12
+	64.93	81.94	
+73.61
+	58.68	43.75	75.00	79.86	62.84	
+
+30-50
+	25.95	39.75	25.26	22.22	38.54	30.20	42.70	39.58	43.15	
+We have done our experiment using other methods such as CSP-LDA (Lotte, ), CSP-SVM (Wang, Miao &amp; Blohm, ) and CSP-KNN (Liyanage, Xu, Guan, Ang &amp; Lee, ) on the obtained optimum time interval and different frequency ranges (8-30 Hz, 8-40 Hz, 8-50 Hz and 30-50 Hz), too. In KNN classifier, k was assumed 5.
+
+
+ displays LDA accuracy rates determining the suitable frequency ranges for each subject.
+
+
+Determination of suitable frequency ranges using CSP feature extraction method and LDA classifier. The best accuracy rates were bolded. (S1 to S9 stand for Subject1 to Subject9). 8-30 Hz is µ and β frequency ranges and 30&lt; Hz is γ frequency range.
+
+Frequency Intervals (Hz)	S1 (%)	S2 (%)	S3 (%)	S4 (%)	S5 (%)	S6 (%)	S7 (%)	S8 (%)	S9 (%)	
+
+8-30
+	75.34	
+59.72
+	76.38	52.77	
+39.58
+	45.83	
+71.53
+	5.34	66.66	
+
+8-40
+	76.04	59.02	76.73	
+58.68
+	38.19	
+47.22
+	71.18	
+76.74
+	
+74.31
+	
+
+8-50
+	
+77.77
+	56.94	
+78.82
+	55.56	29.17	43.06	66.67	73.61	70.83	
+
+30-50
+	32.29	34.38	30.21	25.00	25.00	24.31	42.01	32.29	50.00	
+As it can be seen, for subjects 1 and 3, 8-50 Hz frequency range, for subjects 2, 6,8 and 9, 8-40 Hz frequency range and for subjects 2, 5 and 7, 8-30 Hz frequency range have had the best accuracies. But for Subject 2 the obtained accuracy rate in 8-30 Hz frequency range had 0.7% difference in performance compared to 8-40 Hz. Subject 5 had 1% and subject 7 had 0.4% difference in performance compared to 8-40 Hz. Therefore, existence of the γ band have had a positive effect.  displays SVM accuracy rates determining the suitable frequency ranges for each subject.
+
+
+Determination of suitable frequency ranges using CSP feature extraction method and SVM classifier using linear kernel function. The best accuracy rates were bolded. (S1-S9 stand for Subject1-Subject9). 8-30 Hz is µ and β frequency ranges and 30&lt; Hz is γ frequency range.
+
+Frequency Intervals (Hz)	S1 (%)	S2 (%)	S3 (%)	S4 (%)	S5 (%)	S6 (%)	S7 (%)	S8 (%)	S9 (%)	
+
+8-30
+	72.22	61.45	74.65	
+58.33
+	40.27	45.86	68.75	
+77.83
+	68.40	
+
+8-40
+	
+74.65
+	
+64.93
+	74.30	54.81	
+40.97
+	
+46.18
+	
+69.44
+	77.08	
+74.30
+	
+
+8-50
+	71.87	61.11	
+75.34
+	52.77	33.33	44.44	67.36	75.34	64.23	
+
+30-50
+	35.06	43.05	29.51	25.34	25.00	27.43	37.50	45.13	31.59	
+As can be seen in , for subjects 1, 2, 5, 6,7 and 9, 8-40 Hz frequency range have had the best accuracies. For subject 3, 8-50 Hz and for subjects 4 and 8 8-30 Hz has had the best performance. But for subject 8 the obtained accuracy for 8-30 Hz had 0.8% difference in performance compared to 8-40 Hz frequency range.  displays KNN accuracy rates determining the suitable frequency ranges for each subject.
+
+
+Determination of suitable frequency ranges using CSP feature extraction method and KNN classifier using Euclidean distance criterion. The best accuracy rates were bolded. (S1 to S9 stand for Subject1 to Subject9). 8-30 Hz is µ and β frequency ranges and 30&lt; Hz is γ frequency range.
+
+Frequency Intervals (Hz)	S1 (%)	S2 (%)	S3 (%)	S4 (%)	S5 (%)	S6 (%)	S7 (%)	S8 (%)	S9 (%)	
+
+8-30
+	67.36	
+61.11
+	67.36	49.65	
+46.87
+	37.84	
+57.63
+	61.80	67.01	
+
+8-40
+	61.80	59.02	
+68.05
+	54.51	43.05	
+43.75
+	56.59	
+64.93
+	
+69.09
+	
+
+8-50
+	
+69.44
+	57.63	
+68.05
+	
+55.55
+	25.69	39.93	49.30	
+64.93
+	64.93	
+
+30-50
+	32.29	40.62	28.47	28.47	25.34	31.25	37.50	39.58	47.56	
+As it can be seen, KNN classifier (k = 5) had the best accuracy rate for subjects 3, 6, 8 and 9 on 8-40 Hz frequency range and for subjects 1 and 4 on 8-50 Hz frequency range. Also, this classifier had the best performance on 8-30 Hz frequency range for subjects 2, 5 and 7. But for subject 2 and 3 the obtained accuracy rate for 8-30 Hz frequency range had 2% and 1% differences in performance compared to 8-40 Hz, respectively.
+
+In 4 above tables, 30-50 Hz frequency range (only γ band) have never had the best performance. Therefore, it can be concluded γ band merely has not sufficient information for movement imagination classification.
+
+As a result, combination of µ,β and γ bands would have better performance than µ,β in motor imageries classification.
+
+
+Kappa Coefficient
+In order to compare the results of our experiments with previous studies, we had to find kappa coefficient. Kappa coefficient is a measure of classification interpretation and is computed using the following formula.
+
+
+Where P_o is the relative observed agreement between raters, and P c is the hypothetical probability of chance agreement. (Sim &amp; Wright, )
+
+The kappa values gained by first three winners’ methods in the BCI Competition IV, Multi-Segment Joint Approximate Diagonalization (MSJAD) (Gouy-Pailler, Congedo, Brunner, Jutten &amp; Pfurtscheller, 2010), and Five-Stage Decoding of EEG (FSDE) (Wang, Miao &amp; Blohm, ) methods and our proposed method are displayed in . As it can be seen, our proposed method achieved significant results and got better results in 5 subjects than first three winners’ methods in the BCI competition IV. (Subjects 1,2,4,5 and 6). Furthermore, our method got better performance compared to MSJAD method for 6 subjects (Subjects 1,2,4,6,7 and 9), and in comparison with FSDE method for 5 subjects (Subjects 1,2,3,4 and 9).
+
+
+Kappa values obtained by first three winners’ methods in the BCI Competition IV, MSJAD and FSDE methods and our proposed method. Best kappa values are bolded.
+
+Subject	1st winner's Method	2nd winner's Method	3rd winner's Method	MSJAD Method	FSDE Method	Proposed Method	
+
+S1
+	0.68	0.69	0.38	0.66	0.56	
+0.70
+	
+
+S2
+	0.42	0.34	0.18	0.42	0.41	
+0.53
+	
+
+S3
+	0.75	0.71	0.48	
+0.77
+	0.43	0.72	
+
+S4
+	0.48	0.44	0.33	
+0.51
+	0.41	
+0.52
+	
+
+S5
+	0.4	0.16	0.07	
+0.5
+	
+0.68
+	0.43	
+
+S6
+	0.27	0.21	0.14	0.21	
+0.48
+	0.3	
+
+S7
+	0.77	0.66	0.29	0.3	
+0.8
+	0.62	
+
+S8
+	
+0.75
+	0.73	0.49	0.69	0.72	0.69	
+
+S9
+	0.61	
+0.69
+	0.44	0.46	0.63	0.66	
+
+Mean
+	0.57	0.51	0.31	0.5	0.57	0.57	
+
+Std.	0.18	0.23	0.15	0.18	0.15	0.14	
+In general, it was superior to other approaches in 3 subjects and as no artifact removal was done in our method, this approach seemed to be the winner among all these methods.
+
+In order to show that γ band is effective in performance improvement, we counted the number of frequency bands in which any of 4 classifiers (MLP, LDA, SVM and KNN) had the best accuracy rates and placed them in . As it can be seen, 8-40 Hz frequency range has the first rank. Thus, it can be deduced that presence of γ band is effective in performance improvement. Also, we can see 8-40 Hz range ranks first, 8-30 Hz ranks second and 8-50 Hz ranks third. In other words, wider frequency range may not improve performance necessarily.
+
+
+The ranking of frequency intervals. (S1 to S9 stand for Subject1-Subject9)
+
+Frequency Intervals (Hz)	S1	S2	S3	S4	S5	S6	S7	S8	S9	Total Wins
+	
+
+8-30
+	0	2	0	1	2	1	3	2	1	12	
+
+8-40
+	1	2	2	1	2	3	1	2	3	17	
+
+8-50
+	3	0	3	2	0	0	0	1	0	9	
+
+30-50
+	0	0	0	0	0	0	0	0	0	0	
+4. Discussion
+In this paper, it's been showed that using combination of µ, β and γ bands would have better performance than combination of µ,β in motor imageries classification. Different time and frequency intervals were experimented in order to find the best time and frequency intervals for each subject. CSP was used as feature extractor and MLP, RBF, LDA, SVM and KNN were used classifiers.
+
+The average of classification accuracy using combination of µ, β and γ is 72.25% and it is 69.34% using combination of µ and β. Thus, the improvement rate for all subjects is 2.91%.
+
+Future works are going to study different feature extraction and classifier combination methods.
+
+5. Acknowledgement
+The authors wish to thank Shahid Rajaee Teacher Training University for funding this project.
+
+Linear Discriminant Analysis (LDA)
+
+Radial Basis Function (RBF)
+
+Multi Layer Perceptron (MLP)
+
+Support Vector Machine (SVM)
+
+K-Nearest Neighbor (KNN)
+
+Inverse
+

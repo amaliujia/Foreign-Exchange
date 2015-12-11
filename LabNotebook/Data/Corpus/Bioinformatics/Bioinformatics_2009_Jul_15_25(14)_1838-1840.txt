@@ -1,0 +1,40 @@
+1 INTRODUCTION
+Genome-level high-density tiling arrays are becoming more accessible for genome-wide profiling studies including transcriptome identification (Bertone et al., ), transcription factor binding site identification (Lee et al., ), histone modification profiling (Gendrel et al., ; Li et al., ), DNA methylation profiling (Hayashi et al., ) and comparative genome hybridization. Specific analysis methods and tools are required for each type of study because the strategies behind different tiling array applications vary extensively. As a result, several models have been proposed and software tools have been developed for the analysis of different types of tiling array data (Chung et al., ; Ji et al., ; Li et al., ; Wang et al., ; Zhang et al., ). However, there is still room to improve for data analysis of epigenetic features including histone modifications and DNA methylation. The recognition of distribution patterns of modifications at both the local (gene) and global (chromosome) levels are usually required to infer biologically meaningful conclusions (Hayashi et al., ; Li et al., ).
+
+Here, we present a NimbleGen Tiling array data Analysis Package (NTAP) designed for histone modification profiling analysis (Li et al., ) that can also be applied to other ChIP-chip data (Lee et al., ). The advantage of our package is its ability to generate reports for various pattern recognition questions instead of focusing only on identifying significantly enriched oligos or genomic regions.
+
+2 FUNCTIONS AND FEATURES
+NTAP was developed using the R statistical language to take advantage of the powerful statistical functions of other open source packages especially those from the Bioconductor project (http://www.bioconductor.org/). It contains five main steps for data analysis: importing, normalization, feature identification, oligos mapping and post-processing for pattern recognition.
+
+2.1 Data importing
+We implemented an R function similar to the ‘read.maimages’ function in the limma package (Smyth 2004) to import NimbleGen raw data into limma data object formats for normalization.
+
+2.2 Data normalization
+Users can apply various microarray normalization methods to the imported datasets through the limma package functions ‘normalizeBetweenArrays’ and ‘normalizeWithinArrays’. Unlike the expression profiling arrays whose log transformed ratio distributions are usually symmetric around zero, the distribution of the ChIP-chip result tends to skew to the ChIP channel. Because only the protein-bound DNA fragments will be pulled down by a specific antibody, more positive log transformed ChIP/Input ratios are expected. Thus, the rank-invariant set scheme (Buck and Lieb, ) was incorporated for better data normalization.
+
+2.3 Feature identification
+Tiling arrays usually contain several oligos per single gene rather than one oligo per gene. For example, the traditional whole-genome array for expression studies in Arabidopsis thaliana usually contains only 23k oligos, while a customized whole-genome tiling array tiled at ∼250 bp resolution may contain ∼400k oligos. The much larger number of oligos on a single array makes the traditional methods for feature identification unfeasible. For tiling array data, expressed mRNA or pulled-down DNA fragments can cause the signal of a group of neighboring oligos to increase simultaneously. Therefore, our package implements the non-parametric Wilcoxon rank-sum method to compare the signal differences between the ChIP channel and the reference channel for a group of oligos using sliding windows. Under certain circumstances, however, the density of some tiling arrays may not be high enough to use the Wilcoxon method. In these cases, we utilize simple comparison linear models implemented in limma (Smyth ) to identify single oligos whose signal increased significantly in the ChIP channel. Then, we consider a genomic region as ‘positive’ if the region contains a single oligo that meets stringent user-defined criteria or the region contains a group of neighboring oligos that meet less stringent criteria.
+
+2.4 Mapping oligos to gene models
+Genome data are usually kept up-to-date by genome sequencing consortia or curation groups, who usually release their data as standard XML format files that can be parsed to easily obtain coordinates of gene models. A Perl module was implemented to retrieve records of the gene model position information on each chromosome and to determine the relative position of a specific oligo to its nearby gene model(s). Signal distribution patterns among different groups of genes can then be determined based on the stored relative position information.
+
+2.5 Post-processing functions
+The following questions are frequently asked in epigenomics research. What is the modification distribution pattern relative to genes and does it vary between different organs/tissues? Is there an association between specific histone modification levels and gene sizes, or gene expression levels? To answer these questions, we implemented several R functions to align genes, to calculate the average ChIP/Input intensity ratio of the oligos within sliding windows, and to plot the final results for different groups ().
+Demonstration of two different methods for the alignment of gene models and reorganization of histone modification patterns. (A) Two different strategies to align genes (three genes with different lengths were used as examples). The alignment without gene length normalization overlapped all the oligos based on their absolute distance (kb) to the transcription start site while with length normalization based on the relative positions (percentile) to the transcription start site. (B) The histone modification distribution pattern between different user-defined gene sub-groups that contain various length genes in this particular case. (C) The tissue-specific histone modification distribution pattern on all genes by the two different strategies demonstrated in (A).
+
+
+
+
+2.6 Result visualization
+Quality control is a key step to guarantee the validity of the overall data analysis. An R function was implemented to calculate the raw intensities correlation coefficient between any pair of two replicates. MA-plots of array hybridization results are also generated in order to examine the intensity ratio (M) versus averaged intensity (A) to discover possible non-linear biases that require special normalization methods. After raw data processing, all the oligos are mapped back to the most up-to-date chromosomes and the ChIP/Input ratio value of each oligo can then be plotted along the chromosome. These values can be displayed either by a program within NTAP or they can be exported in the GFF format to be displayed in the Generic Genome Browser GBrowse (Stein et al., ).
+
+3 IMPLEMENTATION
+Most of the functions are implemented in the R statistical language (http://www.r-project.org/) and Perl. Users can also choose any other software to pre-process their data before using our post-processing modules.
+
+ACKNOWLEDGEMENTS
+We thank Dr Kate Dreher for providing critical comments.
+
+Funding: NSFC (grants 90408015, 863: 2006AA02Z334); China high-tech platform; Monsanto Fellowship and the China Postdoctoral Program (to K.H.).
+
+Conflict of Interest: none declared.
+

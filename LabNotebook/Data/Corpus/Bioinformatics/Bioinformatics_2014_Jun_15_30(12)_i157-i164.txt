@@ -1,0 +1,287 @@
+1 INTRODUCTION
+Metabolomics deals with the analysis of small molecules and their interactions in living cells. A central task in metabolomics experiments is the identification and quantification of the metabolites present in a sample. This is mandatory for subsequent analysis steps such as metabolic pathway analysis and flux analysis (). Mass spectrometry (MS) is one of the two predominant analytical technologies for metabolite identification. Identification is done by fragmenting the metabolite, for example, by tandem MS (MS/MS), and measuring the mass-to-charge ratios of the resulting fragment ions. The measured mass spectra contain information about the metabolite, but extracting the relevant information is a highly non-trivial task.
+
+Several computational methods have been suggested to identify the metabolites from MS/MS spectra. Mass spectral databases (spectral libraries) have been created (e.g. ; ; ; ), which allow us to search measured mass spectra. Unfortunately, this approach can only identify ‘known unknowns’ where a reference measurement is available.
+
+Fragmentation trees are combinatorial models of the MS/MS fragmentation process.  suggested fragmentation trees for identifying the molecular formula of an unknown compound. Later, fragmentation trees were shown to contain valuable structural information about the compound (, ).
+
+The relation between spectral and structural similarities has been studied by . A kernel-based machine learning approach for metabolite identification was recently introduced by , relying on predicting the molecular fingerprints as an intermediate step. Molecular fingerprints are given as bit vectors with each bit describing the existence of certain molecular property such as substructures in the molecule. After the prediction, imposing some scoring strategy, the predicted molecular fingerprints are used for searching some chemical database and finally the ranked list of candidates are generated (; ).
+
+Besides these two approaches, methods have been suggested for predicting MS/MS spectra from molecular structures (; ); commercial software packages also exist for this task. Such simulated spectra can be used to replace the notoriously incomplete spectral libraries by molecular structure databases (). Combinatorial fragmentation of molecular structure serves the same purpose (; ). Finally, we can search spectral libraries for similar compounds, by comparing either MS/MS spectra (; ) or fragmentation trees (). See  and  for recent reviews.
+
+We propose a joint strategy that combines fragmentation trees and multiple kernel learning (MKL) to improve molecular fingerprint prediction and, subsequently, the metabolite identification. We first outline the metabolite identification framework and introduce fragmentation trees and their computation. Next, we introduce a family of kernels for fragmentation trees, consisting of simple node and edge statistics kernels as well as path and subtree kernels that use dynamic programming (DP) for efficient computation. We then describe state-of-the-art methods for MKL. In these experiments, we evaluate different MKL algorithms with regards to the fingerprint prediction and the metabolite identification.
+
+2 METHODS
+ gives an overview for our metabolite identification framework through MKL. Fragmentation trees are computed first, followed by the computation of kernels. MKL approaches are used to integrate different kernels for molecular fingerprint prediction. The final step of the framework is to query molecular structure databases with the predicted molecular fingerprint using a probabilistic scoring function.
+The metabolite identification framework through MKL. First, we construct the fragmentation tree from the MS/MS spectrum. Second, we compute kernels for both MS/MS data and fragmentation trees. Third, MKL is used to combine kernels and predict molecular fingerprints. Finally, fingerprints are used for molecular structure database retrieval
+
+
+
+The advantages of the kernel-based machine learning framework are: that it easily allows incorporating the combinatorial fragmentation trees by kernelizing the model; that it can query molecular structure databases which are much larger than MS/MS spectral libraries; and that molecular fingerprints can help to characterize the unknown metabolite and may shed light for de novo identification.
+
+2.1 Fragmentation trees
+ introduced fragmentation trees to predict the molecular formula of an unknown compound using its MS/MS spectra. A fragmentation tree annotates the MS/MS spectra of a compound via assumed fragmentation processes. Nodes are molecular formulas, representing the unfragmented molecule and its fragments. Edges represent fragmentation reactions between fragments, or the unfragmented molecule and a fragment. Details on the computation can be found in  and ; here, we quickly recapitulate the method. We assume that MS/MS spectra recorded at different collision energies have been amalgamated into a single spectrum, as described in Section 3. We decompose all peaks in the amalgamated spectrum, finding all molecular formulas that are within the mass accuracy of the measurement. For each decomposition of the parent peak, we build a fragmentation graph which contains all possible explanations for each peak, where nodes are colored by the peaks they originate from. We insert all edges between nodes that are not ruled out by the molecular formulas: that is, a product fragment can never gain atoms of any element through the fragmentation. Edges of this graph are then weighted, taking into account the intensity and mass accuracy of the product fragment, the mass of the loss and prior knowledge about the occurrence of certain losses.
+
+Under the parsimony assumption, we then compute a colorful subtree of this graph with maximum weight. Unfortunately, finding this tree is an NP-hard problem (). Nevertheless, we can compute optimal trees in a matter of seconds using Integer Linear Programming (). For each peak, this tree implicitly decides whether it is noise or signal and, in the later case, assigns the molecular formula of the corresponding fragments and the fragmentation reaction it resulted from. The score of the tree is the sum of its edge weights. Candidate molecular formulas of the parent peak are ranked by this score, which is the maximum score of any tree that has this molecular formula as its root.
+
+Different from  and , we used a modified weighting function for the edges of the fragmentation graph. With these new weights, the above optimization can be interpreted as a maximum a posteriori estimator of the observed data. We weight edges by the logarithmic likelihood that a certain fragmentation reaction occurs: for this, we consider the intensity and mass deviation of the product fragment peak, the loss mass and chemical properties of the molecular formula as proposed in : namely, the ring double bond equivalent and the hetero atoms and carbon atoms ratio. Furthermore, we favor a few common losses that were learned from the data, and penalize implausible losses and radicals. Such weights have already been used in  and ; different from there, we did not choose parameters ad hoc but rather learned them from the data. Details about these new weights will be published elsewhere.
+
+2.2 Kernels for fragmentation trees and MS/MS spectra
+2.2.1 Probability product kernel
+ compared several kernels that can be computed directly from the MS/MS spectra without the knowledge of the fragmentation trees. In their studies, simple peak and loss matching kernels were found inferior to the probability product kernel (PPK). Thus, we use the PPK as the baseline comparison with the fragmentation tree kernels. The idea of the PPK is the following: each peak in a spectrum is modeled by a 2D Gaussian distribution with the mass-to-charge ratio as one dimension, and the intensity as the other. All-against-all matching between the Gaussians is performed to avoid problems arising from alignment errors.
+
+Formally, a spectrum is defined as , a set of ℓχ peaks  consisting of the peak mass μ(k) and the normalized peak intensity ι(k). The k-th peak of the mass spectrum χ is represented by  centered around the peak measurement and with covariance shared with all peaks
+
+where the variances  for the mass is estimated from data and  is tuned by cross-validation. No covariance is assumed between peak distributions. The spectrum χ is finally represented as a mixture of its peak distributions .
+
+The PPK
+Kpeaks () between the peaks of two spectra χ, χ′ is given by:
+
+
+
+The precursor ion is the compound selected in the first round of MS/MS and further fragmented in the second round. As a result, the difference (loss) between the peak χ(k) and the precursor ion prec(χ) = (μ(p),0) is also important, where μ(p) is the mass of the precursor ion. We can model the difference with distribution , where . This feature is denoted as loss and corresponding kernel matrix as Kloss. Experiments in  and  showed that the combined kernel Kpeaks + Kloss achieved best accuracy and computational efficiency among the spectral kernels.
+
+2.2.2 Fragmentation tree kernels
+Fragmentation trees can be considered as an annotated representation of the original MS/MS spectra. Recent advancement (; ) in comparing and aligning the fragmentation trees enables similarity metrics to be defined between fragmentation patterns for small molecules.  introduced fragmentation tree alignments, and showed alignment scores to be correlated with chemical similarity. However, alignment scores of this type do not, in general, yield positive semidefinite kernels. In the following, we define a set of kernels for fragmentation trees that will allow us to transfer the power of the fragmentation tree approach to the kernel-based learning algorithms for molecular fingerprint prediction and metabolite identification.
+
+A fragmentation tree T = (V, E) consists of a nodes set V of molecular formulas (corresponding to the fragments) and an edges set E ⊆ V × V (corresponding to the losses). Let r denote the root of T. For an edge  let  be the molecular formula of the corresponding loss. Clearly, different edges may have identical losses; let λ(E) be the multiset of all losses. For some loss molecular formula l, let N(l) be the number of edges  with λ(e) = l. Each path from the root r to a node v implies a root loss r − v; let  be the set of all root losses. For a MS/MS spectrum x, let Tx = (Vx,Ex) be the corresponding fragmentation tree, with root losses  and loss multiplicities Nx(·). For any node  let ιx(v) be the corresponding peak intensity; for an edge  let ιx(e) be the intensity of the terminal node v.
+
+For the loss- and node-based kernels, feature vectors ϕ are constructed and the kernel function is just a simple dot product between two feature vectors. Path-based kernels are more complicated, and details on their computation will be given below.
+
+Loss-based kernels: edges in the fragmentation trees represent the losses from the parent node to the child node. The following feature vectors are devised based on the losses in a fragmentation tree Tx:
+LB: Loss binary, indicates the presence of a loss l in a fragmentation tree Tx, that is, .
+
+LC: Loss count, counts the number of occurrences of a loss l in a fragmentation tree Tx, that is, .
+
+LI: Loss intensity, uses the average intensity of the terminal nodes with loss l in a fragmentation tree Tx, that is, .
+
+RLB: Root loss binary, indicates the presence of a root loss l in a fragmentation tree Tx, that is, .
+
+RLI: Root loss intensity uses the intensity of the terminal node of a root loss if it is present in a fragmentation tree Tx. For root r we set  if , and  otherwise.
+
+
+
+
+Node-based kernels: the nodes in the fragmentation tree explain peaks in the MS/MS by some chemical formula of the hypothetical fragment. The nodes are unique in a fragmentation tree T, and so are the root losses. To this end, we can omit root losses from the feature vectors.
+NB: Nodes binary, indicates the presence of a node v in a fragmentation tree Tx, that is, .
+
+NI: Nodes intensity, uses the intensity of the node if it is presented in a fragmentation tree Tx; that is,  for , and  otherwise.
+
+
+
+
+Path-based kernels: these kernels are count common path between two fragmentation trees—here, ‘common path’ refers to an identical sequence of losses in the two trees. We use DP to efficiently count the number of common paths, that is, the dot product of two feature vectors which are not explicitly constructed. For two fragmentation trees T1 = (V1,E1) and T2 = (V2,E2) we compute a DP table D[u,v] for all  and . In all cases, the number of common paths is D[r1,r2] where ri is the root of Ti. We initialize
+
+where  denotes the leaves of a tree T. Let C(v) be the children of a node v.
+Common path counting (CPC). The DP table entry D[u,v] records the count of common path for the subtrees rooted in u and v, respectively. This leads to the following recurrence:
+
+
+
+Common paths of length 2 (CP2). In this case, only common losses for paths of length two are considered:
+
+
+
+Common path with Kpeaks (CPK). Instead of simply counting the common paths, we use the PPK Kpeaks to score the terminal peaks. We omit the straightforward but somewhat tedious details.
+
+Common subtree counting (CSC). In this case, we count the number of ‘common subtrees’ between T1 and T2, which can be defined analogously to the common paths above. Entry D[u,v] now counts the number of common subtrees for the two subtrees rooted in u of T1, and v of T2. We have to consider three cases: for each pair of children  and  with λ(u,a) = λ (v,b) we can either attach the subtrees rooted in a and b; we can use solely the edges (u, a) and (v, b) as a common subtree; or, we can attach no common subtree for this pair of children. But if we choose no subtree for all matching pairs of children, the result would be a tree without edges and, hence, not a valid common subtree. Thus, we have to correct for this case by subtracting one. Hence, the recurrence is:
+
+
+
+
+
+
+2.3 MKL
+In many applications, multiple kernels from different kernel functions or multiple sources of information are available. MKL becomes a natural way to combine information contained in the kernels. Instead of choosing the best kernel via cross-validation as in  and , MKL seeks a linear, convex or even non-linear combination of the kernels. An overview of MKL algorithms can be found in a survey by .
+
+In practice, it is often difficult for MKL algorithms to outperform the uniform combination of the kernels (UNIMKL) where the weights for kernels are equal. However, in some cases, some methods have seen improvements over the uniform combinations. Three algorithms coupled with SVM are considered in the following: centered alignment-based algorithms (), quadratic combination of the kernels () and ℓp-norm P &gt; 1 for the kernel weights ().
+
+For all the three algorithms, the input will be a set of kernels  computed from n data points. The output is a set of m fingerprint properties  which is a multi-label prediction task and each label is trained independently in the experiments.
+
+2.3.1 Centered alignment-based MKL
+The centered alignment-based MKL algorithms are based on the observation that the centered alignment score with the target kernel  correlates very well with the performance of the kernel, where y is a single label. Experiments by  show consistent improvements over the uniform combination. In the molecular fingerprint prediction setting, the target kernel is defined as .
+
+Two-stage model are considered in which the kernel weights are learned first and then can be applied to all kernel-based learning algorithms (SVM in this work). The centered kernel matrices are defined by :
+
+where I is the identity matrix and e is the vector with all ones. , let  denotes the Frobenius product and  denotes the Frobenius norm which are defined by
+
+
+
+Let now  and  be two kernel matrices such that  and . Then the centered alignment between K and K′ is defined by
+
+
+
+The simple independent centered alignment-based algorithm (ALIGN) () computes the alignment score between each kernel matrix Ki and the target kernel matrix KY and combine the kernels as
+
+
+
+The alignment maximization algorithm (ALIGNF) () jointly seeks the weight μi to maximize the alignment score defined by  between the convex combination of the kernel in K and the target kernel , that is, the following optimization problem:
+
+where .
+
+2.3.2 Quadratic combination MKL
+In this setting, the quadratic combination of kernels (QCMKL) is included in the formulation and the MKL problem is solved by semidefinite programming (; ). The kernels in K are enriched to a new set  by the following transformation:
+
+where i,j = 1, … ,q and ∘ denotes the Hadamard product.
+
+The convex combinations of the kernels is given by  with  and . Adapting the soft margin SVM formulation reveals the following dual problem (in epigraph form) ():
+
+
+
+The derived Lagrangian for the problem is ():
+
+with  as dual variables, and . Applying Schur’s lemma to convert the first inequality constraint to Linear Matrix Inequality (LMI) unveils the following semidefinite program (SDP) ():
+
+
+
+Many standard SDP solvers can be used to find the optimal solutions such as cvx (http://cvxr.com/).
+
+2.3.3 ℓp-norm MKL
+While ℓ1 norm on the kernel weights μ produces sparse solutions, higher norms p &gt; 1 produces non-sparse solutions which may be beneficial. A general framework for ℓp-norm MKL (ℓp-MKL) was proposed by . The q kernels correspond to q feature mappings  and l is some convex loss function and the primal problem is then:
+
+when the optimization is coupled with hinge loss, the problem has a simple dual form ():
+
+where all the variables are all as defined before but .
+
+The optimization problem can be solved by alternating the dual variables α and the kernel weights μ via the squared norm on w by the following equations:
+
+
+
+
+Based on the above equations, a simple alternating algorithm has been proposed by  as Algorithm 1.
+
+Algorithm 1 Wrapper algorithm for ℓp-norm MKL
+Input feasible α and μ
+
+while optimization conditions are not satisfied do
+
+ Solve α with current μ using standard SVM.
+
+ Compute  with .
+
+ Update μ by .
+
+end while
+
+
+
+The optimization conditions can be the difference of objective function or the duality gap between two subsequent iterations. More detailed, theoretical results and a faster chunking-based algorithm are also presented in .
+
+2.4 Probabilistic scoring of candidate metabolites
+Given a predicted fingerprint associated with a mass spectrum, for metabolite identification, we need to retrieve metabolites with similar fingerprints from a molecular database. Assume  is a predicted fingerprint and an arbitrary fingerprint  for some molecule in some molecular database, one can score the y by the following equation as used in FingerID (; ):
+
+that is, the Poisson binomial probability for the fingerprint vector y where the cross-validation accuracies  of the fingerprints prediction are taken as the reliability scores.
+
+3 RESULTS
+Two MS/MS datasets, 978 compounds downloaded from METLIN () and 402 compounds from MassBank (), both measured by QTOF MS/MS instruments are tested. For each compound, mass spectra recorded at different collision energies were amalgamated before further processing: we normalize MS/MS spectra such that intensities sum up to 100%. We merge peaks from different collision energies with m/z difference at most 0.1, using the m/z of the highest peak and summing up intensities. We discard all but the 30 highest peaks, as well as peaks with relative intensity &lt;0.5%.
+
+Next, we compute the fragmentation tree. We assume that we can identify the correct molecular formula from the data: limiting candidate molecular formulas to those present in KEGG (), which is used for searching molecular structures below, the best scoring fragmentation tree identified the correct molecular formula of the compound in 97.1% (96.0%) of the cases for the METLIN (MassBank) dataset. Integrating other sources of information such as MS1 isotope patterns () or retention times would reach even better identification rates. To allow for a meaningful comparison of the power of the different kernels, we therefore use the best scoring fragmentation tree of the correct compound molecular formula.
+
+All 11 fragmentation tree kernels proposed in the previous section were computed, along with PPK used in  and  computed directly from MS/MS, resulting in 12 kernels to be evaluated.
+
+Molecular fingerprints were generated using OpenBabel () which contains four types of fingerprints (http://openbabel.org/wiki/Tutorial:Fingerprints). FP3, FP4 and MACCS fingerprints (528 bits in total) were generated based on the software predefined SMARTS patterns. In our dataset, more than half of the fingerprint properties have high-class bias rate, with a large majority of the dataset belonging to the positive class (most compounds match the property) or respectively the negative class (most compounds do not match the property). For such fingerprints, the default classifier, one that always predicts the majority class, has high accuracy, although the model is not meaningful. For our performance comparisons, we opted to only include fingerprints with class bias rate &lt;0.9.
+
+For each fingerprint property, we separately trained a SVM; for all properties, we used identical training and testing compounds. Five-fold cross-validation was performed and the SVM margin softness parameter () was tuned based on the training accuracy.
+
+3.1 Fingerprint prediction performance
+The micro-average (simultaneous average over fingerprint properties and compounds) accuracy and F1 of the individual kernels on the predictions of fingerprint properties with bias rate &lt;0.9 are shown in  with the SDs computed from different cross-validation folds. The kernel NB achieves the best accuracy and F1 on both METLIN and MassBank. Compared with the PPK, the fragmentation tree kernels are markedly more accurate on average.
+Micro-average performance of individual kernels 
+
+	METLIN	MassBank	
+	Acc (%)	F1 (%)	Acc (%)	F1 (%)	
+LB	79.5 ± 0.5	69.9 ± 0.9	78.9 ± 1.0	69.0 ± 2.2	
+LC	79.4 ± 0.3	69.6 ± 0.4	78.5 ± 1.2	68.4 ± 2.7	
+LI	77.8 ± 0.5	66.8 ± 0.7	77.4 ± 1.0	66.7 ± 2.0	
+RLB	81.6 ± 0.8	73.2 ± 1.1	78.6 ± 1.0	68.4 ± 1.2	
+RLI	78.4 ± 0.6	68.5 ± 0.8	76.7 ± 0.9	65.4 ± 1.6	
+NB	81.9 ± 0.4	73.9 ± 0.3	81.4 ± 0.7	73.2 ± 1.2	
+NI	80.3 ± 0.7	71.1 ± 0.8	79.8 ± 1.0	70.5 ± 0.9	
+CPC	80.6 ± 0.5	71.6 ± 0.7	78.7 ± 1.4	68.9 ± 2.4	
+CP2	78.7 ± 0.7	68.4 ± 1.2	76.4 ± 1.0	65.5 ± 1.1	
+CPK	72.9 ± 0.3	58.8 ± 0.5	72.2 ± 0.6	57.9 ± 0.5	
+CSC	74.9 ± 0.4	61.9 ± 0.8	77.8 ± 0.8	67.2 ± 2.0	
+PPK	76.7 ± 0.6	64.0 ± 0.7	72.9 ± 1.1	58.6 ± 1.2	
+PPK is the method from , which we compare against.
+
+
+
+The improvement of MKL approaches over single kernel SVMs are clear. The t-test between NB and ALIGNF shows the differences of mean accuracy and F1 are indeed very significant with P-values of 4 × 10−6 and 1.7 × 10−3, respectively. The kernel weights learned by different MKL algorithms are shown in the supplementary file.
+
+The micro-average accuracy and F1 of the MKL algorithms on the fingerprint properties predictions are shown in , where it can be concluded that averaged overall fingerprints of the MKL methods are quite close. We conducted further pairwise difference testing, where the performance difference of each method on each individual fingerprint property is evaluated.  shows the significance level of the sign test on the accuracy and F1 on the METLIN and MASSBANK datasets using the different MKL methods. The sign test describes whether one of the methods has higher probability of success (better than the other on a fingerprint) than the other (alternative hypothesis) or not (null hypothesis). From the table, we can deduce that ALIGN and ALIGNF rise slightly above the competition whereas ℓ2-MKL and QCMKL are slightly inferior to the rest. The performance of UNIMKL is also respectable. The scatter plots of accuracy and F1 between every pair of the MKL algorithms are shown in the supplementary file.
+Micro-average performance of MKL algorithms
+
+	METLIN	MassBank	
+	Acc (%)	F1 (%)	Acc (%)	F1 (%)	
+UNIMKL	85.0 ± 0.6	78.3 ± 0.7	82.2 ± 0.6	73.9 ± 1.5	
+ALIGN	85.2 ± 0.6	78.6 ± 0.7	82.4 ± 0.7	74.4 ± 1.4	
+ALIGNF	85.0 ± 0.5	78.6 ± 0.4	82.8 ± 0.4	75.2 ± 1.2	
+QCMKL	84.9 ± 0.5	77.8 ± 0.5	82.1 ± 0.6	74.0 ± 0.7	
+ℓ2-MKL	84.7 ± 0.5	77.5 ± 0.5	82.2 ± 0.5	74.0 ± 0.9	
+ℓ3-MKL	85.2 ± 0.6	78.5 ± 0.7	82.4 ± 0.6	74.4 ± 1.3	
+ℓ4-MKL	85.2 ± 0.6	78.5 ± 0.8	82.3 ± 0.6	74.2 ± 1.0	
+ℓ5-MKL	85.1 ± 0.6	78.5 ± 0.7	82.3 ± 0.6	74.1 ± 1.3	
+
+Sign test for the performance of MKL algorithms on the METLIN and MassBank datasets
+
+	Acc	UNIMKL	ALIGN	ALIGNF	QCMKL	ℓ2-MKL	ℓ3-MKL	ℓ4-MKL	ℓ5-MKL	
+METLIN	UNIMKL		−−	−	++	++		−−	−−	
+ALIGN	++			++	++	+		++	
+ALIGNF	+			++	++			+	
+QCMKL	−−	−−	−−		++	−−	−−	−−	
+ℓ2-MKL	−−	−−	−−	−−		−−	−−	−−	
+ℓ3-MKL		−		++	++				
+ℓ4-MKL	++			++	++				
+ℓ5-MKL	++	−−	−	++	++				
+MassBank	UNIMKL		−	−−	+	+			+	
+ALIGN	+		−−	+	++		++	++	
+ALIGNF	++	++		++	++	++	++	++	
+QCMKL	−	−	−−			−	−−	−	
+ℓ2-MKL	−	−−	−−				−	−	
+ℓ3-MKL			−−	+			+		
+ℓ4-MKL		−−	−−	++	+	−			
+ℓ5-MKL	−	−−	−−	+	+				
+F1	UNIMKL	ALIGN	ALIGNF	QCMKL	ℓ2-MKL	ℓ3-MKL	ℓ4-MKL	ℓ5-MKL	
+METLIN	UNIMKL		−			+	−−	−−	−−	
+ALIGN	+			++	++				
+ALIGNF				+	++				
+QCMKL		−−	−		+	−−	−−		
+ℓ2-MKL	–	−−	−−	−		−−	−−	−−	
+ℓ3-MKL	++			++	++				
+ℓ4-MKL	++			++	++				
+ℓ5-MKL	++				++				
+MassBank	UNIMKL		−						+	
+ALIGN	+			++	++				
+ALIGNF				++	++				
+QCMKL		−−	−−			−−	−−	–	
+ℓ2-MKL		−−	−−						
+ℓ3-MKL				++					
+ℓ4-MKL				++					
+ℓ5-MKL	–			+					
+‘+’ indicates the method in the row is better than the method in the column (‘−’ otherwise) with significance P-value between 0.01 and 0.05; blank indicates no significance. Similarly, ‘’ and ‘−−’ indicate significance with P-value &lt; 0.01. Upper table is for accuracy and lower table is for F1.
+
+
+
+3.2 Metabolite identification performance
+The molecular fingerprint prediction can serve as an intermediate step for metabolites identification, and can be used to search a molecular structure database (; ). We want to evaluate whether improvements in fingerprint prediction propagate to better metabolites identifications. We will search for molecular structures from the KEGG database. As we assume to know the correct molecular formula, we may filter based on this information to generate our candidate lists. But it turns out that this filter is too strict for a meaningful evaluation, as the number of candidates for each MS/MS spectrum becomes very small and, hence, all kernels show good performance. For a more discriminative evaluation of the kernels, we artificially enlarge the set of candidates: we use all molecular structures in KEGG with mass accuracy window  as candidates, where μM is the true mass of the unknown molecule. For sufficiently large mass accuracy Δ, this results in candidate lists that allow a meaningful comparison of the kernels.
+
+For identification, we want the true molecular structure to be ranked as high as possible in the candidates list. a and b shows the fraction of compounds that were ranked higher than certain rank for the two datasets, when searching KEGG with 300 ppm mass inaccuracy to generate the candidates for the two datasets.
+(a and b) show the performance for identification when searching KEGG using 300-ppm mass window with predicted molecular fingerprints, with fingerprints trained with METLIN and MassBank datasets, respectively. NUM denotes the number of candidate molecules returned per query. (c and d) show the proportion of data that were correctly identified in the top 1 rank against a series of mass windows
+
+
+
+We notice that the NB kernel is consistently more accurate than PPK. In addition, MKL clearly improves the identification performance, especially the number of top-ranked identifications increases significantly. T-test between the ranks of the ALIGNF and PPK shows a P-value of 0.06 which verifies the improvements in identification by ALIGNF over the PPK is indeed significant. ALIGNF comes on top of the MKL approaches, which is in line with its good fingerprint prediction accuracy and F1 score.
+
+The effect of mass accuracy windows during the database retrieval are shown in c and d. A narrower 20-ppm mass search window filters out many false candidates, and thus significantly elevates the identification accuracies to 60% on METLIN dataset and 40% on MassBank dataset. However, the effect of improved molecular fingerprint prediction is softened due to the fewer but possibly more similar candidates. An extreme case is observed in d in which all the methods shrink to the same result when searching with 20-ppm mass accuracy window.
+
+4 DISCUSSION
+The present work combines the combinatorial fragmentation tree approach with machine learning through a kernel-based approach. We suggest several kernels for fragmentation trees, and show how to fuse their information through MKL. The result significantly enhances molecular fingerprint prediction and metabolite identification.
+
+The closest analogs to our fragmentation tree kernels in literature are those defined for parse trees in natural language processing (); our fragmentation trees can be seen as parses of the MS/MS spectra. DP techniques similar to ours are used there for computing kernels between trees (; ). However, fragmentation trees have important differences to the trees defined between parses of natural language and to kernels comparing molecular structures (). Differently from natural language parses, the node labels have partial order (via their molecular weights) and also the edges have labels. Differently from kernels for molecular graphs, the label spaces of both nodes and edges are vast (subsets of molecular formulae).
+
+The comparison with the PPK employed by the FingerID () software shows that the fragmentation tree kernels are able to extract more information out of the MS/MS spectra. Improvements are seen in both the prediction accuracy and the F1 score. Comparing with FingerID (PPK), the uniform combination of the kernels (UNIMKL) improves the molecular fingerprint prediction significantly in accuracy and F1. As witnessed by many MKL applications, the UNIMKL algorithm is hard to beat. In our result, several MKL algorithms such as ALIGNF and ℓ3-norm can give slightly better result than UNIMKL. The improvements in the molecular fingerprint prediction translate to improved metabolite identification.
+
+There are several possible routes forward with the current metabolite identification framework. First, post-processing on the candidates list, such as the one proposed by , is necessary when searching a large compound database such as PubChem, because the returned candidates (hundreds to thousands) may share the same fingerprints and there is no way to differ them based only on molecular fingerprints. Second, training a separate SVM for each fingerprint property is clearly an aspect that can be improved upon, for example, by a multi-label classification approach. A still more tempting yet challenging direction would be to replace the two-step identification by an integrated prediction approach. Such an approach would potentially learn to predict the fingerprint properties that are important for discriminating metabolites from each other.
+
+Funding: Academy of Finland grant 268874 (MIDAS); Deutsche Forschungsgemeinschaft grant (BO 1910/16-1) (IDUN). 
+
+Conflict of Interest: none declared.
+

@@ -1,0 +1,262 @@
+Background
+Clustering is routinely used in the exploratory phase of a microarray experiment. Genes are clustered using the pairwise correlation coefficients between two sets of
+expression profiles as a measure of similarity or closeness. With the growing annotation databases, it is perhaps wise to take advantage of the functional class information of the
+annotated genes along with the experimental data in grouping genes. Unlike, other approaches (e.g., []), the
+purpose of this paper is to outline a general approach of modifying the distance itself. Thus, in a sense, we do not propose a new clustering algorithm - any classical
+clustering algorithm can be applied based on the new distance (or dissimilarity) matrix. We illustrate this procedure using the agglomerative hierarchical clustering
+UPGMA and the divisive hierarchical clustering algorithm DIANA applied to two gene expression data sets.
+
+Methodology
+Biological Information
+The  is linked.
+
+This new similarity metric (1) corresponds to distances used by semi-supervised clustering techniques in Machine Learning. [] 
+In our case the functional distance plays the role of the similarity-adapting function. Therefore the measurement distance is computed in the same fashion as
+in the case of standard clustering of gene expressions, and the role of the functional distance is to alter similarities between the gene expressions so that the resulting clusters
+are in agreement with the functional annotation of genes. Because one of the purposes of cluster analysis of gene expressions is prediction of previously unknown functions
+of genes, it is desired that: 1) genes with similar functions appear in the same cluster, and 2) genes with unknown functions appear in clusters where majority of genes have
+known and similar function. In order to satisfy the presented goals the distance matrix needs to be altered so that:
+distance between genes with similar functions is smaller than between genes with different functions,
+
+distance between a pair of annotated and unannotated genes is smaller than between two unannotated genes,
+
+distance between genes with different functions is larger than between two unannotated genes. 
+
+
+
+Thus the functional distance is composed of the three parts that correspond to the above tasks:
+
+         The  is linked
+
+Decreasing the distance between genes with similar functions
+The often overlooked difficulty in assessing gene similarity is the lack of clear structure in the public gene ontology data bases. Some functions are more general than others
+and some functions are sub-functions of others. As a solution to this problem we assume that genes are more similar if they share more functions. Let F be a binary
+matrix that represents gene membership in the functional sets or lack of functional annotation: 
+The  is linked
+where α is a diagonal matrix of scaling coefficients for each functional set. The scaling coefficients α are introduced because distance variance may 
+vary across functional sets.
+
+Increasing distance between unannotated genes
+Because the purpose of gene expression clustering is to predict functions of genes not studied previously, it is desired that the unannotated genes are placed into clusters
+composed primarily of genes with known functional annotations. Increasing distances between unannotated genes will result in change of the behavior of a clustering
+algorithm. The annotated genes will be clustered earlier and will thus form basis of functional clusters to which unannotated genes will later be assigned. Because the only
+accessible information about unannotated genes are their expressions, dF2 should not alter the relative distances between expressions of unannotated genes. Adding a
+constant to the distance between each pair of unannotated genes will satisfy the goal without changing the properties of the data. The element modifying the distance matrix that
+accomplishes this task is equal to:
+The  is linked.
+and β is a scaling factor that controls the magnitude of the increase of the distance between a pair of unannotated genes.
+
+Increasing the distance between genes with different functions
+The previous paragraph presents the modification of distance matrix that increases distances between all pairs of unannotated genes so that clusters composed primarily of
+genes with unknown functions are avoided. However the set of unannotated genes may contain genes with similar functions that should be placed in the same clusters. The
+modified distance matrix counteracts assigning twounannotated genes to one cluster. In the absence of functional information of unannotated genes, it is not
+known how the distances between unannotated genes should be altered. Gene expressions and functional information of annotated genes provide the only accessible
+knowledge about the unannotated genes. Thus the distances between annotated genes that have different functions will be increased so that unannotated genes with similar gene
+expressions can be placed in the same cluster. The distance matrix is updated by:
+The  is linked.
+
+Selection of parameters
+The new updated distance matrix depends on the values of the parameters α, β, and γ. These are found by considering the constraints imposed on the distances between genes that lead to formulation of 
+the functional distance. The mathematical details are provided in the supplement. 
+
+The  is linked.
+
+The detailed derivation of the above presented equations is given in the supplemental document.
+
+Note that this constrained distance matrix controls the behavior of a clustering algorithm. The annotated genes that belong to the same functional sets are the closest to one another and thus
+create basis of clusters. Then genes with unknown functions are assigned to clusters created by annotated genes. Because (5) and (7) increase the distances between unannotated genes and genes
+that do not share any function by a constant, cluster assignment is delayed but performed on the basis of gene expressions.
+
+Results
+Two illustrative examples of clustering gene expression data are included here. We compare the results of two distance based clustering algorithms – UPGMA and DIANA that utilize the
+proposed distance matrix dM + dF with prior functional information with those of the respective clustering algorithms based on distance matrix computed only with gene expressions
+dM . We measure biological validity of clustering results and the distribution of functions in gene clusters. Two publicly available sets of gene expressions and functional annotations
+obtained from public databases are used. The detailed description of data sets and performance measures is presented below.
+
+Data
+Two publicly available sets of gene expressions: 1) Yeast time course cDNA, and 2) Normal versus breast carcinoma, SAGE data, are utilized in our illustration.
+
+Yeast time course cDNA data
+This set of gene expressions was collected by Chu et al. and presented in []. This data set records expression profiles during
+sporulation of Saccharomyces cerevisiae at seven time points.  The original data set was filtered using the same criterion as in []. 
+We consider a subset of 513 genes (ORF's to be correct) that were overall positively expressed (i.e., Σtimelog expression ratio &gt; 0).
+
+As in [], the sets of functional classes were obtained using the web-based GO mining tool at 
+http://mips.gsf.de/proj/funcatDB/search main frame.html.
+Overall, 342 of the 513 genes were annotated into the following sixteen functional classes: metabolism (121 genes), energy (25), cell cycle and DNA processing (140),
+transcription (45), protein synthesis (9), protein fate (66), protein with binding function or cofactor requirement (73), protein activity regulation (15), transport (57), cell
+communication (11), defense (36), interaction with environment (27), cell fate (11), development (11), biogenesis (69), cell differentiation (72).
+
+Normal versus breast carcinoma, SAGE data
+The second data set comes from the study presented in []. We illustrate our methods using the expression profiles of 258 genes (SAGE tags) that were judged to be significantly
+differentially expressed at 5% significance level between four normal and seven ductal carcinoma in situ (DCIS) samples. Abba et al. [] 
+combined various normal and tumor SAGE libraries in the public domain with their own SAGE libraries and used a modified form of t-statistics to compute p-values. Further details can be obtained from
+their paper and its supplementary web-site. The functional classes were constructed using a publicly available webtool called Amigo (
+http://www. godatabase.org/cgibin/amigo/go.cgi). As in [], a total of 113 SAGE tags were annotated into the following eleven classes of molecular
+function based on their primary biological functions. They were as follows: cell organization and biogenesis (24), transport (7), cell communication (15), cellular metabolism
+(48), cell cycle (6), cell motility (7), immune response (7), cell death(7), development (5), cell differentiation (5), cell proliferation (5).
+
+Clustering algorithms and distance metric
+The Unweighted Pair Group Method with Arithmetic mean (UPGMA) and Divisive Analysis (DIANA) were applied to the two illustrative data sets. The following expression
+The  is linked. 
+The values of parameters α, β, and γ utilized for
+computation of the functional distance (2) for yeast and SAGE data are presented in  and , respectively. These were calculated using our algorithm stated in the
+Methods section (c.f., (8)-(11)).
+
+In order to demonstrate how the distances between genes change we selected six genes: YBL043W, YBR168W that belong to the biogenesis functional set, YGL210W that
+belongs to both biogenesis and transport functional groups, YAL067C from transport group, and YAL018C, YBL010C both unannotated. The measurement distances between the listed genes are presented in . Note that YAL067C
+that belongs to the transport group is, according to gene expressions, more similar to YBL043W and YBR168W that belong to biogenesis group than to YGL210W, which
+also belongs to the transport group. Note also that the two unannotated genes YAL018C and YBL010C are more similar to each other than the genes from the biogenesis or the transport functional group.
+
+The functional dissimilarities between the selected six genes are shown in . The complete functional distance (2) 
+is not listed in  so that the change with
+respect to dM can be observed. The parameter αk is equal to 0 for the biogenesis group and 0.0302 for the transport group. The similarities between the genes from the
+biogenesis group are not changed. The distance between YGL210W and YAL067C (that belong to the transport group) is decreased and that between the unannotated genes
+YAL018C and YBL010C is increased. The distances between annotated genes that do not share any functions YAL067C and YBL043W, as well as YAL067C and
+YBR168W are also increased.
+
+The resulting new distances between the selected genes are given in , where the distance between the unannotated genes YAL018C and YBL010C is larger than
+between genes that share a function: YBL043W, YBR168W, YGL210W, but smaller than between annotated genes that do not share any function, such as YBL043W and YAL067C.
+
+Performance measures
+We compare the performance of the resulting clusterings with the following two measures: 1) distance from model profiles and 2) average proportion of functions in clusters. These
+quantities are described below. A more extensive comparison along the lines of [] or 
+[] might be possible but is deemed to be beyond the scope of this paper.
+
+Distance from model profiles
+The distance from model profiles, proposed in [], measures biological validity of statistical clusters. Model profiles are
+created from a small group of hand-selected genes that were available from the original studies and classified into biological classes as deemed appropriate by the biologists for
+that particular experiment. The gene expressions averaged over each class create the model profiles. The averaged gene expressions are also calculated for each cluster, and the
+distance between so created profiles and the model profiles is computed:
+The  is linked.
+
+The expression (12) for a dissimilarity was also used here. Smaller dist indicates that resulting clusters are more similar to the model profiles thus more biologically
+valid. Datta and Datta [] proposed to use the model profiles as a benchmark for result produced by a clustering algorithm.
+In the original paper, Chu et al. [], determined on the basis of first induction of expression that seven is the right number
+of clusters to be used for grouping genes for this data set. In addition they created a model expression profile by using certain handpicked genes in each class. We use the same
+number of clusters (K = 7) and the benchmark model profile. The genes used for construction of model profiles have no functional information assigned. The distance from model
+profiles (13) was computed for the yeast data clustered with UPGMA and DIANA using dM and dM + dF as distance matrices. The resulting values of 
+dist are presented in .
+The same performance measure was computed for the SAGE data set. The model profiles were composed of genes reported in [], 
+whose deregulation is altered in the ductal carinoma in situ stage of breast cancer. Three model clusters were created from the following functional classes: Cell cycle
+(3 genes), Apoptosis (3), and Cytokines (4). The values of the distance from model profiles, computed for the SAGE data set clustered with UPGMA and DIANA are presented in .
+
+Incorporation of the functional information into the distance (dissimilarity) matrix decreased the distance from model profiles in all but one cases 
+() indicating a closer
+agreement with the selected profiles.
+
+Average proportion of functions in clusters
+The average proportion of functions in clusters assesses the ability of a clustering algorithm to group genes with similar biological functions into the same clusters. For a given
+number of clusters K, the proportion of the largest group of genes with common biological function is found in each cluster. The performance measure is given by the average
+proportions weighted by the number of elements in a cluster:			
+The  is linked.
+The value of E(K) closer to 1 indicates that a majority of genes in the clusters belongs to one functional set, therefore denotes better clustering performance. Only the 
+genes with known biological functions are used for computation of (14). Note however that all genes are clustered, but only the annotated ones are used for performance 
+assessment. If a gene belongs to more than one functional set, it is considered in finding proportion of all those sets.
+
+Note that E(1) is the proportion of the largest functional group in the entire set of genes under consideration and is independent of a clustering algorithm. 
+A plot of E(K) vs. K can be used to compare the effectiveness of clustering algorithm. Generally speaking, a rapidly increasing curve reaching values close to 1 
+would indicate better clustering results.
+
+The average proportion of functions in clusters (14), computed for the yeast gene expressions clustered with the UPGMA and DIANA algorithms are presented in 
+ and , respectively. The performance measure was computed for K = 1...,10. The average 
+proportion of functions in  for the proposed distance matrix
+dM + dF is larger than for the distance dM computed only with gene expressions. Note also that the performance of UPGMA with dM as a distance matrix is stable for K =2,...,10. 
+Thus consecutive divisions of clusters into smaller parts do not improve the distribution of functions in clusters. The clustering with dM + dF as distance matrix,
+on the other hand, yields monotonically increasing E(K). Therefore as K increases the distribution of functions in clusters improves. Similarly, the performance of the
+DIANA clustering with the proposed distance matrix is superior to distances computed only with gene expressions () for K &gt; 1.
+
+The average proportion of functions in clusters was also computed for the SAGE data set. The resulting E(K) for several number of clusters produced with UPGMA and
+DIANA are presented in  and . The biologically motivated distance matrix dM + dF provides larger E(K), for K &gt; 2, for clusters constructed with UPGMA
+() and DIANA () than the gene expression-based distances dM. Therefore 
+inclusion of prior functional information improves the distribution of functions in clusters.
+
+Discussion
+Although somewhat limited in nature, our studies make astrong case for using semi-supervised clustering whenever possible - one that merges existing biological
+knowledge with experimental data in grouping genes. A penultimate stage of this approach is available in. [] The
+present approach has at least two distinct advantages over previous approaches [,]: 
+it offers a one step algorithm that determines the appropriate modifications for various categories of genes in an automatic and data based fashion. In addition, since it just modifies the
+distance (or dissimilarity) matrix, it can be used in conjunction with any dissimilarity based clustering techniques. Furthermore, unlike the approaches
+presented in [] and [], we provide analytical as well as
+computationally inexpensive procedure for parameters selection.
+
+Supplementary Material
+Data 1
+Data 2
+Data 3
+Data 4
+Data 5
+Data 6
+Data 7
+Data 8
+Data 9
+Data 10
+Data 11
+Data 12
+This research was supported by grants from the National Science Foundation (MCB-0517135) and the National Security Agency (H98230-06-1-0062).
+
+Figures and Tables
+The values of the parameters α, β, and γ used for computation of functional distance for the yeast gene expressions
+Parameter	Value	
+α1	0	
+α2	0.0683	
+α3	0.0005	
+α4	0.0185	
+α5	0	
+α6	0	
+α7	0	
+α8	0.0302	
+α9	0	
+α10	0	
+α11	0	
+α12	0.0176	
+α13	0	
+α14	0	
+α15	0.1406	
+α16	0	
+β	0.9542	
+γ	1.8764	
+c	0	
+The values of the parameters α, β, and γ used for computation of functional distance for the SAGE gene expressions
+Parameter	Yeast	
+α1	0.0377	
+α2	0	
+α3	0.1166	
+α4	0.0089	
+α5	0	
+α6	0	
+α7	0.01	
+α8	0.0322	
+α9	0	
+α10	0	
+α11	0	
+β	0.9816	
+γ	1.9478	
+c	0	
+Distance from model profiles computed for the yeast data set clustered with UPGMA and DIANA using measurement
+        and functional distances
+Clustering algorithm	Distance from model profiles for distance matrix	
+	dM	dM + dF	
+UPGMA	0.1077	0.1218	
+DIANA	0.0822	0.0604	
+ Classification results of coding and non-coding sequences
+Clustering algorithm	Distance from model profiles for distance matrix	
+	dM	dM + dF	
+UPGMA	0.4753	0.2307	
+DIANA	0.4887	0.2433	
+Average proportion of functions in clusters computed for the yeast data clustered with the UPGMA method
+       with (triangles) and without (circles) functional information
+
+Average proportion of functions in clusters computed for the yeast data clustered with DIANA with
+      (triangles) and without (circles) functional information
+
+Average proportion of functions in clusters computed for the SAGE data clustered with UPGMA with (triangles)
+       and without (circles) functional information
+
+Average proportion of functions in clusters computed for the SAGE data clustered with DIANA with (triangles)
+      and without (circles) functional information
+
+
+        Citation:Boratyn 
+        et al., Bioinformation 1(10): 396-405 (2007)
+

@@ -1,0 +1,360 @@
+Background
+Structural comparison of proteins is an important methodology towards the
+                understanding of protein functions. Sequencing proteins and determining the
+                three-dimensional structures (or structures for short) of proteins
+                have made rapid progress with the aid of advanced technologies such as X-ray
+                crystallography and NMR spectroscopy. Meanwhile, testing the functions of proteins
+                through experiments remains a time consuming and resource demanding process.
+                Proteins which undergo mutations have been modified gradually during evolution;
+                nevertheless, they are conserved particularly at the substructures responsible for
+                their functioning. This suggests that structural similarity of proteins may infer
+                their functional similarity. Automating the process of structural comparison hence
+                assists our understanding of protein structures with respect to their functions, as
+                well as our prediction of functions of newly discovered proteins. This paper
+                investigates the computational problem of multiple structural alignment that helps
+                discover important functional sites and motifs.
+
+As the structure is more conserved than its sequence during evolution, proteins
+                exhibiting similar functions may have conserved substructures but share no overall
+                sequence similarity [, ]. Yet
+                aligning structures in the three-dimensional (3D) space is a computationally hard
+                problem and is NP-hard in many variations []. Note that an alignment of structures involves
+                rotations and translations to superimpose the structures and identify similar
+                substructures. Many existing tools for structural comparisons of proteins try to get
+                around the difficulties with different assumptions and simplifications. In this
+                paper, we investigate the problem when much less information or assumptions are
+                available. In particular, we study the problem with the following properties.
+
+Sequence order independence
+We do not require the sequence order information, i.e., the exact sequential
+                    arrangement of the amino acids in the proteins. The only information required is
+                    the set of 3D locations of the amino acids. This allows aligning structures
+                    without sequence order, e.g., protein interfaces which consist of amino acids
+                    from two chains which have no particular order. This is different from some
+                    existing tools which require sequence order information and assume the amino
+                    acids that form the conserved substructures are consecutive segments in the
+                    corresponding protein sequences.
+
+Subset alignment
+We design our tool to detect conserved substructures that may exist only in a
+                    certain subset of the input. This allows discovery of conserved substructures of
+                    functionally similar structures within a mixture with dissimilar ones, without
+                    prior knowledge of the structural similarity of the input. This is different
+                    from some existing tools that align all input structures. Note
+                    that these existing tools can perform subset alignment by trying all possible
+                    subsets. As we will show later, our algorithm can perform it in a much more
+                    efficient way.
+
+Bottleneck metric
+We use the bottleneck metric to measure the quality of an alignment, which
+                    requires that in an alignment, every pair of aligned amino acids must have a
+                    small distance. Using this metric helps reduce the chance of aligning
+                    substructures that are not structurally similar. Thus our approach is different
+                    from some existing tools that measure the similarity with relaxed metrics, e.g.,
+                    the root mean square deviation (RMSD) of the aligned amino acids. We can see
+                    that some aligned amino acids may be far away even if the RMSD is small. To our
+                    knowledge, our work is the first to study the problem with all these three
+                    properties.
+
+Related work
+Due to the importance of the protein alignment problem, it has attracted
+                    significant attention in the last three decades (see, e.g., [] for a survey). Early work
+                    mostly considers pairwise alignment, e.g., DALI [] and VAST []. In particular,
+                        [,] offer pairwise sequence
+                    order independent alignments. They apply the geometric hashing technique
+                        [] to allow
+                    an efficient database search for query structures. Techniques like
+                    tree-progressive approaches [] and center-star [] have been used to derive multiple alignments
+                    from results of pairwise ones. Recent work includes []. They inherit the drawback
+                    that good pairwise alignments may not result in good multiple alignment.
+
+A series of multiple structural alignment tools have then been developed. POSA
+                        [], MASS
+                        [] and Matt
+                        [] are
+                    tools that require sequence order. In particular, MASS aligns structures based
+                    on their secondary structure elements (SSEs). This limits its application to
+                    proteins whose SSEs information is available. MultiProt [] is partially sequence order
+                    dependent, as it first finds matches for short contiguous segments of proteins
+                    and then finds multiple alignments based on these short matches. Tools that are
+                    sequence order independent include MUSTA [], MultiBind [] and MAPPIS
+                        []. All of
+                    them use the geometric hashing technique. They lack the support of subset
+                    alignment. []
+                    is also a sequence order independent method, which uses a graph-based technique.
+                    However it is targeted for motifs that are usually small in size, and it has
+                    been considered to be inefficient [].
+
+Methodology
+We model the alignment problem as a combinatorial problem. We define the
+                    structure of a protein to be a set of amino acids in the 3D
+                space. Each amino acid is represented by its Cα ,
+                N and C atoms, and the 3D coordinates of these three atoms
+                are given. Therefore, a structure consisting of n amino acids is
+                represented by 3n coordinates. The size of a structure is the
+                number of amino acids in it. A substructure S‘ of
+                    S is a subset of amino acids S‘
+                ⊆ S. The sequence order of the amino acids is unknown.
+
+We want to find similar substructures among different structures with suitable
+                transformations. In particular, a transformation T is a Euclidean
+                transformation that can be applied on a structure S such that for all amino acids
+                    s ⊆ S, the location after transformation is
+                    T(s) = Rs + t, where R is a 3×3 rotation matrix,
+                    t is a 3×1 translation matrix, and the
+                transformation is applied to all the three atoms in s.
+
+To define similarity, let C = {c1, … ,
+                ck} be a set of substructures of same size l , each from a
+                distinct structure. Let ε ≤ 0 be a real number and T =
+                        {T1, … ,
+                Tk} be a set of transformations. Then C is
+                    ε-congruent with respect to T if: we can transform each substructure ci by Ti and
+                            then order the transformed amino acids of ci by 1, 2,
+                            … , l , and
+
+for j = 1, 2, … , l , consider the j-th amino acids of all
+                            transformed substructures and let Pj be the set of these
+                            amino acids, then the Cα atoms of any two amino
+                            acids in Pj have a distance at most ε.
+
+ Note that we only align the Cα atoms. For any set
+                S‘ = {S1, … ,
+                Sk} of structures, an ε-congruent
+                        alignment of S‘ is a tuple (C, T), where C
+                        ={c1, … ,
+                ck.} is a set of substructures with ci
+                ⊆ Si and T = {T1, … ,
+                    Tk} is a set of transformations, such that C is
+                ε-congruent with respect to T. The cardinality of the
+                alignment is the number of structures involved, which is k in this
+                alignment. The size of the alignment is the size of each substructure in C.
+
+Finally, let S = {S1, … ,
+                Sm} be a set of m structures. Our task is to identify the
+                largest ε-congruent alignment for each subset
+                S‘ ⊆ S. We allow a parameter
+                min_cardinality ≤ 2, which is the minimum cardinality
+                of S‘ for which an alignment will be considered. Similarly, the
+                parameter min_size ≤ 3 is the minimum size of an alignment for
+                S‘.
+
+Problem statement
+Given a set S = {S1, S2, …
+                        , Sm} of structures, a distance threshold
+                    ε, a cardinality threshold min_cardinality and a
+                    size threshold min_size, find, for each subset S‘
+                    ⊆ S with ∣S‘∣ ≥
+                        min_cardinality, the maximal size ε-congruent
+                    alignment whose size is at least min_size.
+
+Algorithm SOIL
+Our new algorithm SOIL (Sequence Order Independent aLignment) finds the
+                    alignments in 3 steps.
+
+Step 1 -- Geometric hashing
+We first apply the geometric hashing technique [] to store the structures
+                        redundantly in many different transform-ations. Specifically, consider a
+                        structure Sk consisting of n amino acids. Let
+                            {Sk1, Sk2,
+                        … ,Skn} be a set of
+                        coordinates such that Ski is the coordinates for the
+                            Cα atom of the i-th amino acid.
+                        We reiterate that the order is arbitrary and does not correspond to the
+                        sequence order of the protein. The
+                        Cα atom
+                            Ski together with the N
+                            and C atoms in the same amino acid form a basis for this amino
+                        acid. We define a local reference frame (LRF) as in
+                            []. We
+                        overload Cα =
+                        Ski, N and
+                        C to mean the coordinates of the corresponding atoms. Then,
+                        the LRF defined by this basis is centred at
+                            Ski and specified by the vectors
+                        defined using equations 1 and 2 in  (see [] for more details)
+
+Hence, using the Cα atom
+                                Ski , we form an LRF and
+                        transform all other Cα atoms
+                                Skj , j ≠ i,
+                        using this LRF. We hash the transformed points into a 3D grid-based hash
+                        table, where the 3D space is partitioned into hash bins having length
+                        ε in each dimension. Precisely, when a point
+                        Skj is transformed using the LRF of
+                                Ski, a 5-tuple (k, i, x,
+                            y, z) is inserted to the hash table, where the tuple
+                            (k, i) correspond to the basis
+                                Ski and (x, y,
+                        z) are the calculated coordinates for
+                            Skj after transformation.
+                        Thistuple is inserted to the bin containing (x, y, z). We
+                        repeat the procedure by using each amino acid of
+                        Sk to form an LRF. We further repeat it for each
+                        structure. Note that we only hash the
+                        Cα atoms.
+
+Step 2 - Frequent pattern mining
+Given the hash table created previously, we consider each bin as a
+                            coincidence group, which is simply a set containing all
+                        the bases in the bin. Our main observation is the following.
+
+Observation
+Assume that a pair of bases {(k1,
+                                i1), (k2, i2)}
+                            is a subset to x coincidence groups. Then, if structures
+                                    Sk1 and
+                            Sk2 are transformed using the LRFs formed by
+                                    Sk1i1 and
+                                Sk2i2 , respectively, there are at
+                            least (x+1) pairs of points locating closely with each other
+                            (specifically with distance at most ε, i.e., diagonal of the
+                            3D box).
+
+In other words, we can potentially form an alignment for
+                                Sk1 and Sk2 with (x+1) pairs
+                            of points aligned, where the extra one pair of points corresponds to
+                                Sk1i1 and Sk2i2. Thus,
+                            finding a large alignment of points can be facilitated by finding a
+                            subset of bases with a large number of co-occurrences in the coincidence
+                            groups. This observation is the main novelty of our work. It allows the
+                            tool to consider all subsets simultaneously and identify the potentially
+                            good alignments directly. We consider each basis as an item and each
+                            coincidence group as a set of items. Then to find the
+                            set of bases that frequently appear in the coincidence groups, it
+                            becomes the problem frequent itemset mining, which is
+                            well-studied in data mining. For any set of items, the number of
+                            coincidence groups that contain it is known as the support for this set
+                            of items. We apply an efficient frequent itemset mining algorithm,
+                            FP-growth [], to identify set of items with large support.
+                            The algorithm is exact, that is, it reports exactly all itemsets
+                            satisfying this requirement. We set the required support to
+                            5% of min_size, since SOIL will extend the
+                            alignment and the final size obtained may be big enough. The current
+                            implementation will also try 3% and then 1% if
+                            FP-growth does not return results involving all structures using the
+                            previous support threshold.
+
+Step 3 -- Alignment generation
+This step generates alignments from the frequent itemsets. Consider any set
+                                {Sk1 , Sk2 , … ,
+                            Skw} of w structures.
+                        Let I = {b1 , b2 , … ,
+                            bw} be the itemset involving these
+                            w structures and having the largest support. For
+                            i = 1, … , w, the item bi
+                        is some basis (ki , ji ) and we
+                        transform all amino acids of Ski using the LRF
+                        formed by Skiji . Then we construct a
+                        graph G so that each vertex in G corresponds to a transformed point of
+                            Ski for some i and two vertices are connected by an edge if
+                        and only if they are from different structures and within ε
+                        distance from each other. G is a w-partite
+                        graph and we aim at finding a large w-partite matching.
+                        Note that finding the largest w-partite matching is
+                        NP-hard. Instead, we use a greedy heuristic that if w
+                        vertices in G form a clique and none of them has been
+                        included in the matching, we include them into the
+                        w-partite matching for G. We continue
+                        until no more vertices can be included.
+
+For each subset of structures, we repeat the above for the K
+                        itemsets with the largest supports, where K is empirically
+                        set to be 10 times the number of input structures. The largest alignment
+                        found is then reported as the alignment for this subset of structures. SOIL
+                        then repeats the procedure for other subsets of structures which satisfy
+                        that some itemset involving them has a large support.
+
+Results and discussion
+We implemented SOIL in C++. The FP-growth procedure was adopted from the open-source
+                package provided by Borgelt [] and modified for our particular purpose. Experiments were run
+                on a PC with a dual core 2.66GHz CPU and 4GB memory. In the experiments, we applied
+                the default settings as follows: the distance threshold ε is 3.0
+                Å, the cardinality threshold min_cardinality is 2, and
+                the size threshold min_size is 3.
+
+We compared SOIL with C-alpha match [] (pairwise only), MultiProt [] and MultiBind []. C-alpha match has a web server
+                and we ran the tests on it. We downloaded the MultiProt software and ran the tests
+                on our machine. As MultiBind only aligns labeled pseudocenters and small datasets,
+                and does not support subset alignment, we adopted the algorithm and re-implemented
+                it so that it aligns the Cα atoms. For
+                subset alignment, we let MultiBind iterate through every subset of structures, and
+                let the first structure be a pivot, which is required by MultiBind. We denote the
+                re-implemented software as MultiBind*.
+
+Note that C-alpha match and MultiProt use the RMSD metric. MultiBind* uses the
+                bottleneck metric. But it is only for the alignment between the pivot and another
+                structure, and has no guarantee for any two non-pivot structures. When making
+                comparison, we first show the sizes of the alignments under the bottleneck metric,
+                i.e., without counting those aligned points that have distance greater than
+                ε. Then we also show the sizes of the alignments under the tool's own
+                distance metric.
+
+Pairwise alignment
+We performed pairwise alignment on 15 pairs of protein structures. The first 10
+                    pairs have been used as testing data, e.g., in []. The 11- th pair shares the
+                    same family in the SCOP classification []. Structures in the 12-th pair both have a
+                        4-helix bundle structure but of different topologies. The
+                    last three pairs are protein interfaces retrieved from PRINT database
+                        [].
+
+We compared the sizes of the alignments generated by SOIL with that by C-alpha
+                    match, MultiProt and MultiBind*. The results are shown in Table 1
+                    (see ). We can see that SOIL has the largest alignment for all cases,
+                    even when the other tools are measured with their own distance metrics. In
+                    particular, SOIL gave the largest alignment for all pairs of protein interfaces.
+                    This suggests that sequence order independence in alignment is important in
+                    aligning structures with non-contiguous sequences. The average running times of
+                    MultiProt, MultiBind* and SOIL were 0.211s, 1.968s and 0.235s
+                    respectively. The web server of C-alpha match returned the results within a few
+                    seconds.
+
+Multiple alignment
+We perform multiple alignments on 10 sets of protein structures. It includes
+                    various superfamilies of SCOP [] (calcium-binding,
+                        4-helix bundle, superhelix, concanavalin, tRNA synthetase,
+                    G-proteins and PTB domains), and clusters of protein
+                    interfaces from PRINT [].
+
+The results are shown in Table 2 (see ). It shows the largest alignment
+                    when the cardinality is 2 up to the total number of input structures. In the
+                    comparison with MultiProt, there are cases where SOIL performed better and also
+                    cases where MultiProt performed better. The results show that sometimes sequence
+                    order may be useful in protein structural comparison and at the other times it
+                    may limit the alignment result. The running time of both tools were roughly the
+                    same. SOIL usually generated a larger alignment than MultiBind* and
+                    ran much faster. The experimental results suggest that SOIL is more efficient
+                    than MultiBind* mainly due to the application of frequent itemset
+                    mining for subset alignment.
+
+Note that MultiBind* takes a pivot-based approach by selecting a
+                    pivot and then aligning every structure with it so that every pair of aligned
+                    points has distance at most ε. However, we observed from the results
+                    that when multiple structures are aligned in this way, many aligned points
+                    become more than ε distance apart. On the contrary, SOIL compares
+                    structures simultaneously and produces a larger alignment, ensuring that all
+                    common substructures discovered are similar to each other.
+
+Conclusion
+This paper studies the multiple structural alignment problem for protein structures.
+                We designed an algorithm SOIL that works well with less information and assumptions.
+                In particular, SOIL is sequence order independent and can perform subset alignment
+                with a more restrictive similarity measurement. Our proposed algorithm SOIL makes
+                use of the geometric hashing technique from computer vision, and the frequent
+                itemset mining technique from data mining. Both techniques have been used in a wide
+                range of applications and algorithms. We demonstrated the efficiency and
+                effectiveness of the SOIL algorithm through experiments. SOIL compares structures
+                simultaneously, discovers large common substructures, and ensures that the common
+                substructures detected are similar to each other. Experiments have shown its
+                applications to the alignment of various protein structures including protein chains
+                and protein interfaces.
+
+Supplementary material
+Data 1
+We thank Christian Borgelt for providing an open source implementation of FP-Growth
+                algorithm. This research was partially supported by Hong Kong RGC GRF grant (HKU
+                775207M).
+
+Citation:Siu
+                    et al, Bioinformation 4(8): 366-370 (2010)
+

@@ -97,7 +97,7 @@ public class KeywordsFetchPipeline {
     {
         ArrayList<Pipe> pipes = new ArrayList<Pipe>();
         Pattern tokenPattern = Pattern.compile("[\\p{L}\\p{N}_]+");
-        pipes.add(new CharSequence2TokenSequence(tokenPattern));
+        pipes.add(new CharSequence2TokenSequence());
         pipes.add(new TokenSequenceLowercase());
         pipes.add(new TokenSequenceRemoveStopwords());
         pipes.add(new TokenSequence2FeatureSequence());
@@ -112,7 +112,7 @@ public class KeywordsFetchPipeline {
         ParallelTopicModel model = new ParallelTopicModel(numTopics);
         model.addInstances(instanceList);
         model.setNumIterations(numIterations);
-        model.setNumThreads(2);
+        model.setNumThreads(4);
         model.estimate();
         return model;
     }
@@ -152,7 +152,7 @@ public class KeywordsFetchPipeline {
         }
     }
 
-    private  void extractLDAMatrix(String targetWord, int numTopics, int numIterations, int numKeywords)  {
+    private  void extractLDAMatrix(String targetWord, int numTopics, int numIterations)  {
         File folder = new File(this.corpusDir);
         ParallelTopicModel model = null;
         int numDocuments = 0;
@@ -198,7 +198,7 @@ public class KeywordsFetchPipeline {
 
 
     private void run(String targetWord) throws IOException {
-        this.extractLDAMatrix(targetWord, 20, 1000, 20);
+        this.extractLDAMatrix(targetWord, 20, 1000);
         this.readFileTopicDistribution();
         WordTopicComputor computor = new WordTopicComputor(this.fileWordTopicDistributionFile);
         this.wordTopicDistribution = computor.compute();

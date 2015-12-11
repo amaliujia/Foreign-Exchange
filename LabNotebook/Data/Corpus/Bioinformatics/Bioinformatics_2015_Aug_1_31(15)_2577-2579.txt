@@ -1,0 +1,40 @@
+1 Introduction
+ExaML (Exascale Maximum Likelihood) is a relatively new code for large-scale phylogenetic analyses on supercomputers. It implements the RAxML () search algorithm and replaces RAxML-Light () which was inefficient for large, partitioned phylogenomic datasets that currently represent the typical use case. Hence, in ExaML (v. 1) we implemented a radically different parallelization approach () that improved parallel efficiency by up to a factor of 3 and also increased scalability. For two large alignments that were recently published in Science [51 taxa, unpartitioned,  DNA sites &amp; 48 taxa, four partitions,  DNA sites in ; 144 taxa, 100 partitions, 1, 240, 377 DNA sites &amp; 144 taxa, 770 partitions, 576 840 AA sites in ], we identified and resolved further performance bottlenecks. Note that, ExaML can also be used for analyzing datasets with 10-20 genes and up to 55 000 taxa, but scalability will be limited to at most 100 cores. For ExaML (v. 2), we developed and integrated algorithms for improved load balance (; ) and also optimized the parallel I/O for reading multiple sequence alignments. We also started exploring if and how ExaML can be ported to the Intel MIC (Many Integrated Core) hardware architecture () in a proof-of-concept setting. Here, we present ExaML (v. 3) which offers—apart from new models and data types—a production-level implementation for the Intel MIC architecture that required a substantial amount of re-engineering. We also present a novel parallel alignment I/O method. Finally, we completely re-wrote the user manual.
+
+ExaML is a stable and well-documented code for large-scale phylogenetic inference on x86 Linux/MAC clusters (compiles with gcc,icc,clang). It addresses and provides generally applicable solutions for several performance bottlenecks in parallel phylogentic likelihood calculations on partitioned alignments.
+
+2 New features
+2.1 Models and data types
+Apart from DNA and protein data, ExaML now also supports binary (two-state) characters. This data type can be used, for instance, to analyze genome-wide indel patterns.
+
+The number of available protein substitution models now also includes the LG4M and LG4X models () as well as the recently published stmtREV () model. In addition, ExaML can automatically determine the best-scoring protein substitution model for each partition via a newly implemented standard test procedure that uses either (i) the likelihood score, (ii) the AIC (Akaike Information Criterion), (iii) the cAIC (corrected AIC) or (iv) the BIC (Bayesian Information Criterion).
+
+Finally, a new option for conducting a maximum likelihood estimate of the base frequencies has become available.
+
+2.2 Parallel I/O optimization
+The parallel I/O to read in the input alignment is optimized in two ways. Initially, a plain-text PHYLIP file is analyzed and transformed into a binary file format via a dedicated parser component. The parser can be executed on a standard server and does therefore not consume valuable supercomputer time for issues such as checking the format, detecting duplicate taxon names, compressing site patterns, etc. The binary alignment file contains global data information (alignment length, data types, model options, partition boundaries) as well as the raw sequences stored in the order of the partitions. That is, the sequences for all taxa of partition one are stored first, then, the sequences for all taxa of partition two, etc. This, yet unpublished, binary format allows each ExaML process to concurrently read only those parts of the alignment on which it will be computing likelihoods. This optimization yielded an acceleration of more than one order of magnitude for the start-up phase of ExaML during which the alignment is read (see on-line Supplementary for more details).
+
+2.3 New load balance algorithm
+The typical use case for modern likelihood-based inferences are so-called partitioned analyses, where subsets of the alignment sites form partitions that evolve under a distinct set of evolutionary model parameters (e.g. α shape parameter, GTR rates, base frequencies, etc.). ExaML parallelizes likelihood calculations over alignment sites using MPI (Message Passing Interface). The time for likelihood calculations on a partition i consist of a constant part (irrespective of the partition length), mainly the calculation of the Pi matrix via exponentiation of the Qi matrix given the branch length t, that is,  (). Once the Pi matrix has been computed one can then calculate the per-site likelihoods for each site in partition i in parallel. We observed that, because of additional synchronization and communication overhead, it is not advantageous to first parallelize all P matrix calculation and subsequently (in a second parallel region) calculate all per-site likelihood calculations. Thus, because Pi needs to be computed redundantly by every process, even if it has just one alignment site belonging to partition i, we need to minimize the number of partitions for which a process calculates the likelihood. At the same time, we need to evenly distribute the sites among processors for optimal load balance (i.e. we need to split up some partitions among processes). To this end, we formulated a bi-criterion problem to define the optimal data distribution of partitions and sites to processors (). We showed that: (i) the optimization problem is -hard, (ii) an approximation algorithm with a guaranteed bound exists, (iii) the algorithm misses the optimum by at most one partition (one additional Pi calculation is required at one or more processes than in the optimal solution). We also showed that this new data distribution algorithm outperforms previous approaches (cyclic distribution of sites, monolithic distribution of partitions) in almost all cases with only minor deviations in cases where the performance was worse. In addition, we showed that ExaML runs up to three times faster [see Fig. 4b in ] than with the previous data distribution schemes.
+
+2.4 Checkpointing
+As RAxML-Light, ExaML also allows for checkpointing and subsequently re-starting tree searches from light-weight binary checkpoints. This is particularly useful when using typical supercomputer configurations with 24 or 48 hr run-time limits. Apart from the tree search, ExaML also offers an option to estimate model parameters and branch lengths on a given set of fixed trees. This option is also checkpointable.
+
+2.5 ExaML MIC version
+An increasing number of supercomputing centers now operate systems with heterogeneous CPU/MIC compute nodes. To this end, we have transformed our initial proof-of-concept MIC code into production-level hybrid software that can leverage the capacity of all resources in such a system. A detailed description of this novel and non-trivial parallelization approach that requires exploiting parallelism and handling load balance at essentially two levels (MPI among MIC cards and ‘normal’ CPUs and OpenMP within cards) is provided in the on-line Supplementary. As we show in the supplement, the hybrid code allows to make better use of currently available hardware resources.
+
+3 User support and future work
+User support is provided via the RAxML Google group at: https://groups.google.com/forum/?hl=en#!forum/raxml. The ExaML source code contains a comprehensive manual.
+
+Future work includes the continued maintenance and support of ExaML and the implementation of additional models [e.g. models with ascertainment bias correction ()], data types and search algorithms ().
+
+Supplementary Material
+Supplementary Data
+Acknowledgements
+The authors wish to thank lab member Diego Darriba for help with the implementation of the AIC, cAIC and BIC tests.
+
+Funding
+All three authors are funded by institutional funds from the Heidelberg Institute for Theoretical Studies for theoretical studies.
+
+Conflict of Interest: none declared.
+

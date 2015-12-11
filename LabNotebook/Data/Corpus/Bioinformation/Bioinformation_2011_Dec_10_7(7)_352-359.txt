@@ -1,0 +1,433 @@
+Background:
+Protein sequence encodes the fundamental structural unit of
+life: “protein structure” and protein structure defines its
+biological function [–
+]. Knowledge of the structure and
+function of proteins is, therefore, important in the area of
+biomedical sciences. Protein structure prediction from
+sequence information has been a grand challenging problem in
+molecular biology for the last forty years. Nature conserves
+structure core, due to convergent evolution, and the number of
+unique structural (domain) folds in nature is possibly limited.
+The probability for a protein sequence to have a native-like
+structural fold in Protein Data Bank (PDB) 
+[] is estimated to be
+60-70%. Various fold recognition methods based on
+mathematical, statistical, and computational algorithms have
+been developed to predict possible from sequence information.
+For example, contact map model-based pseudoenergy function
+incorporating pairwise residue interaction potential by allowing
+variable gaps have been developed and implemented to predict
+protein 3D structure through fold recognition method. The
+ability of these fold recognition methods to accurately
+distinguish the correct, folded structure from moderately
+distorted (misfolded) structures is limited 
+[–].
+
+In this manuscript, we propose a new method called as Higher
+Order Residue Interaction Based ALgorithm for Fold
+REcognition (HORIBALFRE). We incorporated potential
+contributions not just from one-body and two-body terms, but
+also from the three-body (triplet interactions) and the four-body
+(quadruple interaction) interactions, to improve the
+performance of fold prediction using sequence data. Core of
+HORIBALFRE includes the potentials generated from a
+structure library derived from CAMPASS database [] of
+structure based sequence alignment. We used Fischer's dataset,
+with 68 templates and 56 target sequences, derived from SCOP
+database and performed one-against-all sequence alignment
+using T-Coffee []. These potentials were incorporated into
+HORIBALFRE algorithm. Currently, the algorithm was applied
+to the Fischer's dataset with 68 template-target pairs.
+
+Sequence databases are experiencing an unprecedented growth
+in the post-genome era due to automated sequencing
+techniques. Annotation of the sequences by computational
+approaches using structure and sequence based methods are
+getting increasingly important [–, , 
+, –]. As attempts to
+sequence entire genomes increases the number of protein
+sequences by a factor of two each year, the gap between
+sequence and structural information stored in public databases
+growing rapidly []. To fill the sequence-structure-function
+gap and to completely understand the function role of a protein
+and its multitude of cellular interactions, the knowledge of 3D
+structures is very crucial. As the cost of sequencing technologies
+are decreasing at an increased rate, the experimental
+approaches for high–throughput characterization of protein
+structures using X-ray crystallography and NMR spectroscopy
+remains a challenge due to cost and laborious nature and often
+unsuccessful experimental processes. As an alternative,
+theoretical and computational methods to predict the structure
+from sequence such as homology, ab initio, and fold recognition
+are widely employed. Homology (comparative) modeling,
+attempts to predict protein structure on the strength of a protein
+sequence similarity to another proteins with known structures.
+Even though it has been the most reliable technique for protein
+structure prediction, its dependence on alignment quality and
+the existence of good homologue, indicate it is not applicable to
+a large fraction of protein sequences which are not within
+‘structural distance’ in sequence space and only 10% of the
+sequences are modeled [,
+,
+]. Ab initio method
+encompasses any means of calculating co-ordinates of protein
+structure for a protein sequence from physical principles.
+Despite a few recent successes on small proteins and short
+peptides, this method is still not a practical proposition for
+predicting protein structure due to limitations in computing
+power and poor understanding of the biophysical forces
+driving protein folding. The third category of protein structure
+prediction, falling somewhere between Homology modeling
+and ab initio prediction, is fold recognition.
+
+Methodology:
+Conceptual idea behind fold recognition method came from the
+estimate that there is an ˜70% chance that a newly characterized
+protein with no obvious common ancestry to proteins with a
+known structure will in fact turn out to share a common fold
+with at least one protein of known structure in the database[,
+]. The objective of fold recognition approach was that given a
+sequence and a library of structure templates; discover which
+fold is best compatible with the given sequence 
+[,
+,
+,
+,
+–]. 
+If the target protein shares significant sequence similarity to
+a protein of known 3D structure, the fold recognition problem is
+trivial – simple sequence comparison will identify the correct
+fold. Threading based approaches could detect structural
+similarities that are not accompanied by any detectable
+sequence similarity, and thus, fold recognition is the protein
+structure prediction method of choice when (1) the sequence
+identity to any sequence with a known structure, and (2) one or
+more structures from the structure library represents the true
+fold of the sequence. Based on the pseudoenergies derived from
+the statistical analysis of observed protein structures
+(knowledge - based approach), existing computational methods
+for fold recognition can be grouped into two major classes: First
+class of methods employ residue local environments and do not
+include residue interaction potentials explicitly 
+[–,
+–,
+,–
+]. 
+In this kind of method, the prediction speed is fast, but
+they were not effective in detecting structural similarities
+between divergent proteins, and between proteins sharing a
+common fold through convergent evolution (analogous folds).
+The reason for these limitations is down to the loss of structural
+information due to residue interactions []. Second class of
+methods includes pairwise residue interaction potentials 
+[,
+,
+,
+,
+]. However, pairwise residue interactions cannot
+capture regularities of protein structure and found statistically
+inadequate to explain the frequency distribution of residue
+interactions, and consideration of cooperative interactions of
+higher order may improve the quality of structure prediction
+[,
+,
+,
+,
+–]. In this manuscript, we introduce the
+architecture of a new fold recognition algorithm,
+HORIBALFRE, which employs higher order residue interaction
+potentials and an integrated approach that also include local
+environments of residues. We recently showed that a webserver
+which can compute higher order residue interactions can be
+used for in-depth structure analysis []. HORIBALFRE is an
+extension of HORI server and utilize pre-computed amino acid
+interaction data derived using higher order residue interaction
+programs developed for HORI server.
+
+Description of HORIBALFRE algorithm:
+HORIBALFRE is a multi-step fold recognition algorithm with 5
+major steps. A flow-chart of the algorithm is given in .
+The following consecutive steps form the core of HORIBALFRE.
+
+(1) Library of target-template (derived from Fischer's dataset):
+Target-template library is sourced from Fischer's benchmark
+dataset [] comprising of 68 unique probe sequences and 56
+unique target structures (PDB identifiers of proteins in Fischer's
+dataset is provided in supplementary material)
+
+(2) Alignment of target sequence to the template sequences:
+T-Coffee [] is used for the alignment of the target sequence to
+the template sequence. T-Coffee is used in Global alignment
+mode and global-local alignment method has been employed to
+align one target sequence to one template sequence []
+
+(3) Computation of potentials due to mutation, gap penalty,
+secondary structure and solvent accessibility, pairwise
+interactions, triplet-interactions and quadruple interactions:
+Core part of the algorithm includes computing set of potentials
+that feed into the final score. The potentials were generated
+using different set of methods. The mutation potential values
+score for the amino acid sequence similarity between the probe
+sequence and the target fold. The values were computed by
+summing up the scores over the aligned, conserved secondary
+structural regions in the template. This gives a score for the
+substitution of an amino acid residue in the template sequence
+with that in the probe sequence. This score is obtained from the
+BLOSUM62 matrix [,
+].
+
+Mutation potential incorporated in HORIBALFRE was
+calculated using  (see supplementary
+material). The alignment between the sequence and structure
+will have gaps and a gap penalty was assigned after the
+alignment. An empirical gap opening penalty of 11 is chosen
+after examining the scores assigned to amino acid exchanges,
+while a gap extension is given a lesser penalty. The gaps in the
+secondary structure regions were penalized for more than a gap
+introduced in loop regions using  (see
+supplementary material).
+
+Unlike comparative methods, which compare proteins based on
+sequence similarity and concept of homology, fold recognition
+methods take advantage of the extra information made
+available by 3D structure. A sum over the amino acid structural
+environment preferences over the entire sequence is a good
+indicator for the recognition of native-like folds []. The
+secondary structure details were mapped to the template
+sequence that is aligned to the probe sequence. The solvent
+accessibility values were mapped to the template sequence,
+according to the JOY-based structural feature definition 
+[].
+The secondary structure and solvent accessibility values were
+paired to give a single score at each residue position.
+Eisenberg's 3D-1D substitution table [] is then used to assign
+a score for the occupancy of 20 different amino acid residues at
+all the residue positions in the template. Hence, a score is
+obtained for the occupancy of an amino acid in the probe
+sequence into the corresponding, aligned residue position in the
+template. These values were summed up over the conserved
+and aligned regions between the sequence and the
+template. Hence, the combination of secondary structure and
+solvent accessibility values at different residue positions gives
+an environment score that is considered as a parameter. The
+results obtained only using environment scoring potential
+proves that subsets of sequence-structure pairs were not
+detected when the total potentials were considered. This
+explains the need for using weight factors for each of the
+parameters that were used for scoring. The potentials obtained
+for interactions between all residues. This interaction score thus
+depends on the observed frequency of interaction between two
+residues in already known protein structures. Pairwise
+potentials of mean force computed for a subset of protein
+structures derived from CAMPASS database is given in the
+additional material URL.
+
+Pairwise, triplet and quadruple interactions were computed
+using HORI programs explained in our previous study 
+[].
+The potentials were derived from a standard library of protein
+structures compiled from CAMPASS database []. The SCOP
+identifiers of the structures used to derive the potentials were
+given in supplementary material. Three-dimensional structure
+and amino acid sequence of proteins were related by an
+unknown set of rules that is often referred to as the folding
+code. This code is significantly influenced by non-local
+interactions between the residues []. If we approximate each
+residue as a sphere centered on its location, accordingly it is
+possible for three or even four closely packed spheres to make
+mutual contact, thus giving rise to three- or four-way
+interactions. Just as no more than four same-sized spheres can
+be in mutual contact in 3D space, no more than four–way
+interactions generally be expected to occur. We hypothesize
+that an interaction exists between two residues if the spatial
+distance between their Cβ atoms is within 7 Å and residues
+should be ≥4 residue positions apart in the template sequence. It
+is generally believed that the interactions involving loop
+residues can be ignored, as their contribution to fold recognition
+is relatively insignificant. In the current version of
+HORIBALFRE implementation, we consider only interactions
+between residues in the cores. It is observed that the scores
+obtained depend on the possible interactions within 7 Å and
+also all the interactions possible, depending on the residue
+pairs. For example, a positive potential was expected for Pro-
+Glu residue pair because the number of interactions possible
+within 7 Å for this pair is limited; only 0.8% of the total Pro-Glu
+interactions in the dataset. Similarly, as the number of possible
+Ala-Ala interactions is high, the potential is expected to be
+negative. In some sequence-structure pairs, no quadruple
+interaction potential value was obtained. But all protein
+structures showed pairwise interactions as expected, as the
+impact of constraints were less. Hence, inclusion of higher order
+interactions can make a distinction between sequence-structure
+pairs in the algorithm. Higher order residue interactions in
+HORIBALFRE algorithm were calculated using 
+
+and  (see supplementary material).
+
+Calculation of potentials of mean force using log-odds ratio:
+Potentials of mean force were defined using pseudopotentials
+calculated from protein structures, pre-computed from a
+database using the inverse Boltzmann principle. Pairwise
+potentials of mean force have been used to study
+conformational ensembles [,
+] .The potentials were obtained
+from the manually curated structures from the CAMPASS
+database. The formula used to calculate the log odds ratio is
+given in  and 
+ (see supplementary material).
+
+(4) Sum of Potentials (HORIBALFRE score):
+The success of theoretical methods depends on the accuracy of
+the underlying scoring function that should be capable of
+discriminating between correct (i.e. native) and incorrect
+configurations of the native polypeptide sequence 
+[,
+].
+HORIBALFRE score (see  in supplementary
+material) is derived using the summation of various potentials
+described earlier using the following equation. Additional
+weight factors were incorporated before the calculation of final
+HORIBALFRE score, and the values of the weight factors were
+determined based on the data available on the contribution of
+various potentials in protein structures [].
+
+(5) Ranking compatibility scores for sequence-fold pairs:
+The benchmarking was performed using the Fischer's dataset
+that consists of 68 sequence-structure pairs []. The templatetarget
+pairs were analyzed to find out the considering only the
+mutation potential values. The mutation potential values
+obtained were comparatively lower in the cases where the right
+fold was identified. The mutation potential values showed
+dependence on the length of the sequences. In general, the
+potential values were high for sequences that differ hugely in
+length and with a poor sequence identity. As the difference in
+length increases, the negative values of mutation potentials
+were not observed. Mutation potential for a subset of templatetarget
+pairs is given in additional material URL.
+
+(6) Statistical evaluation of HORIBALFRE algorithm::
+Sensitivity and specificity analyses were performed at class
+level and at the superfamily level, with and without higher
+order residue interactions to illustrate the impact of higher
+order interactions in predicting the correct fold. Sensitivity and
+Specificity were calculated using  and 
+ (see
+supplementary material).
+
+Discussion:
+HORIBALFRE score, an objective-scoring method introduced in
+this manuscript is calculated for 68 template-target members in
+the Fischer's dataset using a one-against-all method. Potentials
+explained in methods sections (See equations 1-10) were
+computed and used to derive HORIBALFRE score. Following
+the calculation of the HORIBALFRE score, a comparative
+analysis is performed using the scores without and with
+quadruple interactions. Representative template-target pairs
+without and with quadruple interactions are provided in 
+and . (See supplementary materials) Some of the
+sequence pairs were not observed amongst the top hits when
+quadruple interactions were not included. Here, we illustrate
+that higher order interactions contribute towards discriminating
+the correct fold amongst other folds, which give a similar
+score. The set of template-target pairs given in 
+, (See
+supplementary materials) identified to have the corresponding
+fold pair amongst the top ten scores obtained for the sequence.
+From the class-wise distribution of the results, we observed that
+most of the folds that were predicted correctly (true positives)
+were belong to the mixed class of α/β. Further analysis will be
+required to elucidate whether quadruple interactions were
+biased towards specific SCOP classes. We had earlier shown
+that it is possible to discriminate between two folds of similar
+composition of supersecondary structures, the singly wound
+α/β barrels and doubly wound dehydrogenases, using higher
+order interactions [, also See additional Material URL].
+
+We used statistical validation that compared sensitivity and
+specificity analyses at the class level and superfamily level and
+analyzed the impact of the presence and absence of higher
+order residue interactions. For the sequence - pairs that were
+amongst the top 10 hits obtained using raw scores we calculated
+sensitivity and specificity. As expected, at the class level, the
+number of sequences that identified other structures that
+belonged to the same class as the native fold was higher than
+that obtained at the superfamily level. Class level with higher
+order interactions included, and superfamily level with higher
+order interactions are provided in . As expected, at the
+class level, the number of sequences that identified other
+structures that belonged to the same class as the native fold was
+higher than that obtained at the superfamily level. The same
+data, when analyzed without the inclusion of quadruple and
+triplet interaction scores, it was seen that there were lesser
+number of sequences that identified other structures, belonging
+to the same class as the class of the native fold. The sensitivity at
+the class level also dropped to below 30%, while with the
+inclusion of higher order potentials, a higher sensitivity was
+obtained.
+
+HORIBALFRE utilize three type of higher order residue
+interaction for characterizing correct fold for a given query
+sequence from a database of folds. We introduced various
+parameters incorporated in the algorithm and discussed pilot
+results in this manuscript. In an earlier study we showed that
+higher order residue interactions could delineate between
+closely related folds using two members from α/β folds from
+SCOP database [, 
+, also See additional Material URL]. The
+current results using 68 template-target pairs from Fisher's
+dataset used in HORIBALFRE indicates that fold recognition is
+being improved by the addition of higher order residue
+interaction potential due to quadruple interaction. The
+performance in the current analysis could be improved by
+inclusion of additional features. We will be applying
+normalization techniques and linear programming based
+function to improve the algorithm. Further, the algorithm will
+be tested on larger benchmark data sets to derive the coverage
+of algorithm and an integrated web server will be developed for
+fold prediction using higher order residue interactions.
+
+Conclusion:
+In this manuscript, we introduced and demonstrated results
+obtained from a novel fold recognition algorithm developed for
+protein fold recognition from sequence information. Fold
+recognition is an important problem in the current era of
+exponentially increasing sequenced genomes. Function and fold
+level annotation of newly sequenced genomes remains to be a
+priority. We designed a new fold recognition approach
+“HORIBALFRE” that utilize higher order residue interactions.
+The algorithm was tested using Fischer's dataset and performed
+a statistical evaluation. Preliminary results suggest that
+inclusion of higher order residue interactions, specifically
+quadruple interactions improves fold prediction.
+
+Additional Material:
+Additional datasets (PDB identifiers, Fischer's dataset,
+CAMPASS database derived structures), HORI-based pairwise,
+triplet and quadruple interaction scores and various parameters
+associated with HORIBALFRE scores and related programs are
+accessible from the URL:
+http://caps.ncbs.res.in/download/horibalfre/.
+
+Supplementary material
+Data 1
+S.P. was a Senior Research Fellow funded by the Ministry of
+Human Resource Development, Government of India and R.S.
+was a Senior Research Fellow funded by the Wellcome Trust,
+U.K. We would like to thank Department of Biotechnology,
+India for partial financial support. We also thank Indian
+Institute of Technology Roorkee and National Centre for
+Biological Sciences (TIFR) for infrastructural support.
+
+Citation:Sundaramurthy et al, Bioinformation 7(7): 352 - 359 (2011)
+
+Flowchart of HORIBALFRE algorithm. Algorithm
+derive parameters from multiple features like gap penalty,
+mutation potential, secondary structure and solvent
+accessibility potential, higher order residue interactions. Precomputed
+potentials from CAMPASS dataset and BLOSUM 62
+matrix were also incorporated.
+
+Sensitivity (x-axis) vs. Specificity (y-axis) plots based
+on HORIBALFRE results.
+

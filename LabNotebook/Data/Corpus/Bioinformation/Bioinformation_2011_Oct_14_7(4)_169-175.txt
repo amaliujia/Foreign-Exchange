@@ -1,0 +1,230 @@
+Background:
+Incorporation of prior pathway data into microarray analysis
+has become a popular research area in bioinformatics due to the
+advantages in providing the further biological interpretation
+compared to the single gene microarray analysis. These
+advantages have triggered various experiments and approaches
+in order to identify informative genes and pathways that
+contribute to certain cellular processes. Two most common
+approaches to identify the informative genes and pathways are
+enrichment analysis (EA) and machine learning (ML)
+approaches []. In EA approaches, genes are viewed as
+functional pathways where the pathways with large number of
+differentially expressed genes between two conditions are
+considered as significant []. While in ML approaches, the genes
+in the pathways are discriminated between two or more
+phenotypes of interests and the pathway with genes that
+improves the prediction of the phenotype considered as
+significant pathways.
+
+However, there are some challenges in pathway analysis, such
+as, some pathways may be included with uninformative genes
+or perhaps informative genes were excluded []. Another
+concern is that usually pathway data are curated from the
+biological context free; it can be that only several genes take
+part in certain cellular process when it goes to the phenotype
+specific analysis (e.g. lung cancer research). In order to deal
+with the challenges in the quality of pathway data, several
+researchers in EA approaches attempt to refining the pathway
+data to specific conditions by removing the unaltered genes in
+the pathways, and including the additional information of the
+functional interpretation of the pathways or gene groups 
+[]. In
+ML approaches, several researchers have included the gene
+selection methods in order to select the informative genes
+within pathways before the pathway evaluation process [,
+].
+This is because, gene selection methods provide several
+advantages such as: (1) improves the classification accuracy, (2)
+removes uninformative genes, and (3) reduces computational
+time [].
+
+Misman et al. [] had proposed the gSVM-SCAD in order to
+identify the significant genes and pathways, simultaneously
+dealing with the challenges in pathway data quality. gSVMSCAD
+is a hybrid method of support vector machines (SVM)
+and smoothly clipped absolute deviation (SCAD) with groupspecific
+tuning parameters that select the informative genes
+within pathways before the pathway evaluation process. gSVMSCAD
+had shown its superior performance in identifying
+significant genes and pathways compared to the hybrid of SVM
+and L1 penalty function (L1 SVM), and almost with all other 5
+classifiers without gene selection methods []. However, in this
+work, we detected that gSVM-SCAD had some limitations.
+
+A SCAD performance relies on the tuning parameter. If the
+tuning parameter is too small, it can bring little sparsity and
+over fit to the classifier model. While if it is too large, it can
+make very sparse to the classifier model but produced poor
+discriminating power [,
+]. Therefore, it is important to choose
+an appropriate tuning parameter selector method for the gSVMSCAD,
+since the SCAD plays an important role in determining
+the true classification model for the SVM. The generalized cross
+validation (GCV) proposed by Fan and Li. [] is widely used in
+the past literatures as a tuning parameter selector method for
+SVM-SCAD. Unfortunately, GCV had some limitations where it
+poorly performs when dealing with the low number of
+variables (genes) and large sample sizes []. This is due to the
+reason that usually some pathways contained not more than
+100 genes and even some pathways contained less than 10
+genes. We believed that this scenario can lead to the poor
+performance of SCAD in selecting the informative genes and
+simultaneously identifying significant genes. In order to
+surmount the limitation of the gSVM-SCAD, we propose the Btype
+generalized approximate cross validation (BGACV) as a
+new tuning parameter selector method for gSVM-SCAD. Our
+proposed method is denoted as gSVM-SCADBGACV.
+
+Methodology:
+Experimental Data:
+There are two types of data used: gene expression and pathway
+data. For gene expression data, the canine and lung cancer
+datasets were used to evaluate the performance of the gSVMSCADBGACV
+(the information of the datasets is shown in
+, see supplementary material). For the pathway data,
+there are total of 441 pathways with 129 taken from KEGG
+database while other 312 pathways curated from BioCarta
+database. Both gene expression and pathway data can be
+downloaded at 
+http://bioinformatics.med.yale.edu/pathwayanalysis/datasets.htm. 
+For the simulated data, total 1060
+simulated genes are generated, where 848 genes are informative
+while other 212 genes are uninformative. The sample size for
+this experiment has been setup as 80. All 1060 genes are
+distributed into the Gi groups of genes where i = 1,…,15 and
+each group have a different size of genes. For the distribution of
+genes, each Gi contains i × 10 of genes. Moreover, 80% of genes
+in each group are informative. This creates 15 groups of genes
+with sizes varying from 10 to 150. The simulation data were
+created using the sim.data function in R package penalized
+SVM [].
+
+gSVM-SCAD with BGACV Tuning Parameter Method (The Proposed Method):
+Our proposed method (gSVM-SCADBGACV) consists of three
+steps as shown in . Step 1: group genes based on the
+pathway information provided by the pathway data. Step 2 is
+the most important step where the genes within pathways are
+evaluated using the SVM-SCAD, the uninformative genes are
+discarded from their pathway. In step 2.1, the proposed
+BGACV is used in order to select an appropriate tuning
+parameter for SVM-SCAD. In step 3, the classification error
+from the selected genes for each pathway is calculated. Step 1
+and 3 is similar to the gSVM-SCAD but in step 2.1, there are
+some changes where BGACV is used instead of GACV.
+
+BGACV is a modified version of GACV where “B” stands for
+Bayesian information criterion (BIC) model selector proposed
+by Schwarz []. Researchers believe that solution provided by
+BGACV is sparse and analogous to BIC []. The first BIC type of
+GCV for SCAD had been proposed by Wang et al. [] and
+improved by Wang et al. [] to be more robust when dealing
+with the diverging number of parameters. Despite showing
+good results when dealing with the diverging number of
+parameters, Wang et al. [] admitted that their method still
+showed some limitation when dealing with the data with high
+number of samples and low number of variables. Therefore, we
+used the GACV formula [] and transformed the GACV
+formula into BGACV. The GACV proved it robustness when
+dealing with data with high number of samples and low
+number of variables []. The formula of GACV is given in
+.
+
+Discussion:
+Simulation Study:
+The purpose of this experiment is to evaluate the performance
+of both GACV and BGACV and providing the appropriate for
+gSVM-SCAD in a situation where the sizes of pathways are
+small and medium. Both gSVM-SCADBGACV and gSVMSCAD
+were run for 10 times for each group of genes and the
+averages of the classification error are recorded. The results are
+presented in .
+
+From the , it is shown that BGACV obtained less
+classification error compared to GACV in group of genes sizes
+10, 20, and 60 with 0.02, 0.06, and 0.06 less, respectively. All
+these groups of genes contained a size of genes smaller than the
+sample size (sample size = 80). While for the groups of genes
+that contained the size of genes with equal and bigger than
+sample size, there are no different results between both BGACV
+and GACV methods. From the results above, it is shown that
+BGACV can deal with the small group of genes compared to
+GACV by producing less misclassification error. While for
+groups of genes that contained larger size of genes than the
+sample size, both BGACV and GACV methods have the same
+performance. Our analysis shows that BGACV are more robust
+and consistent in providing the near optimal for SCAD when
+dealing with the diverging numbers of parameters, especially
+when the number of genes are smaller than the number of
+samples.
+
+Performance Evaluation:
+A gSVM-SCADBGACV is also used on the lung cancer and
+canine datasets to evaluate the performance of the proposed
+method. From this experiment, results from the 10-fold cross
+validation (10-fold CV) were recorded and compared with other
+5 supervised machine learning methods. The 5 supervised
+machine learning methods are PathwayRF [], neural
+networks, k-nearset neighbour with 1 neighbour (KNN1) and 3
+neighbours (KKN3), and linear discriminant analysis (LDA).
+The results of the gSVM-SCADBGACV performance against
+other machine learning methods are shown in  (see
+supplementary material).
+
+For the canine dataset in  (see supplementary material),
+it is interesting to note that gSVM-SCADBGACV outperforms
+gSVM-SCAD and the other machine learning methods with
+85.95% accuracy. The gSVM-SCADBGACV achieved 4.87%
+higher than gSVM-SCAD, 3.62% higher than neural networks,
+slightly 0.04% higher than PathwayRF, and 4.96% higher than
+KNN1 and KNN3 respectively, and 9.34% higher than LDA. For
+the lung cancer dataset, gSVM-SCADBGACV also showed a
+significant improvement with 76.55% accuracy and 2.78%
+higher than gSVM-SCAD. While with other methods, gSVMSCADBGACV
+obtained 4.55% higher than PathwayRF, 6.16%
+higher than neural networks, 14.82% higher than KNN1, 11.75%
+higher than KNN3, 13.31% higher than LDA, 21.41% higher
+than L1 SVM, 23.05% higher than SVM-SCAD.
+
+From these results, it is proved that BGACV plays an important
+role in increasing the performance of SCAD in gSVM-SCAD.
+For the canine dataset, gSVM-SCAD showed quite poor
+performance, ranked third behind neural networks and
+PathwayRF. However, when BGACV is applied to the gSVMSCAD,
+it showed a significant improvement even it obtained
+slightly higher than PathwayRF result. This is because, BGACV
+is consistently identified nearly optimal for SCAD and
+simultaneously provides nearly unbiased coefficient estimation
+when dealing with large coefficients. The results from the
+gSVM-SCADBGACV show significant achievement, since the
+pathway analysis usually dealing with the lower size of genes
+and larger size of samples.
+
+Conclusion:
+In this work, the proposed gSVM-CADBGACV is shown to
+outperform the gSVM-SCAD and other supervised machine
+learning methods. It is also shown that, a tuning parameter
+selector method plays an important role in gSVM-SCAD in
+dealing with the small genes size and large sample size that
+usually happened in pathway-based microarray analysis. The
+gSVM-SCADBGACV consistently showed better performance
+from the simulation study, the 10-fold CV accuracy, and in
+biological validation compared to gSVM-SCAD (see
+ for biological validation results). We
+have only focused on static gene expression data; however, our
+approach can be implemented with modification to time-course
+or survival gene expression data.
+
+Supplementary material
+Data 1
+We would like to thank Universiti Teknologi Malaysia for
+supporting this research by the UTM GUP research grant (Vot
+number: QJ130000.7107.01H29).
+
+Citation:Misman et al, Bioinformation 7(4): 169-175 (2011)
+
+The gSVM-SCADBGACV procedure.
+
+Correlations between the tuning parameter selector
+methods performance and the number of genes.
+

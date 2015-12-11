@@ -1,0 +1,42 @@
+1 INTRODUCTION
+A DNA or protein sequence motif is a short pattern that is conserved by purifying selection. In DNA, a motif may correspond to a protein binding site; in proteins, a motif may correspond to the active site of an enzyme or a structural unit necessary for proper folding of the protein. Thus, sequence motifs are one of the basic functional units of molecular evolution. Consequently, identifying and understanding these motifs is fundamental to building models of cellular processes at the molecular scale and to understanding the mechanisms of human disease.
+
+We describe here a software tool, called FIMO (Find Individual Motif Occurrences, pronounced fēmō), that carries out in an efficient, statistically rigorous fashion one of the core functions required for any motif-based sequence analysis: scanning a collection of DNA or protein sequences for occurrences of one or more motifs. FIMO is by no means the first motif scanning method; however, many publicly available motif scanners are either not currently maintained or lack some of FIMO's features.  summarizes the differences between FIMO and eight currently available motif scanners. Furthermore, as part of the MEME Suite (), FIMO can be used seamlessly in conjunction with a variety of complementary motif-based sequence analysis tools.
+Comparison of motif search functionality
+
+Method	Scans DNA	Scans proteins	Supports custom backgrounds	Reports P-values	Performs multiple testing correction	Source code freely available	Web accessible	GFF/WIG output	XML/HTML output	
+MotifScanner	✓		✓			✓	✓	✓		
+MotifViz	✓		✓	✓		✓	✓			
+STORM	✓			✓		✓				
+TRED	✓					✓	✓			
+RSAT	✓		✓	✓		✓	✓	✓		
+Patser	✓	✓	✓	✓		✓	✓			
+PoSSuMsearch	✓	✓	✓	✓	✓		✓		✓	
+MATCH	✓	✓					✓			
+FIMO	✓	✓	✓	✓	✓	✓	✓	✓	✓	
+References for the motif scanning algorithms are provided in the supplement. Note that FIMO only supports zero-order custom backgrounds.
+
+
+
+
+Note that the MEME Suite provides two other motif scanning algorithms that are useful in different scenarios. MAST () searches with one or more DNA or protein motifs against a database composed of relatively short sequences, e.g. proteins or candidate regulatory regions, assigning a single score to each target sequence assuming that every motif occurs exactly once in the sequence. MCAST (), in contrast, uses a hidden Markov model to search DNA sequences for regions that are enriched with occurrences of one or more of the given motifs. Thus, MCAST is designed to scan chromosomes to detect cis-regulatory modules containing a known collection of cofactor motifs. Compared with MAST and MCAST, FIMO is simpler and more general. FIMO only assigns scores to individual motif occurrences; it makes no attempt to assign scores to joint occurrences of motifs, to sequence regions or to complete sequences. FIMO is thus a general-purpose tool for identifying individual candidate binding sites or protein motifs.
+
+2 IMPLEMENTATION
+FIMO takes as input one or more fixed-length motifs, represented as position-specific frequency matrices. These motifs can be generated from the MEME motif discovery algorithm, extracted from an existing motif database or created by hand using a simple text format. The program computes a log-likelihood ratio score (often referred to incorrectly as a ‘log-odds score’) for each motif with respect to each sequence position and converts these scores to P-values using dynamic programming (), assuming a zero-order null model in which sequences are generated at random with user-specified per-letter background frequencies. Finally, FIMO employs a bootstrap method () to estimate false discovery rates (FDRs). Because the FDR is not monotonic relative to the P-value, FIMO instead reports for each P-value a corresponding q-value, which is defined as the minimal FDR threshold at which the P-value is deemed significant ().
+
+FIMO produces as output a ranked list of motif occurrences, each with an associated log-likelihood ratio score, P-value and q-value. This list is represented in multiple ways: as an HTML report, as an XML file in CisML format (), as a plain text file and as tab-delimited files in formats suitable for input to the UCSC Genome Browser (.gff and .wig).
+
+The FIMO web server allows the user to upload one or more motifs and then search either a user-supplied sequence file or one of 3102 single and multiorganism DNA and protein databases from Ensembl and Genbank. Search results are stored online, and the user is notified of their availability via email.
+
+3 EXAMPLE
+To demonstrate FIMO's functionality, we searched the human genome with a motif for CTCF, a highly conserved zinc finger DNA-binding protein that exhibits diverse regulatory functions and that plays a major role in the global organization of the chromatin architecture of the human genome ().  shows the FIMO HTML output for the top-scoring predicted occurrences of the motif, and a precision–recall curve comparing the predicted CTCF binding sites with a gold standard derived from a ChIP-seq experiment (see Supplementary Material for details). Overall, FIMO identified 8647 candidate binding sites with q &lt; 0.05. The precision–recall curve suggests that the top of the list is enriched with sites that overlap ChIP-seq peaks. Note that the absolute precision is low, presumably for two reasons: first, a single motif lacks sufficient information to reliably scan an entire eukaryotic genome with high precision; second, FIMO identifies many bona fide CTCF binding sites that are not active in the particular cell type in which the ChIP-seq experiment was carried out. Scanning the entire human genome took 30 min 10 s of wall clock time on an Intel Xeon 2.2 GHz CPU, equivalent to scanning 3.5 Mp/s.
+Using FIMO to identify candidate CTCF binding sites in the human genome. (A) Sample FIMO HTML output, showing the locations of the top-scoring occurrences of the CTCF motif in the human genome. (B) A precision-recall curve created by comparing FIMO's ranked list of CTCF sites with a gold standard derived from a ChIP-seq experiment.
+
+
+
+Funding: This work was supported by National Institutes of Health award 2 R01 RR021692.
+
+Conflict of Interest: none declared.
+
+Supplementary Material
+Supplementary Data

@@ -1,0 +1,193 @@
+Background:
+Genomic islands are chromosomal regions that have the 
+evidence of horizontal gene transfer. The studies of genomic 
+islands are extremely important to biomedical research, due to 
+the fact that such knowledge can be used to explain why some 
+strains of bacteria within the same species are pathogenic while 
+others are not, or the phenomena that some strains of bacteria 
+can adapt to extreme environments while others cannot.
+
+Current approaches of detecting genomic islands include 
+comparative genomic analyses and sequence composition 
+analyses. The comparative genome analysis consists of 
+collecting the genome sequences of phylogenetically closely 
+related species, aligning these genome sequences, and then 
+considering those genome segments present in a query genome 
+but not in others to be GIs []. Since this type of approach does 
+not apply to the genomes that do not have enough number of 
+phylogenetically closely related genomes for reference, it cannot 
+be applied to all genomes. The second kind of approach, 
+sequence composition-based approach, does not require 
+reference genomes and can be applied to any genome. It is 
+generally believed that each genome has a unique genomic 
+sequence signature, and thus genomic islands can be detected 
+by analyzing sequence composition. Existing sequence 
+composition based tools include AlienHunter 
+[], Centroid 
+[], 
+COLOMBO SIGI-HMM[], IslandPath 
+[], INDeGenIUS 
+[], and 
+PAI-IDA []. The assessment of these computational tools in 
+recent studies has shown that none of these tools can predict 
+genomic islands accurately in all genomes 
+[]. Langille 
+[]
+further suggested that a computational framework that 
+combines multiple prediction results of existing programs 
+should be developed for more accurate genomic island 
+prediction.
+
+In this paper, we present our ensemble program for improved 
+genomic island prediction, based on predicted results of five
+existing GI programs. The framework of our approach includes: 
+[] 
+collecting prediction results from existing programs; (b) 
+analyzing and filtering on predicted results; and c) generating 
+final consensus GI results (). Experimental tests on 
+benchmark datasets have shown that our ensemble program 
+could improve prediction accuracy, and thus it may be used for 
+the future GI prediction.
+
+Methodology:
+Data sets:
+Genomic sequences used for GI prediction were collected from 
+the National Center for Biotechnology Information (NCBI) FTP 
+server (
+ftp://ftp.ncbi.nih.gov/genomes/Bacteria). The genomic 
+islands used for performance evaluation of GI tools were 
+obtained by IslandPick [].
+
+Prediction of GIs with existing tools:
+In our framework, we used the predicted GI results from five 
+GI tools, AlienHunter, COLOMBO SIGI-HMM, INDeGenIUS, 
+IslandPath, and PAI-IDA. All five programs use genome 
+sequences as program inputs, with some individual programs 
+requiring additional inputs such as gene annotations. The 
+prediction results from these programs were used in our 
+ensemble method.
+
+Ensemble method:
+Since GIs could range in size from several kilo base pairs (kb) to 
+several hundred kb, it is very unlikely that two different GI 
+prediction tools predict exactly same genomic islands. Thus, the 
+predicted GIs by different tools often overlap, making it 
+difficult to vote predicted results simply based on their 
+predicted GIs. To handle this problem, we considered the genes 
+within the predicted GI regions to be GI genes, and non-GI genes
+otherwise. We collected GI and non-GI gene information based 
+on the prediction results by multiple GI tools.
+
+A simple voting scheme could be applied by selecting a 
+threshold value, and considering the region, where all 
+contained genes meeting the threshold requirement, to be a GI 
+region, as shown in . This approach may work fine for 
+those candidate GI regions that are far away (), but 
+not for those which are close each other (), which are 
+supposed to be a big GI region [].
+
+To resolve this problem, we proposed a measure for GI or nonGI based on the overall score of all genes in the region, rather 
+than individual gene scores. To do so, we first form candidate 
+GI regions, G1, G2, G3, …, Gm, where two neighboring GI regions,
+Gi and Gi+1, are separated by a non-GI region (i.e., none of 
+programs predicted the region to be a GI). We then merge any 
+two neighboring GI regions, Gi and Gi+1, if the average score of 
+all genes (including the genes in Gi and Gi+1, and between the 
+two regions) meets a predefined threshold value T1. By applying this measurement, we should merge two close GI 
+regions (as shown in ), but not for distant GI regions 
+(). If two GI regions are merged into a newly formed 
+GI region Gi, i+1, then Gi, i+1 and Gi+2 will be picked for the next 
+merging test. Otherwise, Gi+1 and Gi+2 will be selected for 
+merging test. The merging process will be repeated until it reaches to the last GI region, and we can obtain a set of GI 
+regions, G'1, G'2, G'3, …, and G'n
+
+We further filter out GIs from the previous step if (a) the GI is 
+short (i.e., containing &lt; eight genes in the GI); and (b) the 
+percentage of high GI gene scores (i.e., &gt;1) does not meet a 
+threshold value T2, so that we can guarantee that predicted GIs 
+are supported by multiple programs. The determination of 
+threshold values, T1, and T2 was described in Supplementary 
+Material.
+
+Performance evaluation:
+To evaluate the performance of our model, we compared the 
+predicted GIs with the benchmark dataset []. The benchmark 
+dataset contains picked GIs from 118 genomes, and we 
+predicted GIs using our EGID algorithm on these 118 genomes. 
+True positives (TP) are the nucleotides in the positive 
+benchmark dataset predicted to be genomic islands. True 
+negatives (TN) are the nucleotides in the negative benchmark 
+dataset predicted to be non-genomic islands. False positives 
+(FP) are the nucleotides in the negative benchmark dataset 
+predicted to be genomic islands. False negatives (FN) are the 
+nucleotides within the positive benchmark dataset not
+predicted to be genomic islands. We focus on four validation 
+measures, recall = TP/(TP+FN), precision = TP/(TP+FP), 
+performance coefficient (PC) = TP/(TP+FP+FN) and F-Measure 
+= 2*recall*precision/(recall + precision). 
+
+Discussion:
+We collected 118 prokaryotic genomes from the National Center 
+for Biotechnology Information (NCBI) FTP server, ran our EGID 
+program, and generated GI locations 
+(
+http://www5.esu.edu/cpsc/bioinfo/software/EGID) for each 
+genome. We used genomic islands obtained by IslandPick 
+[] as 
+benchmark, to evaluate the predicted GIs by EGID. We also 
+collected predicted GI results of five component programs in 
+EGID, and summarized all performance results in 
+(, see 
+supplementary). As we can see from 
+ (see 
+supplementary), both COLOMBO SIGI-HMM and IslandPath
+have relative high precision rate, but with low recall rate. On 
+the other hand, AlienHunter has relative high recall rate, but 
+with low precision rate. EGID makes the balance between recall 
+and precision, and it reaches relative high recall (0.630) and 
+precision rate (0.630). Since PC and F-measure capture both 
+recall and precision in a single accuracy measurement, their 
+values reflect overall performance more accurately. EGID 
+improves 12.14% over the best existing program AlienHunter in 
+PC, and 7.88% in F-measure, suggesting the performance 
+improvement of our ensemble method. 
+
+In order to view the predicted GIs, we displayed the GI 
+locations through one of the popular visualization tools, circus 
+[]. As we can see from 
+, EGID always picks GIs 
+predicted by multiple programs, thus guaranteeing the 
+reliability of GIs selected. The circular representations of other 
+117 genomes can also be found in our website.
+
+Conclusion:
+In this paper, we have reported the development of an 
+ensemble algorithm EGID for more accurate GI detection. We 
+hope our improved GI prediction program could aid in 
+molecular evolution and horizontal gene transfer studies.
+
+Supplementary material
+Data 1
+This research was partially supported by President Research 
+Fund, and FDR major grant at East Stroudsburg University, 
+USA.
+
+Citation:Che et al, Bioinformation 7(6): 311-314 (2011)
+
+The flowchart of our computational framework for GI 
+prediction
+
+Illustrative examples of candidate GI regions, where 
+two candidate GI regions are close in (A) and distant in (B). 
+Each vertical bar represents the vote of a GI gene by multiple GI 
+tools. The candidate GI regions meeting the threshold value are 
+underlined.
+
+Circular representations of the Escherichia coli O157:H7 
+str. Sakai (NC_002695) showing predicted GIs, with each circle 
+predicted by each program. The predicted GIs from the outer to 
+the inner circle are EGID, AlienHunter, COLOMBO SIGI-HMM, 
+INDeGenIUS, Island-Path, and PAI-IDA. The shaded parts 
+show the predicted GIs by EGID, and evidenced GIs by other 
+programs.
+

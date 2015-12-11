@@ -1,0 +1,206 @@
+1 INTRODUCTION
+Dynamic programming algorithms are often used to find an optimal solution by backtracking through intermediate values of the computation. Typical examples are that of chain matrix multiplication, string algorithms such as longest common subsequence, the Viterbi () algorithm for hidden Markov models, and sequence alignment algorithms such as those of Needleman and Wunsch () and Smith and Waterman (). Dynamic programming algorithm backtraces are also used for random sampling, where the score for each possible backtrace path is deemed to be (proportional to) the probability of the path, and it is desired to choose a path according to that probability distribution. A typical example is the algorithm of Ding and Lawrence () for the sampling of RNA secondary structure. A third use for dynamic programming backtraces is as the second step of a forward–backward algorithm, such as that of Baum–Welch (Baum et al. () for finding the parameters of a hidden Markov model. Sometimes a trade-off with run time allows a problem to be solved without a backtrace through stored results, e.g. sequence alignment (Durbin et al.,  Section 2.6; Myers and Miller, ; Waterman, , page 211) and Baum–Welch (Miklós and Meyer, ), but this is not always the case.
+
+When there is not enough space to store all intermediate results in high-speed memory, checkpointing strategies are employed, whereby selected stages of the computation are stored, and missing information is recomputed from these checkpoints on an as-needed basis. A stage of the computation, also known as a frontier, is a set of intermediate values that are sufficient for making subsequent computations. For instance, in a 2D dynamic programming algorithm that computes a small number of values for each (i,j) in a grid from the neighboring ‘earlier’ values associated with (i−1,j), (i,j−1) and (i−1,j−1), we could define a stage as a row of the computation grid. In this case, stage k would be the values associated with the cells {(k,j) : j=jmin … jmax}, and the stage k values would be sufficient for computing values for cell (i,j) for any i&gt;k. Similarly one could use columns to define stages. In many cases it makes sense to have overlapping stages; in the above example stage k might be the k-th diagonal frontier, i.e. the computation values associated with the cells {(i,j) : i+j∈{k−1,k}}.
+
+Herein we will describe an optimal checkpointing strategy that provably minimizes the number of stage re-computations necessary in performing a backtrace with limited high-speed memory. The algorithm is simple and efficient. Note that, because this limited-memory approach can be used to allow significant increases in locality of reference, it can provide more efficient computations even when the amount of high-speed memory might otherwise be considered sufficient.
+
+We build upon a previous approach that is fairly memory-efficient, which is described in Bioinformatics (Grice et al., ; Wheeler and Hughey, ). With memory enough to store M stages, their ‘2-level’ algorithm uses the memory to compute the first M stages, but then retains only the M-th stage as a checkpoint, discarding the previous ones. Using the remaining M−1 memory locations, the algorithm computes stages M+1, …, 2M−1, and then uses the (2M−1)th stage as the second checkpoint. It continues this process, using the (M+(M−1)+(M−2))th stage as its third checkpoint, and so forth, up to and including M+(M−1)+···+1=M(M+1)/2 as its M-th checkpoint. Thus, if N=M(M+1)/2 stages are needed in the backtrace, they can be achieved with  memory locations; in the backtrace, each missing stage is computed using the space freed by discarding the checkpoints that are no longer needed.
+
+Because the algorithm needs to compute each stage at most twice, once in the forward pass to create the checkpoints and once during the backtrace, the overall number of stage computations of the memory-reduced algorithm is at most double what it would have been.
+
+Wheeler and Hughey () also generalize their 2-level algorithm to an ‘L-level’ algorithm, where L is any positive integer. With M memory locations, the L-level algorithm can compute
+
+stages, where this formula works for any integers L and M so long as the binomial coefficient  is defined to be n!/d!(n−d)! when d≥0 and n−d≥0, and zero otherwise. The asymptotic limit is as M→∞ for fixed L. For the M, L≥1 algorithm, the k-th stage to be checkpointed is
+
+That is, the first stage to be a checkpoint is the last stage that would be a checkpoint under the (L−1)-level algorithm. Generally, the k-th stage to be checkpointed is beyond the (k−1)th checkpoint by an amount that would be the last checkpoint for an (L−1)-level algorithm that uses the remaining M-(k−1) memory locations. Equation () solves to
+
+
+The number of stage computations for the L-level algorithm to compute NWH(M,L) stages using M memory locations is given by the recursion
+
+because the L-level algorithm first computes all NWH(M,L) stages, to get the L-level checkpoints; it then provides access to the stages in reverse order by working with the L-level checkpoints in reverse order; the L-level algorithm uses the (L−1)-level algorithm to generate the missing intervening stages. However, 1 is subtracted, because the last computation of each (L−1)-level algorithm invocation produces an L-level checkpoint that we already had available. Thus, this last computation for each (L−1)-level algorithm invocation is not performed. Equation () solves to
+
+where this formula works for any integers L and M so long as the trinomial coefficient  is defined to be (a+b+c)!/a!b!c!. when a, b, c ≥ 0, and zero otherwise. Thus we have a multiplier for the number of stage computations of approximately L for  memory locations. Computed values of NWH(M,L) and TWH(M,L) for small M and L are given in  and plotted in .
+
+The number of stages and run time for both the algorithm of Wheeler and Hughey () and the optimal checkpointing algorithm
+
+Alg. L	TWH(M,L)/NWH(M,L)	Topt(M,L)/Nopt(M,L)	
+	1	2	3	4	5	6	7	1	2	3	4	5	6	7	
+M=1	1/1	1/1	1/1	1/1	1/1	1/1	1/1	1/1	1/1	1/1	1/1	1/1	1/1	1/1	
+2	2/2	4/3	7/4	11/5	16/6	22/7	29/8	3/2	6/4	12/6	20/8	30/10	42/12	56/14	
+3	3/3	9/6	21/10	41/15	71/21	113/28	169/36	3/3	13/8	34/15	70/24	125/35	203/48	308/63	
+4	4/4	16/10	46/20	106/35	211/56	379/84	631/120	4/4	22/13	70/29	170/54	350/90	644/139	1092/203	
+5	5/5	25/15	85/35	225/70	505/126	1009/210	1849/330	5/5	33/19	123/49	343/104	798/195	1638/335	3066/539	
+6	6/6	36/21	141/56	421/126	1051/252	2311/462	4621/792	6/6	46/26	196/76	616/181	1596/377	3612/713	7392/1253	
+7	7/7	49/28	217/84	721/210	1981/462
+	4753/924	10 297/1716	7/7	61/34	292/111	1020/293
+	2910/671	7194/1385	15 972/2639	
+For the L-level backtracking algorithm of Wheeler and Hughey () with memory suitable for storage of M stages, the left side of this table shows both NWH(M,L), the number of stages that can be produced in reverse order, and TWH(M,L), the number of stage computations required for that backtrace. [See Equations() and().] For instance, to perform a backtrace on N=36 stages with M=3 memory locations requires the (L=7)-level algorithm and requires T=169 stage computations. It is not straightforward to predict the number of stage computations for other values of N ().
+
+For the optimal checkpointing algorithm presented here, the right side of this table shows both Nopt(M,L), a number of stages that can be produced in reverse order, and T(M,Nopt(M,L)), the number of stage computations required for that backtrace. [See Equations() and().] When the number of stages is between Nopt(M,L) and Nopt(M,L+1), the optimal number of stage computations Topt(M,N) is computed via linear interpolation. For instance, to do the backtrace on N=36 stages with M=3 memory locations, we observe that N falls between Nopt(M=3,L=5)=35 and Nopt(M=3,L=6)=48. Thus, the algorithm requires T(M=3,N=36)=T(M=3,N=35)+6(36−35)=131 stage computations. Thus, in this case, the number of stage computations for the L-level algorithm of Wheeler and Hughey () is 29% higher.
+
+Low memory comparison of algorithms. This figure exhibits the effect on the run time at low memory levels. Clockwise from the top, the curves come in 12 pairs, one each for M=2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15 and 20 memory locations. Within each pair, the curve for the L-level algorithm of (Wheeler and Hughey, ) is first; as M increases these curves become increasingly ‘fractal’, with jumps in the run time at several scales. The curve for the optimal checkpointing algorithm is second in each pair; these curves are piecewise linear.
+
+The main drawback to the L-level algorithm is that it can perform badly for a value of N that falls between NWH(M,L−1) and NWH(M,L), for some L. Wheeler and Hughey, () propose an ‘(L,L−1)-level’ algorithm that performs better for these intermediate values of N, but it is not optimal. Wheeler and Hughey () also discuss (L, L−1, …)-level algorithms and an optimal checkpointing algorithm, but do not provide a quick computation for choosing optimal checkpoints, nor do they give formulae to compute the number of stage computations for general values of M and N.
+
+2 METHODS
+The choice of the stages to checkpoint can be framed as an optimization problem. We write T(M,N) for the number of stage computations that are needed by the optimal checkpointing algorithm for a backtrace through N stages, using room for M stages. When N≤M, there is ample memory, and T(M,N)=N. At the other extreme, if M=1 there is room to compute only one stage, and N&gt;1 stages cannot be computed even with an infinite amount of time available. [Following the lead of Wheeler and Hughey () we bar in-place calculations.]
+
+If N&gt;M&gt;1, and if we choose C as the first stage to checkpoint, then we begin by computing the first C stages, 1, …, C, by alternating the use of two memory locations. We store stage C, discarding the previous ones. Then, using the remaining M−1 memory locations, we recursively perform an optimal backtrace on the final N−C stages, C+1, …, N. Next, we present the retained stage C to the user. Finally, we discard stage C and recursively perform an optimal backtrace on the initial C−1 stages, using the full M memory locations. Thus, with an optimal choice for C, we have the recursion for T(M,N):
+
+
+Note that Wheeler and Hughey () give a different recursion for optimal checkpointing. Translated into our notation, their recursion is T(M,N)=minC{C+T(M−1,N−C)+T(M,C)−1}. This error may have impeded their further progress.
+
+A straightforward computation of this recursion would require 𝒪(MN2) time (Wheeler and Hughey, ). However, in the following we will show a mathematical solution to the recursion that permits the calculation of all the needed checkpoints in 𝒪(N) time.
+
+As with the analysis of the L-level algorithm of Wheeler and Hughey (), we find it easier to initially restrict our attention to special values of N. The main contribution of this work is our subsequent generalization to arbitrary values of N.
+
+2.1 Special values for the number of stages
+With storage for M≥1 stages, and for any integer L≥1, we will define a special number of stages Nopt(M,L), and we will calculate Topt(M,L), the number of stage computations required for a backtrace through Nopt(M,L) stages using M memory locations. Let
+
+For M,L&gt;1, with N=Nopt(M,L) stages, we set
+
+the unique optimum checkpoint stage for the problem with M memory locations and N=Nopt(M,L) stages (see Appendix for proofs). Plugging C(M,N)=Nopt(M,L−1)+1 and N−C(M,N)=Nopt(M−1,L) into Equation (), we obtain
+
+This solves to
+
+
+where Equation () is defined for M≥2 only. Computed values of Nopt(M,L) and Topt(M,L) for small M and L are given in  and plotted in .
+
+As with the L-level algorithm of Wheeler and Hughey (), with the optimal checkpointing algorithm, we have a multiplier for the number of stage computations of approximately L for  memory locations. However, we shall now see that, with the optimal checkpointing algorithm, we easily achieve this multiplier for the number of stage computations even when the number of stages N is arbitrary.
+
+The optimal checkpointing algorithm in pseudo-C++, for a backtrace through N stages using memory sufficient for M stages. Using Equation (), find the level L=max{L : Nopt(M,L)≤N}. For the convention that the memory locations are labeled 0, …, M−1 and the stages are labeled 0, …, N−1, invoke backtrace(−1, M, −1, N, L, Nopt(M,L), advance, available, p); where advance is a pointer to a callback function that computes stage Nto, to be stored in memory location Mto, from the immediately preceding stage, which is stored in memory location Mfrom unless Nto is the first stage; where available is a pointer to a callback function invoked during backtrace so that the user can make use of stage N, stored in memory location M; and where p is a user-supplied pointer to applicable stage-independent information. BIGINT should be an integer type able to handle integers a little larger than N M2. Note that, although the backtrace routine directs the callback routines on the use of the memory locations, the actual allocation and access of the memory is not handled by the backtrace routine. Further, note that if the generality is not required, the pointer parameters, advance, available and p, can be eliminated, and their use in the body of the function can be replaced by ‘hard-wired’ calls to appropriate functions. See the Supplementary Materials for C++source code.
+
+2.2 General values for the number of stages
+When N falls between two optimal values, Nopt(M,L) and Nopt(M,L+1), we can compute the number of stage computations T(M,N) by linear interpolation between Nopt(M,L) and Nopt(M,L+1) (see Appendix for proofs). Noting that
+
+we derive
+
+for N≥M&gt;1.
+
+Furthermore, for N between Nopt(M,L) and Nopt(M,L+1), it is optimal to choose the initial checkpoint C(M,N) so that C(M,N)−1 and N−C(M,N) fall between the values that they would have had to equal, if N had equaled Nopt(M,L) or Nopt(M,L+1). That is, we must choose C(M,N) so as to simultaneously satisfy
+
+and
+
+In practice, we choose the largest legal value,
+
+
+The optimal checkpointing algorithm is presented in . Note that we include not just M, and N, but also a level L and a special stage Nopt(M,L) in the parameter list for the recursive subroutine, because the availability of values for L and Nopt(M,L) greatly speeds the calculations of Nopt(M−1,L) and Nopt(M,L−1), which are needed in the calculations of optimal checkpoints:
+
+
+
+It is imperative that the required calculations be impervious to integer overflows. We initially prevented overflow in integer calculations, such as abc/de for Equations () and (), by canceling all common factors between each variable in the numerator and each variable in the denominator. This approach requires 3 × 2=6 invocations of Euclid's algorithm for finding a greatest common divisor. Such a procedure leaves the value of each denominator variable at 1 and, when Nopt(M,L)+1 can be represented as an integer, the numerator variable values are sufficiently small enough to permit all the needed computations—so long as extra care is taken when verifying that the initial value of N is less than Nopt(M,L+1).
+
+To handle computations where the number of stages exceeds the largest unsigned integer, often 232−1≈4 × 109, we modified our C++software implementation to use a C++class that manipulates integers of arbitrary size.
+
+3 SOFTWARE
+Sample C++-code for optimal backtrace is available in the Supplementary Materials.
+
+4 RESULTS
+We applied the algorithm to pairwise local alignments (Smith and Waterman, ) of sequences of up to 3000 nucleotides of human DNA with sequences of up to 2864 nucleotides of rodent DNA. For the largest of the alignments, to keep within a 125 MB limit for total memory use, we restricted ourselves to M=486 stages of storage for the N=2864 stages. For these choices, L=1, Nopt(M=486, L=1)=486, and T(M=486, N=2864)=5242. Thus, the multiplier for the number of stage computations is T/N=5242/2864≈1.83 for memory use M/N=486/2864≈17%. The algorithm ran in 70 s, but would have run much more slowly if it had tried to use memory for all 2864 stages, because the resulting memory swapping would have been onerous. In contrast, the 2-level algorithm of (Wheeler and Hughey, ) computes checkpoints for stages 486, 971, 1455, 1938 and 2420, and requires two computations for all other stages with index under 2420. Thus its total number of stage computations is 2864+(2420−5)=5279, only slightly worse than 5242.
+
+The same calculation performed on a pair of sequences, each 10 000 nucleotides long, takes 12 min to run in 125 MB of memory, a memory size sufficient to store only 138 stages instead of the full 10 000 stages. For a problem of this size, L=2, Nopt(M=138, L=2)=9728, and T(M=138, N=10 000)=20 134. Thus, the multiplier for the number of stage computations is T/N=20 134 / 10 000≈2.01 for memory useM/N=138/10 000≈1.4%. In contrast, the 3-level algorithm ofWheeler and Hughey () is at a particular disadvantage in that it computes its only 3-level checkpoint at stage 9591, with subsequent 2-level checkpoints at 9728, 9864, and 9999. The algorithm requires 29 448 stage computations, significantly worse than 20 134. With 1 GB of memory, sufficient for storing 1104 stages for the pairwise alignment of sequences of length 10 000 nucleotides, the optimal checkpointing algorithm requires 18 896 stage computations, whereas the 2-level algorithm of Wheeler and Hughey () requires 19 891 stage computations, almost 1000 more.
+
+On similar datasets, using a probabilistic model that defines a probability distribution on the set of possible alignments, we used the optimal backtrace algorithm to compute a centroid (Ding and Lawrence, ), also known as a posterior decoding (Miyazawa, ). This task requires a dynamic programming calculation during the backtrace that is comparable to the calculation performed during the forward pass. With sufficient memory, the total computation would require 2N stage computations, thus the multiplier for the number of stage computations with limited memory is
+
+this value is better than L, the multiplier of the number of stage computations for the cheaper backtrace tasks.
+
+We also can draw independent samples from the probability distribution on the set of possible alignments. Here, the run time is as slow as the centroid calculation only when the number of samples to be drawn is of the order of the smaller of the two sequence lengths.
+
+5 DISCUSSION
+We have provided an algorithm for optimal backtrace through a dynamic programming algorithm when memory is limited. The algorithm improves upon previous work via the simplicity and speed of the calculation for the index of the optimal checkpoint, and via achievement of optimal performance for a problem of arbitrary size.
+
+A few variations are worthy of consideration. Generally, for backtrace computations, whether or not they are achieved with the optimal checkpointing algorithm described here, the first stage is computed from initial or boundary conditions, and each subsequent stage is computed from the immediately preceding stage. Thus, at least conceptually, the first stage requires special treatment. If this distinction makes implementation of the advance callback routine difficult, it may be prudent to compute and permanently store the first stage in the first memory location, and to run the optimal checkpointing algorithm so as to provide an optimally computed backtrace through the remaining N−1 stages using M−1 memory locations. The number of stage computations for this approach is 1+T(M−1,N−1).
+
+As already described for both optimal checkpointing and the L-level algorithm of Wheeler and Hughey (), in the limit as the number of memory locations M goes to infinity with a fixed multiplier L for the number of stage computations, we can backtrace through N ∼ ML / L! stages with T ∼ ML / (L−1)! stage computations. However, for the case when memory is severely limited, it is instructive to look at the asymptotics for a fixed value of M, with L tending to infinity. For this situation we have
+
+
+
+
+Thus, in these low-memory situations, the optimal algorithm is asymptotically faster than the L-level algorithm of Wheeler and Hughey (), even when the latter is applied to its optimal problem sizes NWH(M,L). The speed multiplier is , which is approximately 1+(0.693}/(M−1.347)) for moderate values of M. See  and .
+
+6 CONCLUSION
+When high-speed memory is limited, dynamic programming algorithm backtraces make use of checkpoints for re-computing needed intermediate values. We have provided an easy-to-use algorithm for optimally selecting the checkpoints.
+
+Supplementary Material
+[Supplementary Data]
+ACKNOWLEDGEMENTS
+We thank the Computational Molecular Biology and Statistics Core Facility at the Wadsworth Center for the computing resources for the pairwise local sequence alignment calculations.We wish to acknowledge use of the Maple software package by Waterloo Maple, Inc., without which the calculations in this article would have been much more difficult.
+
+Funding: This research was supported by the National Institutes of Health / National Human Genome Research Institute grant K25 HG003291.
+
+Conflict of Interest: none declared.
+
+APPENDIX: PROOF OF RUN TIME
+So that this section is self-contained, we will restate the relevant assumptions and definitions.
+
+We define the following functions and will prove their usefulness presently.
+
+
+We take as given that the number of stage computations required satisfies:
+
+where a choice of value for C that minimizes this last expression for a given N and M is called an optimal first checkpoint, C(M,N).
+
+THEOREM.
+Let N be the number of stages to be made available in a backtrace using storage for M stages. For a choice of N and M, define
+
+We will show that
+
+
+for N ≥ M ≥ 1, where the second term is deemed zero if N=Nopt(M,L), even when L=+∞. We will show that, when N&gt;M&gt;1, the value of an optimal first checkpoint C(M,N) satisfies
+
+and
+
+
+PROOF.
+The proof will be by induction on N and M. We have two base cases: first, a base case for a low value of N and, second, a base case for a low value of M.
+
+Base case, N=M ≥ 1
+
+We wish to show that Equation () correctly matches Equation () when N=M ≥ 1.
+
+We put L=1 into Equation () for Nopt(M,L) and Equation () for Topt(M,L):
+
+
+where the trinomial terms with L−2 vanish by our convention. Thus, for this base case, Equation () indicates that L=1. It follows that Equation () gives T(M,N)=M, which is in agreement with Equation () because N=M.
+
+Base Case, N&gt;M=1
+
+We wish to show that Equation () correctly matches Equation () when N&gt;M=1.
+
+We put M=1 into Equation () for Nopt(M,L) and Equation () for Topt(M,L):
+
+
+Thus, for this base case, Equation () indicates that L=+∞. Because N is strictly greater than Nopt(M,L) (for any L) it follows that Equation () gives T(M=1,N&gt;1)=+∞, in agreement with Equation (), as desired.
+
+General Case, N&gt;M&gt;1
+
+We assume that the theorem is proved true for N′ ≥ M′ ≥ 1, when N′≤N and M′≤M but (N′,M′) ≠ (N, M). We will show that checkpoint choices C′ and C″=C′+1 will give the same number of stage computations if both C′ and C″ satisfy the restrictions of Equations () and (). We will show that if C″ is too high to satisfy these restrictions then use of C′ will lead to fewer stage computations; we will show that if C′ is too low to satisfy these restrictions then use of C″ will lead to fewer stage computations. Together these will demonstrate that the restrictions are optimal and that they can be satisfied simultaneously. We will then show that satisfaction of the restrictions implies Equation ().
+
+Let T′(M,N) and T″(M,N) be the number of stage computations required given that C′ or C″, respectively, is chosen as the first checkpoint, and optimal checkpoints are used in all remaining subproblems:
+
+and
+
+
+Set L1 to be the unique integer such that
+
+and observe that
+
+Set L2 to be the unique integer such that
+
+and observe that
+
+Using our induction hypothesis [Equation ()], we thus compute that
+
+
+
+
+We observe that when both C′ and C″ satisfy the restrictions given as Equations () and () then L1=L2 and the stages C′ and C″ make equally good choices as a checkpoint. When C″ is too large for the restrictions then L1&gt;L2, and when C′ is too small for the restrictions then L1&lt;L2. Thus, we have verified that the restrictions define an optimal first checkpoint.
+
+Finally, using the induction hypothesis, we compute T(M,N) to verify that it yields Equation (), using a value of C satisfying the restrictions of Equations () and ().
+
+
+
+
+as desired. For the last equality, we have used Nopt(M,L)=Nopt(M,L)+Nopt(M,L1)+1 and Topt(M,L)=Topt(M−1,L)+Topt(M,L−1)+Nopt(M,L−1)+1, which are easily proved from Equations () and ().
+

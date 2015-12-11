@@ -1,0 +1,185 @@
+Metabolic Networks: Structure and Capabilities
+Cell metabolism can be computationally represented by a large set of metabolites intertwined by biochemical reactions. This is the simplest definition of a metabolic network. When a system comprises all possible reactions that are performed by a cell, it is a genome-scale metabolic network. Different from kinetic models where time is a fundamental parameter, the computation of metabolic networks is time independent and the outcome is an overview of the metabolic capabilities under the steady-state assumption, where external nutrients are metabolized in final products required for specific “metabolic tasks.” The steady-state assumption states that no internal metabolite can be accumulated in the system. This means, for example, that the sum of reaction fluxes generating a metabolite must be equal to the sum of the reaction fluxes consuming the same compound. The steady-state assumption allows the simplification of the computational complexity of the mathematical problem, although it is known that cell metabolism is in quasi-steady-state.– The genotype content in the cell defines the network structure and which enzymes are present in a specific cell.
+
+In , Panel I, the metabolic network is represented by light blue dots (metabolites) connected by blue and black arrows (active and inactive reactions). Here, two red metabolites are the final products (metabolic targets) whose synthesis is fundamental for the simulated metabolic task(s). Under the chosen availability of external nutrients, only a part of the network is active (blue reactions), while the rest of the system is carrying a null flux (black reactions). Which network subset is active and how efficiently are synthesized the metabolic targets is a detailed description of the cell phenotype and homeostasis. The second scenario (Panel II of ), which is a common routine to assess the network, introduces the concept of “perturbation” of the system. Useful information may be gained comparing the non-perturbed phenotype (phenotype I) with the perturbed one (phenotype II).
+
+The general term “perturbation” defines a wide set of a priori-chosen impairments that may be limitations of external nutrients, inhibitor-induced impairments,, or knock-outs of genes codifying for internal enzymes. In , the perturbation blocks two reactions (the red arrows) and the network topology allows redirection of the fluxes to synthesize the metabolic targets. Usually the perturbation outcome is “binary”: the network may be impaired and the perturbation is then lethal, or the network has some bypasses to exploit and the system reaches a new homeostasis through the establishment of a new phenotype.
+
+Some recent advancements aimed to simulate a partial inhibition of network enzymes to represent in more feasible way the effect of enzymatic inhibitors., It is often the case that the drug-induced impairments of enzymes do not prevent the residual activity of their metabolic targets.
+
+It would then be possible to have more insights about the perturbation consequences, if -omics datasets (eg, transcriptome,– proteome, fluxome) would be integrated into the systems. Drug inhibitors may hinder enzymatic activities, but they can also trigger specific gene expressions, changing the efficiency of some pathways; gene deletions may cause unexpected enzymatic regulation in mutants;, lack of some nutrients leads to the expression of transporters for alternative sources and, thus, possible new influxes to be included in the system. Overall, the cell is a living system that evolves under perturbations through metabolic adjustments. All these considerations may be exhaustively sorted out by experimental datasets,, that also improve the system description and resolve potential inconsistencies. Along with experimental data, a more fine description may be reached if the network is refined from a thermodynamical perspective.– Then, the metabolic network may be only a layer of cell physiology, whose description may be refined by more model types, as signaling networks and transcription regulation (). Complex physiological phenomena require an irreversible change in the metabolism. Terminally differentiated cells show more specific pathways in comparison to the pluripotent progenitors; cancer and other severe diseases impair metabolism in many different ways, all leading to a new phenotype., Fully reversible adjustments of metabolism are likely to happen in case of limited nutrients and environmental adaptation.,,
+
+Simulations of metabolic models
+The basics of the flux cone
+The structure of a metabolic network is defined by its stoichiometric matrix (S), that stores the metabolites connectivity in terms of reactions stoichiometric coefficients. For a network of n reactions and m metabolites, S has m columns and n rows. This is a mean to transform a set of chemical equations in a computationally useful data structure. An example of stoichiometric matrix of the human pentose phosphate shunt pathway is given in  with the list of included reactions. The dynamics of the metabolic network is described by ,
+
+where C is the vector of the metabolite concentrations, t is the time and v is the flux vector.
+
+The steady-state assumption simplifies this equation in , defining the internal mass balance of the network. In this way, the variable “time” is discarded and the problem is simplified.
+
+Now, this assumption leads to a system of n linear equations.
+
+A special propriety of each matrix is the rank r, whose integer value indicates the number of linearly independent columns or rows of the data structure. The rank can also be defined as the amount of non-zero rows of a new matrix, that is obtained reducing S matrix to its row-echelon form.
+
+The network capabilities, defined as the set of all possible solutions, are given by a closed space, the flux cone. This object has (n-r) dimensions, where n is the number of reactions in the system and r the rank of S matrix. Each point within this closed space describes a linearly dependent combination of reaction fluxes, while the cone edges are larger sets of fluxes solutions.
+
+There are many mathematical ways to solve . This can be solved by geometrical means, and in this case, the solution is unique, even if the most common approach is based on optimization problems for which do exist alternate possible solutions. This space can be restricted by constraints that describe reaction irreversibility, uptake and export fluxes, and, when available, experimental measures. Then, there are two main computational perspectives to explore the cone: topology-based analyses and optimization procedures.
+
+Methods for pathway analysis
+The study of the pathway topology may be performed with many methods that rely on the steady-state assumption. The use of these methods is not limited to pathway analysis, but they are also suitable tools to build large-scale networks. These algorithms are elementary modes,– minimal cut sets,– extreme pathways,, and generalized mass-action.
+
+An elementary mode is a set of active enzymes carrying a non-zero flux. This subnet activation respects the reaction irreversibility and defines a short functional route. From a mathematical point of view, an elementary mode is a minimal linear combination of possible fluxes. The solution set may be any vector (internal or on the edge of the feasible space) that spans from the flux cone origin.
+
+The main limit of this approach is given by the combinatorial complexity of all obtainable solutions; hence, some strategies were applied to prune the set of predicted modes, preferring the k-shortest path. This aspect limits the application of this algorithm to genome-scale networks, whose size may hinder the computation time. To bypass this issue, Schuster and coworkers modified and extended this approach to large systems. The outcome of this more recent method (elementary flux patterns) collects a set of elementary fluxes.
+
+Every optimization problem can be described in dual terms, and on this aspect, it is based on the concept of minimal cut set. While the former approach tests the reaction functionality, here the computation indicates the reaction set that is essential for the overall flow of the system. This method gives interesting information about the presence of a putative metabolic bypass in the network topology. It is an useful way to analyze a pathway topology in terms of robustness and sensitivity to perturbations. The feasibility of the approach of Klamt and Gilles was assessed by computing Escherichia coli’s growth on different media.
+
+Similar to elementary modes, also extreme pathways are linear modes of an activate subnetwork. These pathways are the edges of the flux cone. Here, reversible reactions are decomposed into forward and backward fluxes. This is its main difference from elementary modes, where reversible reactions are treated as a single component of the flux. Two extreme pathways for the pentose phosphate shunt are shown in .
+
+The last approach here reviewed to assess pathways functionality is the generalized mass-action kinetics. This method has the advantage of the possibility to describe more accurately the enzyme kinetics if inhibitors or activators are present. Here, the specific enzymatic mechanism is reduced to the product of the reactant(s) concentrations and rate constant. Despite this simplification, generalized mass-action kinetics was feasible to study human purine metabolism and the outcome was supported by many experimental evidences. Advantages and disadvantages of the methods here reviewed are summarized in .
+
+Methods for genome-scale metabolic networks
+The computation of large-scale networks often is performed with constraint-based optimization problems. Their main advantage is that a profound knowledge on enzyme kinetics is not necessary. Despite this, many community efforts are currently devoted to kinetic and semi-kinetic approaches for large-scale networks.,–
+
+FBA (flux-balance analysis) is a wide-spread mathematical framework for genome-scale network simulations. Here, inputs for the models are the external availability of nutrients, the network structure, and the specific “metabolic tasks” to accomplish. The results will then predict the reaction fluxes of the network and how efficiently the metabolic tasks are fulfilled. Reaction fluxes represent qualitatively the reaction contributions to the metabolic tasks. In , an example of FBA outcome is given for the shunt pathway (where inputs are vl = 1, general lower bounds = −10, and general upper bounds = 10).
+
+The mathematical core of FBA is a linear programming problem, where a system of mass-balanced equations (network reactions) and intake fluxes defines a constrained space solution. An objective function should be chosen to find an optimal solution within the constrained space. The optimal solution describes a flux distribution fulfilling the objective function (the metabolic tasks) and represents a point in the restricted feasible space. Unfortunately, the optimal distribution for a given network is not unique. To bypass this issue, Smallbone and Simeonidis developed geometry-based methods that find an unique solution for the flux distribution. Other details on FBA formalism and capabilities are given in Refs.–
+
+If the simulations are representing the metabolism of a growing microorganism, a realistic metabolic task is the maximization of the biomass components.– When the predictions aim to optimize the biochemical design of microbes for cell factories, the synthesis (as molar yield) of key-products is maximized.–
+
+Theoretically, any function can be maximized or minimized in networks, but only a few have specific biological meanings. Some of these functions are the minimization of the internal fluxes, and the maximization of specific metabolites.– All the cited perspectives rely on the main assumption that the cell is under selective pressure and it will exert its efforts to reach an optimum. These efforts may be expressed as “maximization” of some metabolic syntheses or, antithetically, as “minimization” of internal costs (eg, ATP consumption, shortest path, etc). The idea that a cell is able to rearrange its metabolism in an optimal way has been revisited in some works., An interesting work simulated E. coli growth on six media and with 11 different tasks to accomplish. The predictions were then confronted with measured in vivo fluxes, to understand which objective is maximized in reality. The surprising finding is that the cell does not use a shortest path, but tries to maximize its ATP yield for flux unit and the biomass yield.
+
+Segré and colleagues realized that microorganisms under gene deletions are more sensitive to perturbations than wild-type cells. Their minimization of metabolic adjustment (MOMA) method was a relaxed version of the FBA problem, where the prediction is a suboptimal flux distribution for a mutant strain. This method relies on the assumption that mutants are “metabolically impaired” to grow, although there is evidence that not all knock-out organisms are dysfunctional in comparison to the parental wild-type strain.– Suboptimal computational outcomes should be reconciliated with in vivo/in vitro mutation-induced effects, which may be unexpected in some cases. Nevertheless, MOMA found a wide consensus among network modelers as a computational tool. Lactococcus lactis metabolic network was assembled with FBA and its enzymatic deletions simulated with MOMA; a yeast strain has been engineered for vanillin synthesis with FBA and MOMA; the metabolic reconstruction of Sulfulobus solfataricus applied MOMA to assess the percentage of lethal mutations.
+
+Another mutant-dedicated algorithm is regulatory on/off minimization (ROOM), which computes the minimal flux deviation from the wild-type flux distribution. ROOM performance was higher in comparison to FBA and MOMA in the flux prediction for pyruvate kinase deletion in E. coli. MOMA and ROOM pioneered the way to the development of algorithms for metabolic networks that do not strictly follow the optimality criterion. A recent interesting application of ROOM is given by r-dFBA, a dynamic FBA version that integrates ROOM algorithm. While Shlomi and coworkers minimized the flux deviation, r-dFBA minimizes the deviation of metabolite concentrations. Another recent research proposes an algorithm (PSEUDO) to find suboptimal clouds of flux distributions in metabolic networks with a minimal rearrangement of the objective function. The authors correlated flux variability with the degenerated optimal constrained space.
+
+The objective function has a specific importance in a new computational framework for large-scale networks, Feasibility Analysis. The scope of the objective function is improved to describe a large spectrum of cell capabilities, such as network robustness, metabolic homeostasis, and temporal responsiveness. Overall, this approach has a good performance in predicting yeast growth in chemostat under carbon limitations.
+
+Alongside with mutant-dedicated programs, another set of algorithms is dedicated to estimation of the cellular biomass composition. In many works, this composition was retrieved and rearranged from the available literature,, or experimentally measured. It could be also possible to obtain the biomass from a network topology and an available fluxome or test which biomass has the best performance in a specific system. Reconstruction of biological functions can be also predicted by Redirector, which focused on minimal adjustments of the biomass components. More details on different types of biomass composition are given in Ref.
+
+Network Reconstruction in a Nutshell
+Assembling a network requires the list of annotated genes in an organism and some patience to rationalize these data in a pathway-centric hierarchy. Often, the first draft of the model is achieved with semi-automatized methods exploiting biochemical databases (KEGG, BRENDA, MetaCyc, and many more). A parallel and complementing way would assemble the metabolic network from literature sources only. This draft should be, then, refined with the available databases.
+
+Another strategy for an initial reconstruction may involve human Recon l, a collection of all reactions present in the human body.
+
+This large dataset can be useful to extract metabolic pathways contained in experimental -omics datasets. In this way, many models of human cells were compiled.,,
+
+The entire viability of the network is assessed, and structural gaps (created by unconnected metabolites; thus, they are indicative of missing reactions or pathways) are analyzed with the help of literature and with sequence alignments. It is possible to assemble reasonable subnetworks to close the gaps and refine erroneous genome annotation. A common practice is the integration of -omics datasets (proteomic, transcriptomic, metabolomic, and fluxomic data) in the metabolic network to improve the physiological description of the cell.,,,,–
+
+Simulation strategies to support a metabolic network
+Generally, the simulations for validation may have two opposite aims:
+
+to predict the maximal production and secretion of a metabolite, given experimental measures of the microorganism in the medium and
+
+to detect enzymes or reactions that are essential for a specific metabolic task (eg, biomass synthesis, toxin synthesis, cell growth).
+
+While the first case is mainly followed by researchers modeling organisms for industrial purposes,,,, the second approach is devoted to simulate effects of enzyme inhibitors for drug research or the discovery of disease-specific biomarkers.,–
+
+Advantages and limits of some methods here reviewed are summarized in . In , a flux balance solution is shown for the human pentose phosphate shunt. Here, the different flux activation of the pathway branches are proportional to the stoichiometric coefficient of the biomass component (G3P, R5P and PRPP).
+
+To assess the network validation for a specific synthesis, it would be reasonable to test, first, the growth rates under different media conditions., This would help to fit the biomass growth under different environments and to detect possible faults in the network topology. It is interesting to notice that the prediction accuracy can be impaired more by an incorrected topology than by a generic biomass composition. The network reconstruction of Pseudomonas putida, for example, includes a biomass composition of E. coli, but it has a good performance in predicting growth yields.
+
+Another approach to test the network validity simulates the effects of existing enzymatic inhibitors on the flux distribution. List of enzymatic inhibitors are retrieved from online resources and literature, and the corresponding enzymes (drug targets) are “computationally inhibited.” The prediction would assess if the metabolic tasks were fulfilled (non essential enzyme) or if there were some impairments (essential enzymes). Simulation of drug-induced effects in a network may focus not only on the detection of the biomass component that is impaired but also on the screening of essential enzyme in a mutated cell with multiple knock-outs.
+
+If a model can reproduce the effects of known drugs on the metabolism, it is also feasible to represent the general homeostasis of the modeled cell.
+
+The Promise: Practical Applications of Metabolic Networks
+Metabolic networks are considered feasible representations of cellular biochemistry. The availability of metabolic networks as predictive tools is fundamental for metabolic engineering. The mutations of specific enzymes would redirect the flux to other products. This strategy was successfully followed to engineer yeast for succinate synthesis. Succinate, an intermediate of the Krebs cycle, is largely employed in chemical industries. Following the same concept, the network of a microalga (Chlamydomonas reinhardtii) predicted a way to accumulate H2. The same model also suggested some ways to optimize this production. The synthesis of antimalarial precursors was optimized with extreme pathways-based modeling in yeast.
+
+The networks are powerful tools to design the metabolic architecture of microorganisms and are also employed to understand how to defeat human pathogens. To identify enzymatic drug targets in pathogens, FBA-based methods were applied to models of Mycobacterium tuberculosis,
+Campylobacter jejuni,
+Plasmodium falciparum, and Neisseria meningitidis. To describe better the host—pathogen interactions, some pathogens were “coupled” to the human host cell. M. tuberculosis was simulated inside a human macrophage, and the malaria pathogen was integrated in a human red blood cell. The main idea is that a parasite growth would be more realistic when it is embedded in the “natural environment” (the host). To understand which pathways are active in L. monocytogenes when it is in the intracellular state, topology-based computations (extreme pathways and elementary modes) were employed to detect essential reactions. The outcome was then in agreement with gene deletion assays and helped to gain insights into the intracellular metabolism of the pathogen. Drug-effects on pathogens metabolism were simulated with extreme modes in two Streptomyces models to assess weak point and cytotoxic effects in the microorganism.
+
+A human cancer network was reconstructed to assess cancer-specific essential enzymes, and the predicted target was experimentally validated.,
+
+An exciting use of metabolic networks is the screening of disease-specific biomarkers that can be applied for early detection of diseases. The principle behind this application is that mutated cells present alterated metabolic profiles. Shlomi and coworkers analyzed a human cancer network, and detected the impairment of 176 enzymes and a set of 233 potential biomarkers for inborn metabolic mutations. Following a similar approach, a large-scale network of human heart cell was reconstructed and analyzed to predict 776 putative biomarkers for cardiovascular diseases.
+
+This short overview of the practical applications of metabolic networks highlights their potential in
+
+detecting new drug targets for specific cell types,
+
+optimizing the genetic design of microbial strains for industrial purposes,
+
+screening biomarkers for early diagnoses,
+
+improving genome annotations of organisms, and
+
+studying physiology and biochemistry of the cell.
+
+The principal axiom of Systems Biology is that a system should be also analyzed at the level of interactions of its parts, not only as sum of them. The examples reported here suggest that this “philosophy” can make sense.
+
+The Reality: the Limits of Metabolic Models
+Metabolic models are useful tools, but, as everything has, they show some limitations too.
+
+A not complete genomic draft may result in a not viable metabolic network. Luckily, possible gaps may be resolved through the integration on -omics datasets.,,,
+
+The second limitation is the inability to describe internal regulations, such as feedbacks, complex assembly, and drug-side effects, without integration of a specific ODE subnet-work. This fact is linked to specific expression of isoforms that are transiently present in different compartments. With no prior knowledge about their localization, it would not be possible to design ad hoc experiments. It is interesting to notice than often -omics datasets do not focus on the carrier expression. This aspect, if integrated in a network, may give hints about the temporal activation of metabolic pathways under a defined stimulus in different compartments.
+
+In some common diseases, the enzymatic isoforms, their assembly, and their possible impairment in the membrane are mainly regulated by single fatty acids. Being this a wide set of molecules, a similar complex event would not be feasible for FBA for its descriptive limits and may be wide for a detailed kinetic model. Generalized mass-action kinetics could be helpful for this purpose.
+
+Overall, the complexity of the cell is always far ahead in comparison to any computational model that may mimic only specific aspects of a living being.
+
+Acknowledgements
+SB thanks the anonymous referees for their advices and comments.
+
+ACADEMIC EDITOR: J.T. Efird, Associate Editor
+
+FUNDING: Author discloses no funding sources.
+
+COMPETING INTERESTS: Author discloses no potential conflicts of interest.
+
+Author Contributions
+
+Conceived the concept: SB. Wrote the first draft of the manuscript: SB. Made critical revisions: SB. The author reviewed and approved of the final manuscript.
+
+DISCLOSURES AND ETHICS
+
+As a requirement of publication the author has provided signed confirmation of compliance with ethical and legal obligations including but not limited to compliance with ICMJE authorship and competing interests guidelines, that the article is neither under consideration for publication nor published elsewhere, of their compliance with legal and ethical guidelines concerning human and animal research participants (if applicable), and that permission has been obtained for reproduction of any copyrighted material. This article was subject to blind, independent, expert peer review. The reviewers reported no competing interests. Provenance: the author was invited to submit this paper.
+
+Abbreviations
+G3Pglyceraldehyde-3-phosphate
+
+E4Perythrose-4-phosphate
+
+X5Pxylulose-5-phosphate
+
+S7Psedoheptulose-7-phosphate
+
+Rl5Pribulose-5-phosphate
+
+R5Pribose-5-phosphate
+
+PRPPphosphoribosyl pyrophosphate
+
+ATPadenosine triphosphate
+
+MPSmathematical programming system
+
+ODEordinary differential equations
+
+Simulation of metabolic networks: two scenarios.
+
+An example of logical dependences between descriptive layers in a cell.
+
+Three representations of human pentose phosphate pathway.
+
+Two extreme pathways calculated for the pentose phosphate shunt pathway. Software: ExPA.
+
+Flux-balance steady-state for the pentose phosphate shunt pathway. Software: Lp_solve under MPS formalism.
+
+A summary of the methods to model metabolic pathways.
+
+COMPUTATIONAL METHOD	ADVANTAGES	LIMITS	
+Elementary modes	Useful to understand possible routes	long computation time for large systems	
+Minimal cut set	Based on structural features of the mathematical problem		
+Extreme pathways	Useful to understand possible routes; different versions available depending from the network size	subset of possible elementary modes	
+Generalized mass action kinetics	Possibility to include regulations		
+A summary of the methods to model metabolic networks.
+
+COMPUTA-TIONAL METHOD	ADVANTAGES	LIMITS	
+Flux balance analysis	genome-wide experimental dataset integration; main reconstruction tool	no unique solution; subnetwork activation dependent from objective function size	
+Elementary flux patterns	feasible on wide-scale systems	not based on objective optimization; not feasible to represent long-distance impairments due to secondary metabolites (cofactors, prosthetic groups donors, etc.)	
+MOMA	first algorithm introducing suboptimality for mutants		
+ROOM	refined suboptimality for mutants		
+Feasibility Analysis	assessment of the system robustness and on a dynamic parameter (time responsiveness); good agreement with experimental results	not tested yet on large scale networks	
+PSEUDO	good agreement with experimental results; feasible for large scale networks		

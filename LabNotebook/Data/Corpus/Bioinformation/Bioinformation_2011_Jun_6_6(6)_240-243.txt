@@ -1,0 +1,222 @@
+Background
+With the continuously increasing number of various genome sequencing
+projects, predicting promoters has become one of the prime focuses for gene
+identification and annotation. Promoter-prediction is multi-informative, as
+along with delineating one end of gene and being key to gene regulation; it also
+gives a cue to functional aspect of gene []. In eukaryotes promoter guides the
+cell development and differentiation, tissue morphogenesis and specificity,
+hormonal communication, and cellular stress responses 
+[]. Moreover the
+knowledge of promoter may lend clues for function of completely anonymous
+proteins which cannot be retrieved from already predicted amino acid
+sequences []. 
+In eukaryotes promoters are classically defined as the start site
+of transcription (TSS) []. 
+According to a geneticist's view promoters are cisacting
+elements deciding the site and rate of transcription, while according to
+biochemist's view; these are target sites of transcription factors 
+[]. Eukaryotic
+promoters are of three types viz., core promoters, proximal promoters and
+distal promoters that have different roles in gene regulation. Core promoters,
+also known as minimal promoters are located ˜80 to 100 base pairs (bp) around
+TSS and are required for initiation of transcription. Proximal promoters located
+˜250 to 1000 upstream of core promoter, are position and species specific,
+involve transcription factor binding site and initiate basal transcription. Distal
+promoters located further upstream and also known as enhancers involve
+additional regulatory element binding sites at distal regions from transcription
+start site [,
+]. 
+For computational prediction, core promoter is more important
+as it is the first essential site required for the initiation of transcription 
+[].
+Eukaryotic core promoters have TATA box as an integral part which lies 25-30
+bp upstream of TSS []. 
+So for retrieving the locations of promoter sequences,
+location of TATA box can be searched and region upstream to TSS with TATA
+box of known genes can be targeted. Major challenges associated with
+promoter prediction methods involve weak models used for promoter regions
+and algorithmic constraints []. Also, it has been reported that using existing
+promoter prediction methods miss 30-40% of true promoters and have a false
+positive rate of 45-60% []. Complex architecture of promoter sequences
+presents a computational problem yet to be solved satisfactorily 
+[]. Methods
+for promoter prediction are in their infancy and level of accuracy achieved is
+low [].
+
+The success of prediction depends upon biological model, type and quality of
+training data utilized []. 
+In general, most of the computational methods for
+promoter prediction are based on models searching for organization of
+promoters, promoter location [] 
+or for the hallmarks of promoters as CpG
+islands [], TATA boxes 
+[], CAAT boxes 
+[], specific transcription factor
+binding sites (TFBSs) [13, 14], pentamer matrix 
+[] and oligonucleotides 
+[].
+Various computational strategies applied for this purpose involve: neural
+networks [], 
+linear and quadratic discriminant analyses 
+[], interpolated
+Markov Model [], 
+independent component analysis (ICA) [], and nonnegative
+matrix factorization (NMF) []. All the methods have their own
+advantages and limitations. Selection of an appropriate combination of
+biological features and computational approach for accurate promoter
+prediction is still an open issue. In the present work we have dealt with this
+problem by utilizing tilling microarray intensities for nucleosome rich DNA of
+chromosome 1 of Arabidopsis thaliana. Although, microarray expression data
+have been used to establish correlation between DNA sequence and promoterstrength
+[], 
+but using it for predicting the promoter location is a novel
+approach.
+
+It has been shown that nucleosome is located at ˜ +40±15 bp of TSS i.e.,
+mostly downstream from typical TATA box position. It can be inferred that
+TATA box is situated within 5' half of nucleosomal DNA or right upstream of
+it. Further, nucleosomal distribution around the TSS has a strong correlation
+with promoter region []. 
+Therefore, microarray experiment was designed to
+retrieve nucleosomal rich DNA regions to ensure the incorporation of promoter
+regions. Further, as analyzed from various biological features adopted for
+promoter prediction, length and composition of DNA sequence i.e., GC content
+plays an important role in distinguishing promoter region from non-promoter
+[]. 
+Difference in melting temperature due to different composition of
+promoter sequence may result into different pattern in hybridization intensity
+which can be detected. Our work explored conglomerative machine learning
+approach to utilize data obtained from high throughput and high resolution
+tilling microarray data for detection of promoter region.
+
+Methodology
+Dataset
+Intensity values for mononucleosomal DNA regions were obtained from tilling
+microarray data downloaded from gene expression Omnibus (GEO) at NCBI
+having GEO accession: GEO25553, available at
+
+http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=gse25553. Also whole
+genomic DNA tilling microarray intensity values generated under the same
+experimental conditions were obtained from same geo data series, which were
+used for normalization of mononucleosomal DNA intensity data. Intensity data
+for mononucleosomal regions was vectorized to consider the context intensity
+values of neighboring probes as a window around centrally positioned intensity
+value. Several window sizes were tested and finally size of 41 was chosen by
+trial and error to include 41 consecutive probes, considering the average range
+of number of probes comprising different known promoter regions in training
+data.
+
+Each window comprised the intensity for the probe in question (P) positioned
+at the centre of the window i.e., 21st position so that P was represented with 20
+intensity values on both sides. A probe in question (P) refers to the tilling array
+position against which the nucleosome was to be detected. For extremities zero
+padding of required size was done. Thus finally the input feature for 779303
+data yields 779303 row vectors each consisting of 41intensity values. Promoter
+locations for fifty genes from chromosome 1 of A. thaliana were identified
+considering the presence of TATA box in the proximity (17-25 base pairs
+upstream) of start codon for the genes concerned. Intensity vectors
+corresponding to these promoter regions were retrieved to prepare the initial
+data set. All the 1492 vectors representing 50 promoter regions and 1500
+vectors representing non-promoter regions were retrieved. Thus we had 2992
+data each comprising a vector of 41 consecutive probe intensity values.
+
+Training set and Validation set
+Data was divided with a ratio of 30:20 for training (897 and 900 data for
+promoters and non-promoters respectively) and validation (595 and 600 for
+promoters and non-promoters respectively) data set respectively. Thus training
+and validation sets consisted of 1797 and 1195 vectors respectively. Mean was
+calculated for data of each column of training set. Training data was
+normalized by subtracting the column wise mean from each element of column
+concerned. The mean calculated from training data was used for normalizing
+the validation set also.
+
+Model development using Neuro-GA approach
+The classification of data was done using a feed-forward backpropagation
+network model, where normalized probe intensity vectors were fed as input.
+Several architectures for neural network were tried for training. Finally a three
+layer neural network giving maximum efficiency was chosen as classification
+model. While the input layer comprised forty one inputs, first and second
+hidden layers consist of twenty and ten nodes respectively. The output layer
+contains two nodes to represent two classes of our interest i.e., promoter and
+non-promoter. Target output vectors were created as [-1 1] for promoter region
+and [1 -1] for non promoter regions. Tan sigmoid transfer function was used in
+both hidden and output layers. To enhance the speed of learning Levenberg-
+Marquardt algorithm was applied. Mean square error of decisions was used as
+performance function for the network. The weights and biases of trained ANN
+were arranged into a vector comprising 1072 variables and optimized using a
+strategy following a published protocol using Genetic Algorithm 
+[]. Initial
+population was created by randomly adding or subtracting uniformly
+distributed random numbers between 0 to 10% of the value of each element of
+the combined vector obtained by the combination of weight-matrices and biasvectors.
+Fitness scaling was done using the rank of each individual. Scattered
+crossover and uniform mutation with rate of 0.01 was used to generate new
+generations of population. Percentage efficiency in correctly classifying
+validation data using current weights and biases was used as fitness function.
+Optimized weights and biases were used for promoter-prediction.
+
+Cross validation using efficiency measures and distance based
+membership
+Sensitivity, specificity and accuracy were used as measures of efficiency of
+classification as the classification of probe intensity values into promoter and
+non-promoter classes is a binary classification 
+[]. Further a new statistic
+‘distance based membership’ of correctly predicted class by neural network in
+the original class was calculated. Euclidian distances were measured between
+the predicted output and original target output as given in 
+.
+
+Discussion
+Accuracy, sensitivity and specificity of trained network on training data set
+were found to be 69.73%, 73.91% and 65.56% respectively. Accuracy,
+sensitivity and specificity of trained network on validation data set were found
+to be 65.36%, 71.26% and 59.50% respectively, as tabularized in Table 1 (see
+). 
+Our method has given false positive rate of 40.50%
+on validation data set as compared to existing methods which have a false
+positive rate of 45-60% as discussed previously. Similarly false negative rate
+was found to be 28.74% which is lower than currently available methods
+known to miss 30-40% of true promoters. Results obtained from this pilot
+study in the direction of a new approach for predicting eukaryotic promoters
+appear to be promising. Nucleosomal DNA experiment intensity values were
+calibrated by using whole genomic DNA intensities generated by hybridizing
+MNase treated genomic DNA (˜150 bp) to similar Arabidopsis tilling array
+chip. So finally the calibrated data had intensity values for nucleosome rich
+regions along with embedded genomic DNA sequence intensities. This
+facilitated statistical analysis which used the concept of context to incorporate
+the effect of genomic DNA intensity values. This might have helped neural
+network classifier to detect the hidden pattern in data for promoter regions.
+Moreover the concept of distance based class membership was introduced that
+gives an idea about the confidence with which the neural network predicted the
+class for input data. Values obtained for distance based class membership were
+found to be 64.14% and 64.94% for training and validation sets respectively. It
+indicates that the classification decision obtained through our classifier was
+reliable. The study paves a way to utilize high throughput microarray data for
+fast prediction of promoter locations. None the less, the study is also helpful to
+establish a link between promoter location, gene expression and nucleosomal
+dynamics in the eukaryotic genome. Study of nucleosomal positioning and
+dynamics in genome is of great importance and interest as it governs the gene
+expression or suppression events which are at the heart of cell metabolism.
+
+Conclusion
+The results obtained from our study which involves robust classification of
+tilling microarray data provide new insights for the promoter prediction
+problem. The error involved in this method is possibly because of low
+resolution in the tilling microarray system. Moreover, the apparent error may
+be due to the identification of unknown promoter sites for further investigation.
+The distance based class membership statistics used to validate the classifier
+accuracy makes the results more reliable and may be used by the machine
+learning community to validate the outcome of their classifier.
+
+Supplementary material
+Data 1
+We gratefully acknowledge the helpful discussion about microarray data used
+in this work by research team of Dr Sameer Sawant, National Botanical
+Research Institute (NBRI), Lucknow, India. We are also grateful to Ministry of
+Human Resource and Development (MHRD) and Department of Science and
+Technology (DST) for their joint financial support to Division of Applied
+Sciences and Indo-Russian Centre for Biotechnology at IIIT to continue this
+work.
+
+Citation:Mishra et al, Bioinformation 6(6): 240-243 (2011)
+

@@ -1,0 +1,97 @@
+Background
+Eukaryotic promoter prediction plays a very important role in the study of gene regulation. Improvements are needed despite the availability of a number of promoter prediction algorithms. There is a need 
+to increase true positive predictions and at the same time reduce false positive predictions. The most important issue is the selection of appropriate features for developing prediction systems.
+
+Available promoter prediction systems use two types of features for classification namely, context features like n-mers, and signal features such as TATA-box, CCAAT-box, and CpG islands. Among the favorable 
+promoter prediction programs, Eponine [] builds a PWM to detect TATA-box and G+C enrichment regions as promoter-like regions; FirstEF [] uses CpG-related and non-CpG related first exons as signal 
+features; PromoterInspector [] uses IUPAC words with wildcards as context features. Good experiment results are achieved by integrating these two types of features. DPF [] applies a separate module 
+on G+C rich and G+C poor regions, and selects 256 pentamers to generate a PWM for prediction. Furthermore, DragonGSF [,] adds the CpG-island feature to DPF.
+
+However, the performance of existing methods is still not satisfactory. There is a common problem in these prediction systems and they select limited number of features for classification. So, they ignore 
+information in abandoned features and the interaction of selected features. Feature vectors need to be rebuilt to include more information for classification to achieve better prediction results.
+
+Here, we describe a method named PCA-HPR to predict the location of the TSSs with best performance. Principle Component Analysis (PCA) is applied to the context feature selection from feature matrices. The 
+level of information loss was controlled by choosing a certain number of principal components (PCs). PCA-HPR projects original features extracted from training sequences to a new feature space constructed by 
+PCs instead of choosing specific pentamers, (e.g., CGGCG, GCGCG) which are used in PromoterExplorer []. Resulting feature vectors are then sent to artificial neural networks (ANNs) for training. The concept of 
+CpG islands (genomic regions that contain a high frequency of CG di-nucleotides) is also used as an enhancing signal. The final prediction is performed by a data processing module which combines the output from 
+three classifiers and a CpG island module. The positive predictive value (PPV) and sensitivity (SN) of the model are shown to be higher than existing methods.
+
+Methodology
+The training set in this experiment is divided into several subsets of promoters, introns, exons and 3′UTR sequences. Promoter sequences are extracted from two public databases. One is the Eukaryotic Promoter 
+Database (EPD), release 86 [], which contains 1871 human promoter sequences. The other is the Database of Transcription Start Sites (DBTSS), version 5.2.0 [], which includes 30,964 human promoter sequences and 
+15,531 forward strand promoter sequences. We used forward strand promoter sequences are in our experiment. Human exon and intron sequences are extracted from the exon-intron database [], and the first exons 
+are not included in the exon training set. Human 3′UTR sequences are from the UTR database [].
+
+We randomly selected 1000 promoter sequences from EPD, and 7000 promoter sequences from DBTSS to form the promoter training set. We then extracted 250bp upstream to 50bp downstream relative to the TSS of 
+promoter sequences. In the non-promoter dataset, we selected sequences longer than 1200bp (compared to sequence of length 1200bp in EPD). We arranged the selected sequences into 300bp each and choose 10,000 sequences 
+each from Exon, Intron and UTR databases.
+
+CpG islands, which exist in 60% of mammalian promoters [], are regarded as one of the most important signal features in promoter recognition. Methods such as CpGProD [], DPF [], DragonGSF [,], FirstEF [] 
+and PromoterExplorer [] embed this signal feature in their prediction system. In our method, two features are used to identify if a given sequence (&gt;200bp) is CpG islands related: GC percentage (GCp) and 
+Observed/expected CpG ratio (o/e). These are calculated with equations (1-5) (see ). If GCp &gt; 0.5, and o/e &gt; 0.6, then the sequence is considered CpG islands related, otherwise it is non-CpG islands 
+related [].
+
+A DNA sequence contains four types of nucleotides: adenine (abbreviated A), cytosine (C), guanine (G) and thymine (T). With different combinations, there are 43=64 codons and 45=1024 pentamers in promoter and non-promoter 
+datasets. Pentamers are widely selected as context features in many promoter prediction models [,], as they keep good balance between search efficiency and discriminability. In PCA-HPR, we also extract frequency matrices 
+of pentamers. Additionally, we evaluate the contribution of pentamers and codons to the separation between the promoter and non-promoter sequences using the relevance function (6) (see ). Then the 
+statistical relevance values of 64 codons and 1024 pentamers are ranked, and the analysis result is shown in . A larger relevance function value R represents a higher discriminative ability of the feature. Among 
+the 100 features with highest R value, we found 30% to 40% of them are codons. Since the total number of codons is much less than the total number of pentamers, we conclude that codons have a good discriminative ability. 
+So using codons together with pentamers as context features will improve the classification performance.
+
+To construct codon and pentamer combined frequency matrices, we first count overlapping codon and pentamer frequencies of fixed length sequences in promoter and non-promoter training sets. A 64×n matrix and a 1024×n matrix 
+are built for each training set, where n represents the number of sequences of the training set. Next, we applied normalization and combined two matrices using Equations (7) to (9) for each dataset. Four resulting feature 
+matrices are constructed from promoter, exon, intron and 3′UTR training datasets. Finally, three pairs of matrices: promoter versus exon, promoter versus intron and promoter versus 3′UTR are built from the four feature matrices 
+for further processing.
+
+Embedding all the codon and pentamer features in our system is not practical due to system efficiency. Moreover, redundant information provides noise and directly influences the prediction result of the system. In order to 
+obtain more discriminative information in a relatively low-dimensional feature space, PCA is used in the context feature selection. PCA is an efficient method of reducing dimension of a dataset while retaining useful information, 
+which accounts for most information of the original dataset. We apply PCA to the three pairs of codon and pentamer combined matrices. The idea of PCA in our experiment is to diagonalize the covariance matrix of the feature matrix. 
+The diagonal elements are the variance data type, and the off-diagonal elements are the covariance data type in the covariance matrix. Here, large values of variance elements represent the signals that are of interest, and small 
+ones represent noise. Large values of covariance elements correspond to high redundancy and small ones correspond to low redundancy. Therefore, the ideal solution is to find a matrix to diagonalize the covariance matrix by linear 
+transformation, making the off-diagonal elements of the matrix zero. Through deduction (equations (10), (11) shown in ), we can see the matrix constructed with eigenvectors of the covariance matrix is the one 
+that can diagonalize the covariance matrix. Larger eigen values of covariance matrix associate with higher levels of energy and the corresponding eigenvectors are the principal components (PCs) needed. The minimum number of vectors 
+needed in our method is calculated according to Equation (12) (shown in ). Finally, the first six principal components are selected to form a new feature space in each of the three promoter and non-promoter matrix pairs.
+
+Traditional feature selection methods, such as DPF and PromoterExplorer, employ a certain number of pentamers, which is far less than the size of the original feature set. Although these pentamers are selected as the most 
+discriminative features according to probability or distance functions, there is still massive information missed with the abandoned features. However, PCs selected by PCA contain information of most features in the datasets. Thus, they 
+can best describe the characteristics of each dataset and improve classification. The PCA-HPR system is constructed with several sub-modules.  shows the overall structure of the promoter recognition system. In the system, the CpG 
+module gives a score for each input sequence segment: “1” for a CpG-island-related segment, and “0” for a non-CpG-island-related segment. Three classifiers in the model are built with ANNs, and each classifier is trained by 8000 promoter 
+sequences and 10000 non-promoter sequences. The threshold of each classifier is set to 0.4, and if the outputs of two of the three classifiers are over the predefined threshold, the data processing module will sum the outputs of the three 
+classifiers and the score from the CpG island module. If the sum is over 2.2, the data processing module will report the window as the potential promoter region. In the TSS prediction module, a promoter region is identified if the number of 
+consecutive windows is more than 20, and the consecutive windows are defined here if the offset of two windows is less than 300bp. The predicted TSS is the location that contains the maximum score.
+
+Discussion
+Three test sets are formed to evaluate the performance of PCA-HPR. Test set 1 consists of four human genomic sequences from GenBank with a total length of 0.95Mb and 14 known TSSs. The accession numbers of these sequences are L44140, 
+D87675, AF017257 and AC002368. They are selected because most existing promoter prediction systems have tested them and the results are available for a fair comparison. Test set 2 uses the Chromosome 22 sequence and its annotation data []. 
+The sequence has a total length of 34.75Mbp with 393 annotated TSSs. In test set 3, seven Homo sapiens chromosome 22 genomic sequences are extracted from GenBank with a total length of 11.56Mbp and 94 TSSs in the forward strands. The accession 
+numbers of these sequences are NT_028395.3, NT_011519.19, NT_011521.4, NT_011523.11, NT_011525.7, NT_019197.5 and NT_011526.6. These sequences have different annotations than the one in test set 2, so the results are credible.
+
+We selected three promoter systems, DragonGSF, Eponine and FirstEF to compare the performance on test set 1. A promoter region is counted as a true positive (TP) if TSS is located within the region, or if a region boundary is within 200bp 5′ 
+of such a TSS. Otherwise the predicted region is counted as a false positive (FP). The test results of Eponine and FirstEF are cited from the reference paper []. On test set 2, we adopt the same evaluation method as DragonGSF []: when one or 
+more predictions fall in the region of [−2000, +2000] relative to a TSS, a TP is counted. All predictions which fall on the annotated part of the gene in the region [+2001, EndofTheGene] are counted as FP. Other predictions are not considered in 
+counting TP and FP. Experimental results of DragonGSF, FirstEF and Eponine are obtained from []. We adopt the sensitivity (SN) and the positive predictive value (PPV) to evaluate the performance of these systems. The results and comparisons based 
+on test 1 and test 2 are shown in Table 1 and Table 2 (tables in ).
+
+In test 1, with the same number of true positives in comparison with existing methods, our method produces the smallest number of false positives. In test 2, although FirstEF achieves a higher SN than PCA-HPR, the PPV is just half of PCA-HPR. 
+DragonGSF keeps a good balance between SN and PPV, while PCA-HPR produces better results. On test set 3, we compare PCA-HPR with DragonGSF because DragonGSF is the only online system which can accept relatively longer sequences among systems compared 
+in the analysis. In order to get fair results for these sequences which are longer than 1,000,000bp (the limitation of a file in the DragonGSF web tool), we divided them into segments that are equal or less than 1,000,000bp each, before sending them to 
+PCA-HPR and DragonGSF. Under the same evaluation criteria as the one in test set 2, PCA-HPR achieved a better result: the SN of PCA-HPR and DragonGSF are 53.2% and 46.8%, and PPV of the two systems are 72.4% and 63.8%, respectively. DragonGSF reports 
+a good prediction performance on the whole human genome sequence, but it uses the TRANSFAC [] database which includes binding site information only available for known promoters. Therefore, our system has the advantage in predicting unknown promoters.
+
+Conclusion
+We have proposed a new system called PCA-HPR for promoter detection in DNA sequences. In this experiment, we focus on improving the feature selection process to achieve a better prediction performance. The majority of promoter prediction methods 
+available now directly extract a limited number of context features from sequences. We use PCA to reduce the high dimensional feature matrices, and select PCs to form the new feature space. The promoter prediction method based on the rebuilding 
+feature vectors is tested on three test datasets. The result of test sets 1 and 3 show that PCA-HPR can reduce false positive rate leading to a high PPV. Predictions on the genome sequence of chromosome 22 made by PCA-HPR are competitive in terms of 
+SN and PPV. The comparison results indicate that the PCA algorithm performs effectively on feature selection, which is one of the most important tasks in human promoter recognition.
+
+Supplementary material
+Data 1
+This work is supported by the Hong Kong Research Grant Council (Project CityU122607).
+
+Codon/pentamer percentage in top 100 discriminative features. Statistics is based on three datasets: Promoter versus Exon, Promoter versus Intron, and Promoter versus 3′UTR.
+
+Overall structure of our promoter recognition system. The 300bp sliding window moves 20bp at each step. Each sequence segment inside the sliding window is sent to the Feature Vector Creation Module 
+and the CpG Islands Module. The Feature Vector Creation Model extracts codon and pentamer combined vector from the input sequence. The PCA module contains three spaces formed by PCs: the promoter-exon space, 
+the promoter-intron space, and the promoter-3′UTR space. The vector generated by Feature Vector Creation Module is projected to the three spaces in the PCA model, and then sent to the three corresponding Classifiers. 
+The three scores from the classifiers together with the score from CpG islands are processed in the Data Processing Model, and then the final prediction of TSSs is produced.
+

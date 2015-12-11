@@ -1,0 +1,44 @@
+1 INTRODUCTION
+Over the past two decades, much effort has been spent improving the accuracy or speed of side-chain modeling methods. Most methods exploit a limited number of representative conformations, called rotamers, at each residue position and use efficient search algorithms to find a low-energy rotamer combination for the whole protein. In spite of their efficiency, rigid rotamers are inherently accompanied by a discrete error and not suited for physics-based force fields, which are sensitive to small atomic clashes: the calculated energies can be quite different for the native conformation and near-native rotamers. Force fields thus have to be modified, by either scaling the atomic radii (), or using softer Lennard–Jones repulsive terms () to reduce the influence of the steric clashes. Alternatively, knowledge-based, coarse-grained energy functions have been developed that can tolerate rigid rotamers while achieving high accuracy (). A third approach is to use extremely detailed rotamer libraries, or flexible rotamer models, in combination with accurate energy functions at the cost of speed ().
+
+Recently, we developed a side-chain modeling program combining accurate, orientation-dependent, Optimized Side Chain Atomic eneRgy (OSCAR-o) with a flexible rotamer model (). The prediction accuracy was significantly higher (2.2% for χ1 and 4.0% for χ1+2) than that of the next-best method, but the run time was as long as 28 min for a single protein. In this study, we adopted OSCAR to a rigid rotamer model by modifying the distance-dependent component for fast side-chain modeling. The parameters of the orientation-dependent functions were optimized so that decoy proteins with low RMSD (root mean square deviation) from native structures could be distinguished from a pool of decoys (obtained by perturbing the energy functions and then modeling the entire protein). The proposed methodology (OSCAR-star) is very fast while maintaining high accuracy.
+
+2 RESULTS
+2.1 Parameter optimization
+The parameters of the distance-dependent energy functions (OSCAR-dstar) were initialized to the corresponding values (OSCAR-d) previously optimized, by maximizing the energy gap between the native conformation and rotamers at each modeled position (). To model a side chain at a given position, OSCAR-dstar exploited a limited number of rigid rotamers to find the rotamer that had the lowest energy. The original OSCAR-d parameters were sensitive to discrete errors of rigid rotamers and the mean RMSD of the lowest energy rotamers was as large as 0.785 Å for a training set of 40 000 side chains per residue type (the rotamer interior energy was calculated the same as OSCAR-d). We then optimized the parameters to improve the accuracy by Monte Carlo (MC) simulation. Consequently, the RMSD was dropped to 0.734 Å and the accuracy (90.9% for χ1 and 80.8% for χ1+2) for single residues in 30 test proteins was similar to that of OSCAR-d with a flexible rotamer model. In the next step, the optimized OSCAR-dstar potential was multiplied by an orientation-dependent function to yield OSCAR-star. The parameters of the orientation-dependent function were optimized by simultaneously minimizing the RMSD of the lowest energy rotamer at each modeled position and the RMSD of the lowest energy decoy obtained by perturbing the energy functions and then modeling the entire protein. As a result, the prediction accuracy of OSCAR-star increased by 0.6 and 0.7% for χ1 and χ1+2, respectively, compared with OSCAR-dstar when modeling all residues in each of the 218 test proteins.
+
+2.2 Comparison with other methods
+We compared the performance of OSCAR-star with other top-ranked side-chain modeling programs () such as CISRR (), SCWRL4 (), LGA (), NCN (), OPUS_Rota (), OSCAR-d and OSCAR-o. OSCAR-star had better prediction accuracies than other programs except OSCAR-o and was faster than all but three programs: SCWRL4, OPUS_Rota and OSCAR-dstar. In other words, OSCAR-star was more accurate than all of the faster side-chain modeling programs. According to a paired t-test, the χ1 accuracy difference between OSCAR−star and the three programs was statistically significant (P&lt;0.0001).
+Comparison of side-chain modeling programs in prediction accuracy and running time for 218 independent test proteins
+
+Program	All residues	Core residues		
+	χ1(%)	χ1+2(%)	RMSD(Å)	χ1(%)	χ1+2(%)	RMSD(Å)	CPU time/protein	
+CISRR	84.7	73.1	1.49	92.6	85.9	0.95	23 s	
+SCWRL4	85.1	74	1.48	93	86.9	0.96	7 s	
+LGA	86.1	72.3	1.42	93.9	85.9	0.91	5 m 53 s	
+NCN	86.3	74.3	1.48	93.8	87.9	0.87	20 m 50 s	
+OSCAR-d	86.6	75.3	1.41	95.5	90.4	0.7	9 m 26 s	
+OPUS_Rota	86.6	75.7	1.4	94.3	87.6	0.86	7 s	
+OSCAR-dstar	87.1	75.7	1.37	93.9	86.3	0.87	14 s	
+OSCAR-star	87.7	76.4	1.35	94.4	87.3	0.85	18 s	
+OSCAR-o	88.8	79.7	1.24	95.9	91.9	0.62	27 m 49 s	
+aThe list of programs are sorted according to χ1 accuracy. Default parameters/arguments were used in the calculations.
+
+bOPUS_Rota was run on one Intel Xeon 3.0 GHz processor and other programs were run on one AMD Opteron 2.7 GHz processor.
+
+cThe prediction accuracies of SCWRL4, LGA, NCN, OPUS_Rota, OSCAR-d and OSCAR-o were obtained from our previous work ().
+
+
+
+
+The performance of a side-chain modeling is affected by the energy function, structural representation and search algorithm. Efficient search algorithms save time but help little to improve the prediction accuracy. For rigid-rotamer-based side-chain modeling programs such as OSCAR-star, the MC simulation time is less than that used to calculate rotamer–backbone and rotamer–rotamer interaction energies in the initial stage (see Methods in Supplementary Material). Orientation-dependent energy functions are essential for high accuracy. For example, OPUS_Rota, the most accurate side-chain modeling program after OSCAR methods (), uses orientation-dependent statistical energy functions. On the other hand, flexible rotamer models, which are time consuming, cannot achieve accurate predictions without high-quality energy functions. In fact, the three programs using flexible rotamers, CISRR, SCWRL4 and NCN, have lower accuracies than the rigid-rotamer-based OPUS_Rota and OSCAR-star. OSCAR-o, which uses both orientation-dependent energy functions and a flexible roamer model, is the most accurate and also slower than the other methods. With a state-of-the-art search algorithm, SCWRL4 is the fastest, even though a flexible rotamer model is used.
+
+2.3 Protein loop selection with OSCAR-star
+We have previously demonstrated that OSCAR-o has higher accuracy than other energy functions in selecting near native conformations from loop decoys (). Here, we compared the performance of OSCAR-star with OSCAR-o for the RAPPER decoy set (), in which every loop target contained 1000 decoys optimized by side-chain modeling and 50 top scored decoys further optimized by energy minimization. We modeled side-chain conformations of loop residues with OSCAR-o/OSCAR-star before each energy calculation. For the decoys without energy minimization, OSCAR-star demonstrated better performance than OSCAR-o in 7 out of 11 loop lengths from 2 to 12 and equal accuracy for five-residue loops. For the energy-minimized decoys, OSCAR-star was effective for long loops but poor for short loops compared with the more accurate OSCAR-o. The relatively coarse-grained OSCAR-star was superior to OSCAR-o, which was sensitive to incomplete sampling and atomic clashes, for decoys without energy minimization. Moreover, it took 5 min for OSCAR-star to model side-chain conformations of 1000 decoys for an eight-residue loop target compared with 5 h for OSCAR-o. OSCAR-star is thus appropriate for the initial stage of loop modeling. Side-chain conformations can be modeled very fast at candidate loop backbones, which makes it possible to sample loop conformations extensively (&gt;1000 decoys). The top ranked decoys can be then energy minimized and evaluated by more accurate force fields such as OSCAR-o.
+
+Funding: DMS was supported by the Funding Program for World-Leading Innovative R&amp;D on Science and Technology (FIRST), Japan Science for the Promotion of Science (JSPS).
+
+Conflict of Interest: none declared.
+
+Supplementary Material
+Supplementary Data

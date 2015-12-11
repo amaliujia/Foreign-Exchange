@@ -1,0 +1,48 @@
+Findings
+Introduction
+Understanding the genetic architecture of common human diseases such as tuberculosis (TB) remains one of the greatest challenges in biomedical research. The goal of the present study was to approach the genetic analysis of TB susceptibility with the assumption that the underlying genetic architecture is complex.
+
+Specifically, we used a machine learning method called multifactor dimensionality reduction (MDR) that was designed specifically for detecting and characterizing non-additive gene-gene interactions (i.e. epistasis) . Only a handful of studies have explored the role of epistasis in determining TB susceptibility. For example, de Wit et al. found statistically significant evidence for epistasis between several different pairs of single-nucleotide polymorphisms (SNPs) in a study of South Africans. Another study of West Africans found significant evidence of pairwise epistasis . We have extended these studies by specifically testing higher-order models of gene-gene interactions using machine learning methods.
+
+The MDR method was designed as a machine learning alternative to parametric statistical methods such as logistic regression . The goal of MDR is to recode SNP data using constructive induction to make non-additive interactions easier to detect . Simulation studies have demonstrated that MDR has good power to detect non-additive epistatic interactions in the absence of detectable main effects . MDR has been applied to numerous genetic studies of common diseases including TB .
+
+As with any machine learning method, there is always the concern of overfitting that can lead to false-positives. To avoid this problem here, we implemented MDR in a cross-validation framework that assesses the predictive ability of the models . We also performed rigorous permutation testing methods to assess how often MDR models as good as the ones we observed in the real data were found under the null hypothesis . As an additional measure, we implemented a ReliefF filter to reduce the total number of SNPs and thus SNP combinations evaluated by MDR . This greatly reduces the total number of tests performed.
+
+Methods
+The data set used in this study was originally analyzed by Olessen et al. . These data include 321 pulmonary TB cases and 347 healthy controls genotyped at The Bandim Health Project in Guinea Bissau . Each individual was genotyped for 19 single-nucleotide polymorphisms (SNPs) from immunological candidate genes VDR, DC-SIGN, PTX3, TLR2, TLR4, and TLR9. Missing data were imputed using a frequency-based imputation. Additional details about the choice of genes and the overall study are provided by Olessen et al. .
+
+We first applied the ReliefF algorithm to filter the 19 SNPs to a total of five. Here, we used 100 nearest neighbors. The goal for the ReliefF analysis was to retain only those SNPs that provide the greatest signal. This reduces the total number of models that need to be explored.
+
+We then applied MDR to five filtered SNPs. We combinatorially evaluated all two-way to five-way models. Balanced accuracy in the context of 10-fold cross-validation was used to assess model quality. An overall best model was selected that had the maximum accuracy in the testing data (i.e. testing accuracy or TA). We also recorded the cross-validation consistency or CVC. This provides a summary of the number of cross-validation intervals in which a particular model was found. Higher numbers indicate more robust results. Statistical significance was assessed using 1000-fold permutation testing. Here, the data are randomized 1000 times to create 1000 datasets consistent with the null hypothesis. The complete MDR analysis is repeated in each permutated dataset and a best model selected just as in the real data. This procedure generates an empirical estimate of the null distribution of testing accuracies and corrects for multiple testing because the same number of models are evaluated in all permutated and real data. We performed two tests. First, we tested the general null hypothesis of no association by randomizing case–control labels. Second, we tested the linear null hypothesis that the only genetic effects are additive according the genotype randomization methods of Greene et al. . Rejection of both null hypotheses is evidence for non-additive epistasis. We considered all result significant at the alpha = 0.05 level.
+
+In addition to the MDR analysis, we performed an independent assessment of non-additivity using entropy-based measures of information gain . Specifically, we used a new measure of three-way epistasis that adjusts for lower-order effects . This approach was used to confirm high-order non-additive interactions.
+
+Results
+ReliefF filtering returned the following five SNPs (corresponding genes shown in parentheses): rs187084 (TLR9), rs4986790 (TLR4), rs11465421 (DC-SIGN), rs2305619 (PTX3), rs1840680 (PTX3), and rs2287886 (DC-SIGN). A summary of the MDR results for these five SNPs is shown in Table 1. None of the SNPs were found to have statistically significant main effects after correction for multiple testing. Additionally, no statistically significant pairwise models were reported. The overall best model consisted of SNPs rs2305619, rs187084, and rs1145421. These three SNPs had a training accuracy of 0.6115 and a testing accuracy of 0.5878. The cross-validation consistency of this model was 10/10. The distribution of cases and controls for each of the three-locus genotype combinations in the best MDR model can be seen in Figure .
+
+Distribution of cases (left bars) and controls (right bars) for each genotype combination from the three single nucleotide polymorphisms identified in the overall best model by multifactor dimensionality reduction (MDR) analysis. High-risk genotypes are shaded dark grey and low-risk genotypes are shaded light grey. The new variable constructed by MDR is shown on the right.
+
+Permutation testing confirmed the statistical significance of the model suggesting it is unlikely to see a mode this good in null data (p = 0.008). Additional permutation testing revealed that the non-additive effects in the model were also statistically significant (p = 0.013). Taken together, these results suggest a role for high-order non-additive epistatic effects.
+
+Figure  summarizes the results of the entropy-based information gain analysis. We found that the three-way epistatic interaction was stronger than any lower-order effects. This confirms the results we observed with MDR.
+
+Summary of information gain by main effects (solid borders), pairwise effects (dashed borders), and the three-way effect (shaded) of single nucleotide polymorphisms (SNPs) found in the overall best model of multifactor dimensionality reduction. Relative synergy or redundancy of each model is indicated below the principal effect in italics. The gene associated with each SNP is indicated below each main effect.
+
+Discussion
+Few studies consider the role of epistasis in disease susceptibility. Even fewer consider the possibility that multiple genetic variants might have synergistic effects beyond main effects or pairwise effects. We have demonstrated how the ReliefF and MDR machine learning algorithms can be employed in conjunction with cross-validation and permutation testing to move beyond the detection of low-order genetic effects. We have applied these approaches to the genetic analysis of TB susceptibility and have demonstrated a statistically significant three-way epistatic interaction exhibiting non-additivity that is not predicted by the one-way and two-way effects. These results were confirmed using an independent analysis approach based on information theory. An important question is whether this three-locus epistatic effect has biological and clinical implications. The biological connection is not difficult given these genes were pre-selected as good immunological candidates for TB . Whether the genetic effects specified in the model are functional will need to be determined by experimental methods. Application of these methods and other machine learning approaches will be important for unraveling the genetic complexity of TB.
+
+Availability
+All methods are freely available as open-source software from the authors. More information can be found at http://epistasis.org.
+
+Abbreviations
+MDR: Multifactor dimensionality reduction; SNP: Single-nucleotide polymorphism; TB: Tuberculosis
+
+Competing interests
+The authors declare no competing interests.
+
+Authors’ contributions
+RC performed the data analysis and drafted the manuscript. TH imputed missing data, performed information gain measurements and critiqued manuscript drafting. CW, GS and SW provided and summarized the data, assisted with results interpretation and assisted with the writing. JM conceived of the study, provided administrative direction, assisted with results interpretation, assisted with the writing, and secured financial support for the study. All authors read and approved the final manuscript.
+
+Acknowledgements
+This work was supported by NIH R01 grants LM010098, LM009012 and AI59694.
+

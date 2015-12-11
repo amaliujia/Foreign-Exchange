@@ -1,0 +1,224 @@
+Background
+High throughput sequencing technologies has contributed to 
+the increase in the number of sequencing projects which in turn 
+increase the number of completely sequenced genomes. This 
+increase in sequenced genomes demands hike in genome 
+annotation which includes gene identification and its functional 
+annotation. One of the important parts in genome annotation is 
+the identification of promoter, the specific regions on the 
+upstream of gene where the RNA polymerase binds to initiate 
+transcription which is one of the major steps in gene regulation.
+
+The sequence, structure and composition of promoters of 
+eukaryotes and prokaryotes differ in many aspects. Prokaryotic 
+promoter prediction is a comparatively easier task due to their 
+relatively simpler gene structure and their high sequence 
+conservation. The complexity of eukaryotic promoter structure 
+makes their identification a difficult task. Even though many 
+computational methods and machine learning techniques are 
+powerful in making highly accurate predictions by learning the 
+underlying data patterns, they are not yet widely explored for 
+the eukaryotic promoter prediction.
+
+The available promoter prediction algorithms are of three 
+types- signal based, property based, and hybrid approach. In 
+signal-based method, DNA sequences are first mapped to 
+signals and are analysed to capture the strong signature 
+features for the promoter. In property based method, various 
+physico-chemical properties are derived from training data set.
+
+In the hybrid approach, a combination of signal based and 
+physico-chemical property based approaches are used. 
+Computational methods like soft computing techniques are 
+largely based on the presence of core-promoters, TSS region 
+and specific motifs like TATA box, INR, DPE, BRE 
+[–]. The 
+performances of all these algorithms are highly dependent on 
+the training dataset used for deriving the information.
+
+Elucidating the sequence to be a promoter in terms of 
+quantitative characterization, termed promoter strength, is one 
+of the new themes in promoter prediction. Many experimental 
+methods are available for measuring the promoter activity 
+based on reporter protein activity determination such as 
+luminescence, fluorescence and spectrometry of enzyme 
+products []. 
+The main challenge is to fit the data obtained from 
+the wet lab experiments into the computational models.
+
+Combinatorial synthesis [] and artificial engineering of 
+promoters is a fast growing area in synthetic biology. The 
+characterization of promoters will accelerate the bottom up 
+approach for designing the genetic construct for useful 
+applications. The massive parallel sequencing method like 
+ChIP-seq can be used for the identification of promoters in 
+different cellular conditions []. This will give more resolution 
+to the mechanism and function of promoters. This can be 
+extended as a tool for automated synthesis of promoter 
+sequence and can serve as a module in tools and programming 
+languages for synthetic biology []. In this study, our aim was 
+to develop a model for predicting promoter sequence and to 
+predict its strength in both prokaryotes and eukaryotes.
+
+Methodology
+Dataset:
+Promoters of E. coli and humans were downloaded from 
+RegulonDB [] and Eukaryotic Promoter Database (EPD) 
+[] 
+respectively. For E. coli, non-promoter data sets were prepared 
+from both the intergenic regions of E. coli genome downloaded 
+from Ecogene [] and the gene sequences downloaded from 
+RegulonDB. Human negative set was obtained from gene 
+sequences downloaded from NCBI-Gene database. 
+
+Context structure features:
+The presence of n-mers is considered as the context structure 
+feature for both E. coli and human promoter prediction [,
+]. 
+In this study, all possible 5 mers (45) are taken into account. 
+Every test sequence is assigned a “ContextScore” which is 
+calculated from the count of occurrence of 5-mers in the training 
+data as well as test data.
+
+feature_value(X)=c/l, where X is a 5-mer present ‘c’ number of 
+times. ‘l’=total number of 5-mers in the sequence. The mean 
+(m1(X)) and standard deviation d1(X) of all the feature values 
+for feature X for a set of N positive sequences is: (Please see 
+ for equation 1 &amp; 2).
+
+Z-test is used as one of the measures to classify a test sequence 
+as promoter or non-promoter. Based on the Z-test, “score1”, 
+“score2” and the ContextScore is calculated as follows:
+
+if |x-m1(X)|/d1(X) &lt;3 then score1=1 else score1=0 
+if |x-m0(X)|/d0(X) &gt;3 then score2=1 else score2=0 
+ContextScore = (score1 + score2)/(2*(length(D)) (3)
+
+Prediction of promoters in human sequences:
+For identifying a human promoter sequence, the presence of 
+TATA box is searched and its presence makes TATA_score 1 or 
+else score is 0. The initiation element (Inr) in the test sequences 
+were then searched and if it is present, the presence of Down 
+Stream Promoter Element (DPE) is also confirmed. If both INR 
+and DPE are present, Inr_score =1, else Inr_score = 0. CpG 
+island association is another sequence signal feature considered 
+for human promoter prediction. GC percentage and 
+observed/expected ratio are used to confirm the presence of 
+CpG islands.
+
+Observed/Expected (o/e) = p(CG)/{p(C) * p(G)} (4)
+
+Where, n(C) is the number of C׳s in a test sequence, n(G) is the 
+number of G׳s in a test sequence, L is the length of the test 
+sequence, and n(CG) is the number of CG׳s in a test sequence. 
+Finally if GCp &gt; 0.5 and o/e &gt; 0.4, then D is CpG related and 
+GC_score = 1, else GC_score = 0.
+
+Final score for the test sequence is calculated as follows: 
+FinalScore = (ContextScore + TATA_score + Inr_score + 
+GC_score)/4 (5) 
+
+Prediction of promoters in E. coli sequences:
+For E. coli sequences we searched for TATAAT, TTGACA and TSS. 
+To calculate TATAAT_score, TTGACA_score and TSS_score of a 
+test sequence, sub-sequences separated by 20 bases are searched 
+for a match of minimum three positions within the sequence TATAAT 
+and then TTGACA. TATAAT_score and TTGACA_score are then calculated 
+as the sum of the individual position scores calculated based on 
+the probability of occurrence of individual symbols at their 
+specific positions in the consensus sequence, as in  
+(see supplementary material) divided by six []. If stop codons 
+are not present, then TATAAT_score is set to zero. If the latter 
+sub-sequence only matches less than three positions with the test 
+sequence, then TTGACA_score is set to zero. If TATAAT_score&gt; 0 and 
+TTGACA_score&gt;0, then the Transcription Start Site score, TSS_score = 1 for the test sequence.
+
+Transcription Start Site score, TSS_score = 1 for the test 
+sequence. 
+AT content in a test sequence is calculated using the following 
+measures. 
+p (A) = number of As in the test sequence/length (test 
+sequence); p (T) = number of Ts in the test sequence/length 
+(test sequence); p (AT) = number of ATs in the test 
+sequence/length (test sequence); AT_content = p (A) + p (T) 
+Observed/Expected, oeAT = p(AT)/(p(A)*p(T)) 
+
+
+Final score for the test sequence is calculated as follows: 
+FinalScore=(score+AT_Score+TSS_score)/4 (6) 
+
+FinalScore and thresholds were selected by a random trial and 
+error method  (see supplementary material) based on 
+the training set.  illustrates Promoter Prediction System 
+Using Context based Method for Human and E. coli Promoters. 
+The test results obtained are tabulated as in  (see 
+supplementary material). A comparison with similar tools is
+given in supplementary file 1. The result shows that the 
+prediction performance of the method is higher compared to 
+other commonly used tools.
+
+Comparison with PHI:
+263 promoters with known PHI (Promoter Homology Index), 
+the index to quantify promoter strength [], are used for the 
+study and have been compared with the computationally 
+identified promoter strength. Also, the correlation between the 
+predicted final score and PHI index are taken note of.
+
+Results &amp; Discussion
+The method employs the context structure feature 
+which relies on the count of n-mers along with sequence 
+signal features. Most of the existing systems include a 
+selection of 5-mers as feature elements. 5-mers are 
+significant since it is the smallest n-mer which can 
+encapsulate the behavior of consensus sequence. 
+The PPS-CBM reported in this paper stands out for its 
+comprehensive use of the complete set of possible 5-mers 
+(1024). We have taken this approach as the biological 
+significance of such a large number of 5-mers cannot be 
+easily analyzed. No literature has yet reported a list of highly 
+impacting 5-mers and their predictive powers. Using such a large 
+number of 5-mers naturally puts a heavy demand on the computational 
+requirement. However this is not a major concern as this occurs 
+only at the time of training, not during individual predictions.
+
+It would be ideal to go from the comprehensive set to either (1) 
+biologically significant 5-mers or (2) statistically significant 5-
+mers, which are confirmed to have predictive power. Further, 
+PPS-CBM also uses most of the consensus features - TATA box, 
+Initiator Elements, and Downstream Promoter Elements for 
+human promoter prediction. The TATA- box is a core promoter 
+element in eukaryotes []. If TATA boxes are absent in 
+promoter sequences, Initiator elements [] and Down Stream 
+Promoter Elements (DPE) [] are used to identify promoters. 
+Another feature used is the presence of CpG islands. Since CpG 
+Islands are found near the promoter region in mammalian 
+genes [], it is a significant feature to identify human 
+promoter. TATAAT box and TTGACA box are the important 
+consensus features used in case of E. coli promoters, for 
+accomplishing the task of prediction. Promoter region is less 
+stable compared to the coding region which shows the 
+abundance of Adenine and Thymine. The AT percentage, a 
+feature used for predicting E. coli promoters, thus makes a 
+significant contribution to the prediction model. The final score 
+calculated is correlated with Promoter Homology Index (PHI) 
+values of E. coli sequences and a high correlation of 0.60 is 
+obtained. 
+
+Conclusion
+We reiterate that PPS-CBM is the first one that is noticed to 
+have a unified predictor for both eukaryotes and prokaryotes 
+and in spite of this generality; the supplementary file 1 clearly 
+shows an enhancement in the prediction performance. Another 
+advantage of this model is that it gives a clue to the promoter 
+strength which is not a common feature found in other existing 
+tools. PPS-CBM reports a measure which can be correlated with 
+the strength of the promoter. Based on the scores calculated, the
+promoters can be classified into weak, strong and very strong 
+categories.
+
+Supplementary material
+Data 1
+Citation:Umesh et al, Bioinformation 10(4): 175-179 (2014)
+
+Data flow diagram of Promoter Prediction System Using Context based Method for Human and E. coli Promoters.
+

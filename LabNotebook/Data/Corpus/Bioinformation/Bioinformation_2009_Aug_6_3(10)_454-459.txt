@@ -1,0 +1,259 @@
+Background
+The nucleosome, which is the primary unit of a eukaryotic
+chromatin, contains about 147 base pairs (bp) of DNA
+which are sharply bent and tightly wrapped around a
+histone octamer. This sharp bending occurs at every DNA
+helical repeat (∼10 bp) where the major groove of the DNA
+faces inwards towards the histone octamer, and again ∼5
+bp away, with opposite direction, the major groove faces
+outward []. Along the chromatin, the neighboring
+nucleosomes are separated from each other by 10 to 50-bp
+long stretches of unwrapped linker DNA [], thus,
+75–90% of genomic DNA is wrapped in nucleosomes and
+as such affects sequence accessibility []. The positioning
+of nucleosomes along the chromatin is known to play an
+important role in the regulation of gene expression in
+eukaryotic cells.
+
+Extensive research has been carried out on nucleosome
+positioning recently. Some of the research tries to explore
+the mechanic properties of nucleosomes, while the others
+develop mathematical models for the prediction of the
+nucleosome positions [,&gt;–]. 
+In their study of nucleosome
+placement in chromatin, Vincent Miele proposed that the
+physical properties of DNA may determine the nucleosome
+occupancy from yeast to fly []. Besides, I.P. Ioshikhes
+predicted some nucleosomes on the basis of comparative
+genomics while M. Yassour located the nucleosomes by
+analyzing microarray data [,]. Despite the fact that
+genome-wide maps of nucleosome locations have been
+generated [,,,
+], the problem of accurately
+predicting the nucleosome positions computationally at
+high resolution remains unresolved.
+
+Statistical analysis suggests that the periodicities of the
+underlying DNA sequence might help solve this problem
+[]. Indeed, there is evidence that the distinctive sequence
+motifs recurring periodically at the DNA helical repeat
+facilitate the sharp bending of DNA around the nucleosome and hence favor nucleosome formation. These
+motifs include ∼10-bp periodic AA/TT/TA dinucleotides
+that oscillate in phase with each other and out of phase with 
+∼10-bp periodic GC dinucleotides [,,]
+. Based on this property, we propose a computational method using
+the so-called matched mirror position filter (MMPF) for
+the prediction of nucleosome positions. An advantage of
+our method is that it does not require training data and thus
+expensive wet-lab experiments are not needed. The
+computational experiment results demonstrate that our
+approach can detect the positions of the nucleosome
+effectively. On average, more than 50% of our predicted
+stable nucleosomes are within 35bp of those detected by
+biological experiments and reported in literature.
+
+Methodology
+Nucleotide base set
+Let us define the set B1 = }A, C, G, T{, which contains the
+four nucleotide bases. Then consequently there should be
+4×4 =16 dinucleotides. S. C. Satchwell has validated that
+in the 16 possible dinucleotides only 10 of them are
+unique. He explained that it is because some of them are
+related to the two fold axis that passes between the two
+strands of the double helix, and the reverse complementary
+dinucleotides are considered to be equivalent [].
+Considering this factor, we define the unique dinucleotides
+as set B2 = {AA/TT, AT, AC/GT, AG/CT, TA, TC/GA,
+TG/CA, CC/GG, CG, GC}.
+
+Dirac delta function
+Assume that a DNA sequence is represented by a discrete
+function x(n), with x(n) єB1 and n = 0, 1, 2, …, N ∼1. For
+each dinucleotide b єB2, a delta function is defined as in
+Equation 1 (see ). The notation
+of this delta function has been used to represent the
+positions of nucleotide bases [,
+]. Here we generalize
+the notation to dinucleotides. For example, if x(n) = {GCAGGTACAGTCGAG}, 
+then xAG(n) = δ(n∼2) + δ(n∼8)
++ δ(n∼13).
+
+Matched mirror position filter
+Ideally, to produce a periodicity of ∼10.5 bp, an impulse δ
+(n∼nk) at each position nk should be like a double-side
+mirror. That is, it should reflect an impulse δ(n∼nk∼l) on the
+left-hand side 10 to 11 bp away and an impulse δ(n∼nk+r)
+on the right-hand side 10 to 11 bp away (). As
+defined in Equations (2) and (3) (see ) respectively, 
+dL(b, nk) is the distance of 
+δ(n∼nk) to
+the impulse closest to the position nk∼ 10.5, and dR(b, nk) is
+the distance of δ(n∼nk) to the impulse closest to the position
+nk 10.5. Then, ideally we should have dL(b, nk) = 10 or 11
+and dR(b, nk) = 10 or 11 and there should be many of these
+impulses in a nucleosome to produce the periodicity of
+∼10.5 bp and no such impulse in a linker.
+
+In practice, dL(b, nk) and dR(b, nk) may deviate from the
+ideal values. To take this deviation into account, we use a
+matching function f(d) to measure the contributions of δ(n∼nk), 
+δ(n∼nk∼l) and δ(n∼nkr) to the periodicity. The matching
+function should be large for d close to 10.5 and decrease as
+d moves away from this optimal value. Several choices of
+f(d) are shown in . Given the matching function,
+the contributions of the three impulses to the periodicity
+can be described as Equation 4 (see ).
+
+To detect the presence of nucleosomes, we move a window
+with the size of 2Ws + 1 along the DNA sequence and
+accumulate the contributions from all dinucleotides within
+the window. Consequently, the nucleosome matching score
+function can be defined as Equation 5 (). In fact, our proposed method involves flexible
+matching of mirrored dinucleotide positions. To some
+extent, it is similar to the matched filter used in radar
+systems for detecting echo signals. Thus, our system is
+named the matched mirror position filter (MMPF) with
+S(n) being the output.
+
+Threshold discriminant
+Following the ideas discussed above, the nucleosomes can
+be predicted by comparing S(n) as defined in Equation 5
+(see ) with a threshold
+distinguishing the nucleosome and the non-nucleosome.
+The threshold here is determined empirically by
+performing a lot of experiments on a number of nucleotide
+sequences. After a lot of experimental trials, we found that
+T = 1.2(2Ws + 1) is the optimal threshold. In the
+implementation of our proposed method, the window
+length is selected as 2Ws + 1=147 according to the fact that
+the lengths of nucleosomes in these sequences studied are
+mostly 147 bp [,,,
+]. A window size in the range of
+100 to 200 gives similar results, but the algorithm achieves
+the best result in terms of the false positives in the
+sequences studied with the window size of 147. For this
+window size, the threshold for the nucleosome matching
+score is 1.22Ws + 1) ≂ 180.
+
+Discussion
+In order to verify the performance of the MMPF, we have
+performed nucleosome position prediction experiments on
+the Saccharomyces cerevisiae (yeast) genome, which is
+downloaded from the database of National Center for
+Biotechnology Information (NCBI) []. The genome
+contains 16 chromosomes with lengths from 230k to 1532k
+bp. We choose the yeast genome since it has been
+extensively studied and there are high-resolution
+nucleosome mapping results reported in literature []. A
+criterion similar to that in [] is used here to compute the
+prediction accuracy. That is, we consider a prediction
+correct if the nucleosome center position determined by the
+MMPF is within 35 bp of that reported in the highresolution
+result of []. The prediction accuracy is then
+computed as the ratio of correctly predicted nucleosomes
+over the total number of nucleosomes predicted by our
+algorithm.
+
+The prediction results achieved by using different matching
+functions in the MMPF are summarized in Table 1
+(). From this table, it can be seen
+that with the isosceles trapezoid function (upper base 9-12)
+the least nucleosomes can be predicted and the accuracy is
+the worst, while with superimposed Gaussian function
+(delta = 0.5) the accuracy achieves the best occasionally
+but its predicted nucleosomes are still less than using the
+isosceles trapezoid function (upper base 8-13). In
+consideration of both the number of correctly predicted
+nucleosomes and the prediction accuracy, we choose the
+isosceles trapezoid function (upper base 8-13) as the
+optimal matching function f(d) to predict nucleosome
+positions for further analysis.
+
+For a better understanding of the correlation between the
+predicted nucleosomes and the regulatory function sites,
+such as promoters and the transcription factor binding
+sites, a comparison between the nucleosomes predicted by
+our method and those obtained from biological
+experiments and published in literature is shown in
+Figures,  and . Besides, the effect of different
+thresholds on the accuracy is also discussed. From , it can be seen that in the segment near the genes CHA1
+and VAC17 of chromosome III, ten nucleosomes are
+reported in literature. Seven stable ones are predicted with
+our proposed method, and four of them coincide well with
+those determined in biological experiments. In ,
+when the threshold is set to be 190, although the number of
+false positives decreases, the accuracy of the whole
+genomic-scale prediction degrades to ∼45%.
+
+ shows the comparison between our predicted
+stable nucleosomes and those reported in literature near the
+genes HIS3 and MFA2 in chromosomes XV and XIV,
+respectively. A similar comparison of the nucleosomes near
+some transcription factor motifs [] (in chromosomes
+XVI and III) is shown in . The results shown in
+Figures,  and  suggest that the potential nucleosomes
+can be effectively predicted by the MMPF. Although in
+some segments the rate of correctly predicting
+nucleosomes is low (), this algorithm performs well on a genomic scale. Our analysis also indicates that
+nucleosomes may play a role in the regulation of the DNA
+sequences. From Figures  and , it can be seen that there
+may be correlations existing between the positions of
+nucleosomes and genes. It can also be seen from these
+figures that the nucleosomes have a strong affinity to the
+genes in some genomic locations and exhibit lower
+occupancy in other positions such as the promoters, usually
+found ∼100 to 500 bp upstream of the start codon in the
+gene or in the intergenic regions. Besides, our findings in
+ support the hypothesis that the functional
+transcription factor binding sites may be predominantly
+nucleosome-free [].
+
+Conclusion
+In this paper, we have presented a computational method
+based on the MMPF for nucleosome position prediction.
+This technique, while offering a level of accuracy
+comparable to existing ones, has some distinct advantages.
+Being based on the periodicity of nucleosomes and a
+flexible pattern matching scheme, it is independent of a
+training set that must be obtained through biological
+experiments. The MMPF can provide a useful tool to study
+the eukaryotic genome chromatin structure, protein-DNA
+interactions, and transcriptional regulations. Our future
+work aims to improve the prediction accuracy for large
+genomic sequences based on more sophisticated
+mathematical models, such as probabilistic relaxation
+labeling [].
+
+Supplementary material
+Data 1
+We thank Dr. Hongya Zhao for helpful suggestions. This
+work is supported by the Hong Kong Research Grant
+Council (Project CityU 123408), the National Natural
+Science Foundation of China (Project 60871086) and the
+Natural Science Foundation of Jiangsu Province, China
+(Project BK2008159).
+
+Citation:Wu et al, Bioinformation 3(10): 454-459 (2009)
+
+Examples of nucleosomes, each containing 147 bp of nucleotides, connected by linkers of different lengths.
+
+Positions of dinucleotides along a DNA sequence. Ideally, a dinucleotide should have two mirror images, on the
+left-hand and right-hand sides respectively, 10 to 11 bp away to produce the periodicity of ∼10.5 bp in a nucleosome.
+
+Possible choices of the matching function f(d) with d representing the distance from the current position. Diagrams
+in (a) and (b) show trapezoids with different base lengths. Diagram (c) shows a matching function consisting of the
+summation of six Gaussian functions with standard deviation equal to 0.5 and means at 8, 9, 10, 11, 12 and 13 bp.
+
+Genome-wide prediction of nucleosome positions in yeast chromosome III using the MMPF with n denoting the
+position in the chromosome and S(n) denoting the matching score. (a) The distribution of the nucleosomes near genes CHA1
+and VAC17. The upper green diamonds show the nucleosomes determined from biological experiments [] and the lower red
+diamonds show the nucleosomes detected using our computational method. The dashed line represents the threshold at 180
+for the nucleosome matching score. (b) The threshold is changed to 190.
+
+Genome-wide prediction of nucleosome positions in chromosome XV and chromosome XIV using the MMPF
+with n denoting the position in the chromosome and S(n) denoting the matching score: (a) near gene HIS3 and (b) gene
+MFA2.
+
+Genome-wide prediction of nucleosome positions near the transcription factor motifs [] in chromosome XVI
+and chromosome III using the MMPF with n denoting the position in the chromosome and S(n) denoting the matching score.
+

@@ -1,0 +1,212 @@
+Introduction
+Biological and empirical evidence suggests that rare variants (RVs) may account for a significant proportion of the genetic component of several disorders including common complex diseases. It is also believed that better insight into the role of RVs will directly inform our understanding of disease pathophysiology, and that if RVs display sufficiently high penetrance RVs may then have predictive value. However, association analyses of RVs present many challenges, including diminished power, potential biases, and the need for a large sample size. Several of the currently available rare variant analysis methods collapse or group RVs.– While this approach may help alleviate the problem of small numbers, it may dilute or mask the direction of association by including variants with no effect or that have an effect in a different direction. Recently, Lin and Tang proposed a general framework for detecting disease associations with rare variants in sequencing studies. They employed a score-type statistic (hereafter referred to as the SCORE-TEST). The SCORE-TEST is more powerful and efficient than other methods, but it could not completely resolve the problem of analyzing variants with no effect. Additionally, this method could not simultaneously consider the combined effect of common variants (CVs) and RVs on a trait in a given genomic region. The Sequence Kernel Association Test (SKAT), in contrast, can simultaneously evaluate CVs and RVs. It is a score-based variance-component test that employs a regression method to test for association of variants within a specified region. As with the SCORE-TEST, SKAT could not account for the direction of association of individual variants or exclude variants that are not associated with the trait of interest. As such, implementation of this method produces a single P-value for all variants in the region, making it uninformative regarding the specific variants or sets of variants within that region are responsible for observed associations. In this article, we present a modified version of the SCARVA method, in which rare variants are analyzed for association in the context of common variants that influence the trait of interest. The new method (SCARVAsnp), based on the analysis of individual markers instead of haplotypes, is applied to simulated and real datasets. Compared to existing methods, SCARVAsnp has the following advantages: (1) common variants are not ignored; (2) rare variants are sequentially removed from a collapsed rare variant term to maximize the sample size retained in the analysis and avoid biases associated with small numbers; (3) RVs with different directions of association are collapsed separately; (4) RVs that are not associated with the index trait are not included in the final model; and (5) different modes of inheritance can be modeled. Although this method is not directly comparable to existing methods because of differences in definining the analytic unit (ie, the number and type of variants collapsed in the analysis), results from analysis of the same regions using existing methods (SCORE-TEST and SKAT) are provided for context.
+
+The Method
+This method modifies and extends the previously-described SCARVA technique, which is haplotyped-based, for use with marker-level data in a given region (which could be defined by a gene, target sequence, window size, or pathway involving multiple genes). A variant is considered rare with a minor allele frequency (MAF) &lt; 5% and with an allele count ≥ 5 (RVs with allele acounts &lt; 5 are removed from the analysis). Common variants (CVs) are modeled separately to determine the association of each with the phenotype. RVs, however, are combined using a union method, and the combined effect of all RVs are modeled to overcome RV-associated diminished power. After eliminating variants of no effect, a final regression model is constructed with collapsed positively-associated RVs, collapsed negatively-associated RVs, and covariates (including CVs).
+
+Let Y = (y1, …, yn)′ be the quantitative trait outcome of n unrelated individuals, with covariates X = (X1, …, Xn)′, where each Xi is a row vector of covariates. H = (h1, …, hn) is the observed genotypes for n individuals and hj = (hj1, …, hjk) is the genotype of the j-th individual at the k-th loci. Each variant is assumed to be biallelic. Suppose m of the k genotypes h1c, …, hmc are common and l of them h1r, …, hlr are rare (m + l = k). Each of the observed hi is one of the (h1c, …, hmc): = Hc or one of (h1r, …, hlr): = Hr(i = 1, …, n).
+
+Let I be the indicator function. The saturated model would be
+
+where αj is the effect of j-th associated CV hjc;λ is the accumulated effects of the associated RVs; β = (β1, … βk)′ is the effects of all the covariates, and the εi’s are i.i.d. with E(εi) = 0 and Var(εi) = σ2, which is unknown and is estimated. We model the effects of all the rare variants with a single parameter λ, instead of modeling each of the individual effects with the λj’s as suggested by others. To simplify notations, let α = (α1, …, αm), θ = (μ, λ, α, β′)′, 1n = (1, …, 1)′ of length n, 0n = (0, …, 0)′ of length n, In be the identity matrix of dimension n, Z = (1n, U, V, X), and ε = (ε1,…,εn)′, where U = (u1, …, un)′, V = (vij)1≤i≤n;1≤j≤l, X = (X1′, …, Xn′)′, with
+
+Then () is re-written as
+
+The proposed approach for the identification of CVs and RVs that are associated with the trait of interest uses the same basic technique as the SCARVA method. To fit the saturated model (), the least squares estimate θ̂ of θ under model () is
+
+and the estimated variance is
+
+where zi = (1, ui,vi,Xi′), is the i-th row of Z, and vi is the i-th row of V. The algorithm contains the following steps.
+
+Step 1: Analysis of CVs
+Here we test the significance of the coefficient αj (j = 1, ..., m) of each CV separately. Of note, the least squares estimate is equivalent to the maximum likelihood estimate under the normal model. Let φ(·) be the density function of the standard normal distribution, and l(θ) be the log-likelihood of the data under φ(·). The hypothesis that the j-th CV is not associated with the trait is represented by Hj: αj = 0. Let z−j = (1n,U,V−j,X): = (z−
+j,1, …, z−j,n), where V−j is V with the j-th column removed, and let θ̂−
+j = (μ̂−
+j,λ̂−
+j,α̂−
+j,β̂−
+j) = (Z−
+j′Z−
+j) Z−
+j′Y be the least squares estimate of θ−j = (μ,λ,α−j,β′)′ under Hj, where α−j is α with the j-th component removed, and the estimation of variance under Hj is 
+, ŷ−j,i = z−j,iθ̂−j.
+
+Let χ12 be the centered chi-squared distribution with 1 degree of freedom. If Hj is true, then, approximately,
+
+Given a significance level of δ, if
+
+we reject Hj. When χ12 (1 − δ) is the (1 − δ)-th upper quantile of χ12, we accept Hj. After testing all the αj’s (j = 1, ..., m), remove all the non-significant components of α (the reduced term will still be denoted by α). Let Hc be the collection of all the significantly associated CVs, and let V and Z denote their counterparts with the corresponding columns removed. Re-fit the model in equation () with the current Z to get a new estimate of θ(θ̂ = (Z′Z)−1
+Z′Y). Linear regression models are used to evaluate CVs (MAF ≥ 0.05) within a given region. Those CVs with P &lt; 0.05 after Bonferroni correction are added to the covariate matrix.
+
+Step 2: Genetic coding of RVs
+RVs (those with MAF &lt; 0.05 and observed minor allele counts ≥ 5) are coded as dominant and recessive variables. For each coding, collapsed RV parameters are made from the union of all RVs (ie, all recessively-coded RVs are collapsed, all dominantly-coded RVs are collapsed, and the two codings are summed to create a set of additively-coded RVs, then collapsed).
+
+Step 3: Analysis of RVs
+Associated RVs can either be positively or negatively associated with the trait; let R+ and R− denote collections of these two types of RVs. The association of the positively- and negatively-associated RVs are modeled using different coefficients. First, we test the statistical significance of each RV hjr and its effect based on the Z estimated in Step 2. Let Hj′ be the hypothesis that hjr is not associated with the outcome. Similarly, let Z−j = (1n, U−j, V, X), where U−j = (u−j,1, …, u−j,n)′, 
+. Let θ̂−j = (μ̂−j, λ̂−j, α̂−j, β̂−j) = (Z−j′Z−j)−1
+Z−j′Y be the least squares estimate of θ under Hj′. The variance under Hj′ is estimated as 
+, y−,i = z−j,iθ̂−j (the same notation was used in Step 2). The hypothesis Hj′ is not nested within the full model, hence we cannot use the chi-square test (as in Step 2). Instead a version of the Bayesian information criterion (BIC) is used. Let mj be the number of associated parameters under Hj′, using this criterion. The model under Hj′ is preferred if l(θ̃−j, σ̃−j2)−(mj/2)log (n) is the largest among all j = 1, ..., l. Here mj is the same for all values of j, thus, we pick the RVs hjr’s as associated for those j’s where l(θ̃−j, σ̃−j2) is larger than the others. Let δj = |l(θ̂, σ̂2)− l(θ̃−j, σ̃−j2)|(j = 1, ...,m) and 
+. We reject Hj′ if there is a big relative increase in δj, ie, if
+
+Based on Yuan et al, the following values for γ: γ = 1.3, and 1.5 to represent significant and very significant, respectively.
+
+If hjr is significant by the above method, and λ̂−j &lt; λ̂ then removing hjr resulted in underestimate of the total effect; thus we can deduce hjr ∈ R+.
+
+Thus, we can identify all the positively and negatively associated rare variants. Now let U (U+,U−)′, with U+ = (u1+, …, un+) as ui+ = ∑hjr;∈R+
+I(hi = hjr), U− = (u1−, …, un−) as ui− = ∑hjr∈R−
+I(hi = hjr), V as after Step 2, Z = (1n, U, V, X)′, λ = (λ+, λ−) and θ be the corresponding components for Z.
+
+Briefly, first, run regression models of the combined RVs. Second, a reduced model of the RV is implemented by removing one RV at a time and noting the λ and log likelihood values for the reduced models. Then, calculate the λ difference and ratio of the likelihood of full model to that of the reduced model with one of the RV removed at a time. If the ratio of the log likelihood of the full to the reduced models is ≥1.3, the RV is considered to be associated with the trait. If the λ difference between the full and the reduced model is positive, the excluded RV is negatively- associated; otherwise the RV is positively-associated.
+
+Step 4: Combining associated RVs
+Combine all positively-associated RVs into one group, with coefficient λ+, and H+, and λ− and H− for all the negatively-associated RVs. Hc is the set of all significantly-associated CVs. The final model is
+
+Step 5: Final model
+Fit the final linear regression model (), and evaluate the positively- and negatively-associated RVs, along with the significantly-associated CVs. Let ℍ+ : λ+ = 0; ℍ− : λ− = 0, and ℍj : αj = 0 for hjc ∈ Hc. Chi-squared test statistics can be used to find and report the P-values of the null hypotheses.
+
+Type I Error and Power
+Let H0 : λ = αj = 0, (j = 1, ..., m) be the null hypothesis that there is no association of the variants. Let θ̂ be the MLE of θ under the full model, σ̂2 be the corresponding variance estimator. θ̂0 be the MLE of θ under H0, and σ̂02 be the corresponding variance estimator. When H0 is true, we have, asymptotically,
+
+where χm+12 is the chi-squared distribution with (m + 1) degrees of freedom. Thus, assuming the data is generated under H0, for a given significance level δ, the type I error is approximated by
+
+Thus, the test is asymptotically unbiased.
+
+The power will depend on the magnitude of the effect size. Let η = (λ2+α12+…+αm2)/σ̂, and Λ0 as given above. Assuming the data are generated not from H0, but from H1, then asymptotically,
+
+where χm+1,η2, is the chi-squared distribution with (m + 1) degrees of freedom (where m is number of associated CVs) and non-centrality parameter η. The power for a given δ at η is approximated by
+
+For a given δ and η, ρ(δ, η) can be determined using a table of the non-central chi-squared distribution.  gives the ρ(δ, η) values when η goes from 1 to 20, δ = 0.05, 0.025 and 0.01, and m = 2, 4, 6, 8, and 10.
+
+Simulation Study
+We conducted a range of simulations based on a set of 4,000 observed quantitative traits, covariates, and corresponding alleles within a given region; for brevity, we present the results from one of these simulation exercises. Ten CVs and 10 RVs were simulated, with frequencies of (p; q) = (p1, ..., p10; q1, ..., q10) = (0.075, 0.115, 0.130, 0.060, 0.220, 0.085, 0.105, 0.050, 0.015, 0.095; 0.008, 0.007, 0.006, 0.005, 0.005, 0.008, 0.009, 0.007, 0.008, 0.009), where p1, …, 10 denote the frequencies of CVs1 to 10, and q1, …, 10 denote the frequencies of RVs1 to 10. For the RVs, let Hr = R+ ∪ R−, with R+ = {h2r, h2r, h10r} (representing all positively-associated RVs) and effect sizes (λ2+,λ3+,λ10+) = (0.42,0.52,0.62), and with R− = {h5r, h8r} (representing all negatively-associated RVs) with effect sizes (λ5−, λ8−) = (−0.53, 0.49). For the CVs, we define the collection of associated variants as Hc = {h3c, h7c}, with effects α3 = 0.45, and α7 = 0.50, thus αj = 0 (j ≠ 3, 7). Covariates are contained in X = (x1, x2, x3) = (gender, age, Body Mass Index (BMI)), where gender has the value of 0 or 1 with 0.5 probability of each, age (years) is uniformly distributed [10,70], and BMI values are uniformly distributed [12,42]. The effect sizes of covariates are β = (β1, β2, β3) = (0.0167, 0.008, 0.120). Given the genotypes and covariates, the quantitative trait follows the normal N (1.5, 2) distribution.
+
+Using SCARVAsnp, the joint analysis detected significant associations for two CVs (v3 and v7, P &lt; 0.0001 for both), positively-associated RVs (u2, u3, u10, P &lt; 0.0001) and negatively-associated RVs (u5, u8, P &lt; 0.0001) as displayed in .
+
+Data Analysis for DHS Application
+We used the SCARVAsnp method to analyze the association of genotypes to plasma triglyceride (TG) in the Dallas Heart Study (DHS). In the DHS, angtiopoietin-like (ANGPTL) genes 3, 4, and 5 were sequenced in 3551 participants. Multiple rare non-synonymous (NS) sequence variants in these genes have been reported to be associated with lower plasma TG levels based on a Wilcoxon rank-sum test (with adjustments for age and gender). Using SCARVAsnp, the joint analysis detected significant associations were displayed in . For comparison, we analyzed the DHS data set using the recently published SCORE-TEST method as well as SKAT. We implemented the T5, Fp, VT, and Tmax variations of the SCORE-TEST for the analysis of the simulated and real datasets, but for brevity, we present only the results of the T5. The results of these analyses are displayed in  (SCORE-TEST) and .
+
+Three CVs and 15 RVs in ANGPTL3 were analyzed (). CV ANG3-008357 (MAF = 0.40) was associated with TG levels (P = 2.17 × 10−7 in the joint analysis). There were 3 RVs with ratio values ≥ 1.3: ANG3-005308 and ANG3-005424 were negatively associated with TG (P = 2.86 × 10−7) and ANG3-004520 was positively associated with TG levels (P = 1.99 × 10−2). RVs ANG3-005308, ANG3-005424, and ANG3-004520 also had the top scores (4.61, 2.73 and 2.10, respectively) using the SCORE-TEST method, and variants in this gene were associated with TG using the SKAT method as well (P = 3.28 × 10−7).
+
+Four CVs and 28 RVs were included in the analysis of ANGPTL4 (). Two CVs (ANG4-010707 and ANG4-009155) were associated with TG levels (P = 2.75 × 10−5 and 1.54 × 10−2, respectively). Five RVs (ANG4-006052, ANG4-009191, ANG4-001175, ANG4-010620, and ANG4-006175) had high ratio values (consistent with the top scores from SCORE-TEST, ). All 5 RVs were negatively associated with TG levels (P-value = 1.00 × 10−20, ). An association with this gene was also identified using the SKAT method (P = 3.78 × 10−23).
+
+Four CVs and 30 RVs were included in the analysis of ANGPTL5. No CVs were associated with TG levels. Four RVs (ANG5-014661, ANG5-011617, ANG5-022751, and ANG5-012530) were negatively associated (P = 2.24 × 10−4), and 3 RVs (ANG5-026244, ANG5-012581, and ANG5-017106) were positively associated with TG levels (P = 6.66 × 10−6; ). The 7 RVs also received the top scores using the SCORE-TEST method, and this gene was also associated with TG when the SKAT method was used (P = 2.01 × 10−7).
+
+While all of these methods were identified an association between each of these genes and TG, there are notable differences in the inferences possible given the output given from each method. SCARVAsnp provides a separate P-value for the union of all positively-associated RVs, the union of all negatively-associated RVs, and for each CV (). In contrast, the SCORE-TEST provides one P-value for all RVs evaluated in the region, and SKAT produces a single P-value all CVs and RVs together. Thus, SCARVAsnp supports conclusions about associations at a finer level of detail than existing methods, and avoids the potential pitfalls of collapsing variants that differ in their level of association (ie, including variants of no effect) or in the direction of that assocation.
+
+Discussion
+We have extended the haplotype-based simultaneous common and rare variant analysis (SCARVA) method to be used with marker-level data (SCARVAsnp). The method is easy to use and could be computationally efficient, as illustrated in the analysis of simulated and real datasets.
+
+In general, RV analysis is challenged by a low number of observations with the relevant genotype, and the resulting decreased power to detect associations. To solve this problem, grouping strategies have been used, which increase the number of observations with relevant genotypes and reduce the number of tests needed by evaluating collapsed markers simultaneously. It is known that not all RVs within a given region have an effect, grouping all RVs regardless of effect may produce an unsatisfactory signal-to-noise ratio. Incorporating information from prior studies or background population variation to grouping strategies has been suggested. In practice, it is unlikely to find this information for a particular disease in a specific population, of significance given that rare variation is less shared across populations than is common variation., The present method is implemented in three stages to deal with issues above. First, RVs are collapsed and the log-likelihood of a model with this collapsed term is compared to the log likelihood of a model with a collapsed term that excludes one of the RVs. After each of the RVs has been evaluated in this manner, the RVs for which the reduced model does not significantly differ from the full model are excluded from the analysis as having no effect. Secondly, RVs are grouped according to the direction of association, with separate groups for positively- and negatively-associated RVs. Thirdly, the group of positively-associated RVs, the group of negatively-associated RVs, associated CVs, and covariates are analyzed together in a joint analysis. This strategy significantly reduces the number of tests, resulting in a large number of degrees of freedom. Our method identified the same RVs as were identified using the SCORE-TEST method for a simulated and a real data set, indicating that the method is as accurate as the SCORE-TEST method for RVs.
+
+In our simulation, CVs (v3
+and v7) explained 24% of the total variance, while positive and negative RVs explained only 6% of the total variance alone (combined, CVs and RVs explained 29% of total variance). These findings suggest that the combined analysis of RVs and CVs may be important in explaining the so-called missing heritability from GWAS analyses. A benefit of SCARVAsnp for RV identification is that it treats CVs as covariates, acknowledging the potential contribution of both types of variation in the outcome. Future work will focus on the interaction between CVs and RVs at different levels of linkage disequilibrium.
+
+Conclusions
+The modified SCARVA method (SCARVAsnp) combines rare variants (RVs) for association analysis to avoid the problem of low number of observations with relevant genotypes. It eliminates variants with no effect within a given region, separately analyzes positively- and negatively-associated RVs, and allows the adjustment for common variants and covariates. SCARVAsnp was used to analyze simulated and well known data sets. In all cases, it identified the RVs that produced the highest scores in the SCORE-TEST, while eliminating the costly effect of analyzing markers with no clear association with the trait of interest. Notably, and in contrast to the SCORE-TEST and SKAT, SCARVAsnp provides P-values for the union of all positively- and all negatively-associated RVs separately.
+
+Acknowledgement
+This work is supported in part by the National Center for Research Resources at NIH grant 2G12RR003048.
+
+Author Contributions
+
+Conceived and designed the experiments: GC, AY, AA, CR. Analysed the data: JZ, GC, AY. Wrote the first draft of the manuscript: GC, AY, WP, YZ. Contributed to the writing of the manuscript: AB, DS, AA, RC. Agree with manuscript results and conclusions: GC, AY, YZ, AB, JZ, WC, DS, AA, CR. Jointly developed the structure and arguments for the paper: GC, AY, AB, AA, DS, CR. Made critical revisions and approved final version: GC, AY, AB, CR. All authors reviewed and approved of the final manuscript.
+
+Competing Interests
+
+Author(s) disclose no potential conflicts of interest.
+
+Disclosures and Ethics
+
+As a requirement of publication author(s) have provided to the publisher signed confirmation of compliance with legal and ethical obligations including but not limited to the following: authorship and contributorship, conflicts of interest, privacy and confidentiality and (where applicable) protection of human and animal research subjects. The authors have read and confirmed their agreement with the ICMJE authorship and conflict of interest criteria. The authors have also confirmed that this article is unique and not under consideration or published in any other publication, and that they have permission from rights holders to reproduce any copyrighted material. Any disclosures are made in this section. The external blind peer reviewers report no conflicts of interest.
+
+Power (Y-axis) and non-centrality parameters (X-axis) for different values of δ(from left to right, panels represent δof 0.05, 0.025, and 0.01).
+
+
+Note: The degrees of freedom (df) are indicated by the color of the lines.
+
+The distribution of the ratio of the log likelihood values from SCARVAsnp (blue line), and the distribution of scores from SCORE-TEST (red line) for rare variants in ANGPT4 in the Dallas Heart Study (DHS).
+
+Association analysis of the simulated sequence data set using SCARVAsnp.
+
+Type of variant	Sig. CVs/RVs	Single	Joint analysis	P-value	
+		
+	
+		
+		P/ratio	β or λ (SE)		
+v(n = 10)	v3	&lt; 0.0001	0.46 (0.02)	&lt; 0.0001	
+	v7	&lt; 0.0001	0.47 (0.02)	&lt; 0.0001	
+u(n = 10)	Rare (+)				
+	 u2	1.38			
+	 u3	1.30			
+	 u10	2.36	0.61 (0.04)	&lt; 0.0001	
+	Rare (−)				
+	 u5	1.92			
+	 u8	1.69	−0.57 (0.05)	&lt; 0.0001	
+Notes: Sig. CVs/RVs—statistically significant common and rare variants.
+
+Total number of CVs analyzed;
+
+total number of RVs analyzed.
+
+Rare (+): Positively-associated RVs. Rare (−): Negatively-associated RVs. β: regression coefficients for CVs. λ: regression coefficients for collapsed RV terms.
+
+Results of the DHS sequence data for 3 lipid genes using SCARVAsnp.
+
+Genes	SNPs	MAF	Sig. CVs/RVs	P/ratio	Joint model	
+ANGPTL3 (v = 3, u = 15)	ANG3-008357	0.40	Common	5.44 × 10−10	2.17 × 10−7	
+ANG3-005424	0.01	Rare (−)	2.56		
+ANG3-005308	0.02	Rare (−)	5.21	2.86 × 10−7	
+ANG3-004520	0.01	Rare (+)	1.86	1.99 × 10−2	
+ANGPTL4 (v = 4, u = 28)	ANG4-010707	0.06	Common	1.50 × 10−7	2.75 × 10−5	
+ANG4-009155	0.28	Common	5.09 × 10−3	1.54 × 10−2	
+ANG4-006052	0.03	Rare (−)	3.88		
+ANG4 009191	0.03	Rare (−)	4.44		
+ANG4-001175	0.04	Rare (−)	4.08		
+ANG4-010620	0.04	Rare (−)	3.98		
+ANG4-006175	0.04	Rare (−)	3.61	1.00 × 10−20	
+ANGPTL5 (v = 4, u = 30)	ANG5-014661	0.01	Rare (−)	1.69		
+ANG5-011617	0.02	Rare (−)	2.67		
+ANG5-022751	0.02	Rare (−)	1.58		
+ANG5-012530	0.04	Rare (−)	1.32	2.20 × 10−4	
+ANG5-026244	0.01	Rare (+)	3.22		
+ANG5-012581	0.01	Rare (+)	2.59		
+ANG5-017106	0.03	Rare (+)	5.58	6.66 × 10−6	
+Notes:
+
+Total number of CVs analyzed;
+
+total number of RVs analyzed.
+
+Rare (+): Positively-associated RVs. Rare (−): Negatively-associated RVs.
+
+Abbreviations: DHS, Dallas Heart Study; Sig. CVs/RVs, statistically significant common and rare variants; P/ratio, P values for CVs or ratio values for RVs.
+
+Results of simulated and DHS data comparing SCARVAsnp, SCORE-TEST, and SKAT.
+
+Data sets	Total # of SNPs	SCARVAsnp	SCORE-test (T5)	SKAT	
+Simulated	v = 10	v3 &lt; 0.0001		2.02 × 10−66	
+		v7 &lt; 0.0001			
+	u = 10	Rare (+) &lt; 0.0001	0.000044		
+		Rare (−)&lt; 0.0001			
+ANGPTL3	v = 3	ANG3_008357 = 2.17 × 10−7		3.28 × 10−7	
+	u = 15	Rare (+) = 1.99 × 10−2	0.008470		
+		Rare (−) = 2.86 × 10−7			
+ANGPTL4	v = 4	ANG4_010707 = 2.75 × 10−5		3.78 × 10−23	
+		ANG4_009155 = 1.54 × 10−2			
+	u = 28	Rare (+) = N/A	0.000001		
+		Rare (−) = 1.00 × 10−20			
+ANGPTL5	v = 4	P-value &gt; 0.05		2.01 × 10−7	
+	u = 30	Rare (+) = 6.66 × 10−6	0.015066		
+		Rare (−) = 2.20 × 10−4			
+Notes:
+
+Total number of CVs analyzed;
+
+total number of RVs analyzed;
+
+P-value for the set of RVs with MAF &lt; 5%;
+
+P-value for the set of CVs and RVs.
+
+Abbreviation: DHS, Dallas Heart Study.
+

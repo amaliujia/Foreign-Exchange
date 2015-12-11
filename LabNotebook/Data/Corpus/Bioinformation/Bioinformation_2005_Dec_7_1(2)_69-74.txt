@@ -1,0 +1,177 @@
+Background
+The completion of the human genome project shows a significant gap between the protein sequence and known structure space. 
+      Determination of protein structures using conventional X-ray crystallography and NMR (nuclear magnetic resonance) techniques 
+      is not adequate to cover the sequence space in the context of drug discovery. Hence, protein structure prediction using 
+      computational methods is becoming critical. However, prediction of protein tertiary structure from sequence is non-trivial 
+      and is generally achieved by dividing the problem into finite levels of secondary structures and super secondary structures.
+
+The native protein fold is dependent on the physical-chemical properties of the amino acid residues in the sequence. Disulphide 
+      bonds between cysteines are important features in the formation of several protein folds. It is shown that cysteines are highly 
+      conserved in a protein family and they exit in either oxidized or reduced states. [­] The cystines 
+      in oxidized state form covalent bond between each other and are referred as disulphide bridges. A schematic representation of 
+      conotoxin (PDB (protein databank) ID 1AS5) showing disulphide bonds is given in . Information about the location of 
+      disulphide bridges find application in the understanding of protein folding [
+      ] and have a role in thermodynamic stability of proteins. [] 
+      Hence, studies on disulphide bridges have become very important. 
+
+Fariselli et al., [] proposed a disulphide 
+			prediction model combining 
+      a neural network based predictor and evolutionary data with an accuracy of 81%. In 2000, Fiser and Simon [] proposed a method based on multiple sequence alignment and reported an accuracy of 
+      82% using Jack Knife test on a larger dataset of 81 proteins. Martelli et al., [
+      ] proposed a Hidden Neural Network method (a combination of Hidden Markov Model and Neural Network) with an accuracy of 
+      84% for a larger data set of 969 non-homologous proteins. 
+
+Vullo and Frasconi [] used recursive neural networks and evolutionary 
+      data to predict bonding patterns using known information on cystine bonding states. The method was tested using a small dataset 
+      derived from Swiss-Prot release 39 (SP39) and an accuracy of 48% was reported. Prior to this, Fariselli and Casadio [] linked connectivity prediction to graph matching. They also showed better connectivity 
+      prediction by combining with neural network models.
+
+Recently, Ferre and Clote [] emphasized the importance of secondary 
+      structure and solvent accessibility information in the development of a di-residue neural network model for predicting disulphide 
+      bridges. Cheng and colleagues discussed ways to find and count (using recursive neural network) disulphide bridges in a given 
+      sequence and tested the model performance in SPX (an extended dataset of SP39 and SP41 with known disulphide information from 
+      PDB). [] Here, we describe a SVM (support vector machine) model for 
+      predicting cysteine bonding state as an extension of the work by Cheng and colleagues []. In this method, we predict disulphide bond connectivity given two cysteines with and without a priori knowledge 
+      on their bonding state using the SPX dataset. 
+
+Methodology
+Support Vector Machines
+SVM (Support Vector Machine) is a class of tool used in classification and regression as described elsewhere by Vapnik. 
+      [] When used as a binary classifier, an SVM will construct a hyperplane 
+      which acts as the decision surface between the two classes. This is achieved by maximizing the margin of separation between 
+      the hyperplane and those points nearest to it. The idea is further extended for data that is not linearly separable by first 
+      mapping it to a possibly higher dimension feature space. The SVM formulation is desirable due to its mathematical tractability 
+      and good generalization properties.
+
+ The data to be classified is formally written as given in the PDF file linked below.
+
+Disulphide bonding patterns in proteins
+The human alkaline phosphatase (PDB ID: 1EW2) have 5 cysteines with 2 disulphide bonds formed between 2nd
+       ­ 3rd and 4th -5th cysteines in the order of the sequence. It should be noted that the 
+       1st cysteine is not involved in any disulphide bond formation. This describes the nature and selectivity of 
+       disulphide bond formation in human alkaline phosphatase and gives information on the bonding states of the cysteines in 
+       the sequence. However, disulphide bonds are formed in various combinations in different proteins. Therefore, it is of potential 
+       interest to predict the nature of disulphide bonds from sequence for which structure is unknown. Nonetheless, this task is 
+       non-trivial and predictions of disulphide bonds are generally preformed with and without prior knowledge on cysteine bonding 
+       states in a sequence of interest. If we have to predict the disulphide bonding patterns in human alkaline phosphatase assuming 
+       the structure is un known, then it can performed either with or without a prior knowledge on the bonding state of cysteines. 
+       Prediction of disulphide bonding patterns with prior knowledge on the bonding state (6 different possible combinations) is 
+       relatively simpler to that without any prior knowledge on the bonding state of the cysteines (10 different possible combinations) 
+       in human alkaline phosphatase.
+
+Dataset
+The SPX dataset was created by Cheng et al. [] was used in this study. 
+      The dataset contains non-homologous (at a sequence similarity cut-off of &lt; 25%) sequences (containing information on intra-chain 
+      disulphide bonds) from PDB. 
+
+Feature parameters
+We used five parameters for each cysteine based on physico-chemical properties and probability of occurrence in secondary 
+      structures (alpha helix, beta strand, coil), Chou-Fasman conformational parameters [] (3 in number), Kyte-Dolittle hydrophobicity scale [] 
+      and Grantham polarity [] (1 in number each) were chosen as features. 
+      The Chou-Fasman parameter for helix α is given by Pαi =  fαi / &lt;
+      fα&gt; where, &lt;fα&gt; = (number of residues in helixtotal number of 
+      residues) and  iis the set of amino acids residues. Similar conformational parameters for strand Pβi  and coil Pγi  were 
+      calculated. Kyte-Dolittle hydrophobicity values and Grantham Polarity values were taken from the Protscale website. [
+      ] We chose the above parameters after preliminary experimentation with a small 
+      dataset (30 protein chains) at different hydrophobic and polarity scales. 
+
+Use of homologous sequence information
+Recent CAFASP and CASP results showed that the use of homologous sequences can improve secondary structure prediction, solvent 
+      accessibility calculations and cystine connectivity identification. This attempts to capture the evolutionary information for 
+      sequences and is generated by developing matrices from sequence profiling. The PSSM (position specific scoring matrix) is 
+      generated by calculating position-specific scores for each position from sequence profiles and the scores are a measure of residue 
+      variability or similarity in the profile. [] The PSSM generated by 
+      PSI-BLAST (http://www.ncbi.nlm.nih.gov/) from a non-redundant (NR) dataset of protein sequences was used in this analysis with 
+      an E-value (expect value) of 0.001 at 3 iterations. A window of length  w was considered for every cysteine under consideration 
+      at the center of the window and this is used as a feature for the classifier. In PSSMs, there are  elements w*L and L is the protein 
+      length. In this study, we used L = 5 after several trails. The PSSM values vary approximately between -10 and +10. However, SVM 
+      require values between 0 and +1. Therefore, we normalized the PSSM values using the following function as described elsewhere. 
+      []
+
+g(x) = 0 for x &lt;= -5 || 0.5+0.1x for -5 &lt; x &lt;5 || 1.0 for x &gt;= 5
+
+In this formulation x is the value in the PSSM matrix. Instead of taking just 20 values per residue as a feature vector, we 
+      considered a window of length  w and all the values within the window were considered in feature definition. [] We were able to incorporate the gradual variation required for the classifier 
+      to make a better decision by selecting a window w = 5 for PSSM values. We included 5 X 20 PSSM values in addition to five 
+      physical-chemical features for every cysteine under consideration and the total feature length for every cysteine was 105. 
+      Hence, the final feature length for each cysteine pair is ((w*20)+5)*2. 
+
+SVM parameters and performance measures
+We use SVM with C = 10 and a polynomial kernel with D = 2 in this analysis. We used the SVM implementation SVMHeavy developed based on 
+      incremental training of support vector machines as described elsewhere. [–
+      ]. A five fold cross validation was performed for each experiment reported in 
+      the study. We compared the performance of the model with the results of Cheng and colleagues using specificity, sensitivity and 
+      accuracies Qc and Qp. Specificity is the ability to reject false positive matches 
+      given by TN/(FP+TN) and sensitivity is the ability 
+      to detect true positive matches given by TP/(TP+FP) (TP = True Positive; FP = False Positive; TN = True Negative). Qc defined per 
+      disulphide bond is given by (TP + TN)/TP+TN+FP+FN) and  Qpis the accuracy defined per protein sequence.
+
+Results and Discussion
+Prediction of disulphide bonds from sequence has a critical role to play in protein fold identification and folding simulation. 
+      A number of statistical models have been described using ANN (artificial neural network), HMM (hidden Markov model) and 
+      evolutionary algorithm for the prediction of disulphide bonding patterns in protein sequence. [
+      ­] However, a SVM model was not 
+      available for disulphide boding pattern prediction in protein sequences.  shows the performance of the described SVM model 
+      (with prior knowledge on disulphide bonding states). The results were compared with the recursive neural network model by Cheng 
+      and colleagues [] in SPX dataset. We compared with the results of Cheng 
+      and colleagues [] because the dataset used in the both studies were 
+      identical. The comparison shows that the SVM method (4% higher sensitivity and 8% higher specificity) performs better than the 
+      recursive neural network model for classification with a priori knowledge. Although, the method performs better than the recursive 
+      neural network model, variations in performance are noticed among different prediction runs.
+
+  shows the performance of the described SVM model (without a priori 
+			knowledge on disulphide bonding states) and 
+      compares with the results of a recursive neural network by Cheng and colleagues [ ] 
+      in SPX dataset. The results from SVM model were found to be similar to that of the recursive neural network presented 
+      by Cheng and colleagues. [] We measured the performance using the overall 
+      accuracy for disulphide bridges and proteins. These results () show the utilization of SVM models for the prediction of 
+      disulphide connectivity in proteins. In our opinion, the combination of SVM parameters and the encoding method chosen in model 
+      development played an important role in better performance even in small datasets. 
+
+Conclusion
+Disulphide bridge pattern identification for fold prediction from sequence is not trivial. In this paper, we have described a 
+      SVM model to predict disulphide bridges with and without a priori knowledge on their bonding states. The SVM method is found to 
+      perform better than a recursive neural network model described elsewhere. []
+      In future investigation, we plan to extend our approach to classify sequences with and without disulphide bonds.
+
+Supplementary Material
+Data 1
+The authors would like to thank Prof. David Jones for providing the pfilt program. We are also grateful to NCBI for PSI-BLAST 
+      program and Cheng and colleagues for making the SPX dataset available on the web. We also thank the anonymous reviewers for help 
+      in improving the manuscript. 
+
+Figures and Tables
+Disulphide Bridge Prediction with a priori knowledge about bonding state
+Number of 
+							Bridges	Specificity †	Sensitivity †	Specificity	Sensitivity	
+1	0.48	0.71	0.61	0.65	
+2	0.63	0.63	0.63	0.61	
+3	0.67	0.62	0.66	0.60	
+4	0.55	0.50	0.61	0.51	
+5	0.41	0.37	0.56	0.38	
+6	0.33	0.29	0.59	0.37	
+7	0.36	0.31	0.47	0.36	
+8	0.32	0.30	0.44	0.32	
+9	0.71	0.61	0.55	0.35	
+10	0.40	0.37	0.59	0.45	
+12	0.55	0.50	0.60	0.50	
+14	0.62	0.57	0.65	0.58	
+16	0.23	0.22	0.43	0.25	
+17	0.40	0.35	0.51	0.31	
+25	0.40	0.24	0.63	0.30	
+26	0.73	0.42	0.69	0.30	
+Overall	0.54	0.55	0.62	0.59	
+Disulphide Bridge Prediction without a priori knowledge about Bonding State
+Number of Bridges	Accuracy at Bridge level †	Accuracy at Protein Level †	Accuracy at Bridge level	Accuracy at Protein Level	
+1	-	0.59	0.65	0.53	
+2	-	0.59	0.59	0.50	
+3	-	0.54	0.61	0.56	
+4	-	0.34	0.63	0.46	
+Overall	-	0.51	0.63	0.52	
+† Chang et. al. []
+
+A schematic representation of CONOTOXIN(PDB (protein databank) ID 1AS5) showing disulphide bonds. 
+
+
+					Citation:Jayavardhana Rama et al., Bioinformation 1(2): 69-74 (2005)
+

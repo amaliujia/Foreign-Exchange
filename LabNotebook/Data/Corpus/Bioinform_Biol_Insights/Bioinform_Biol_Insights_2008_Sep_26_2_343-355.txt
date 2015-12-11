@@ -1,0 +1,251 @@
+Introduction
+The gene copy number (also called “copy number variants”—CNV) is the number of copies of a particular gene in the genome of an organism. Recent evidences show that gene copy number (GCN) amplifications and deletions are common characteristics of many genetic diseases. For example, GCN can be elevated in cancer cells as demonstrated in the epidermal growth factor receptor (EGFR) gene in patients with non-small cell lung cancer () and also higher copy number of CCL3L1 has been associated with susceptibility to human HIV infection (). Thus identifying these genetic gains and losses provides useful information about specific disease susceptibility or resistance. GCN analysis among normal people within the human genome is also of interest. However, these genetic characteristics are usually not directly observable. Recent technological development in array comparative genomic hybridization (a-CGH) provides scientists with an efficient tool to conduct whole genome and high-density region specific investigation of GCN (; ; ).
+
+Briefly, a-CGH technique involves the labeling of genomic DNA from disease tissues (e.g. cancer) and normal control tissue (reference) with different colors (fluorochrome). These samples are then co-hybridize to a metaphase spread from a normal reference cell. After hybridization, emission from each of the two fluorescent dyes is measured, and the signal intensity ratios are indicative of the relative copy number of the two samples. The ratio of the two fluorochrome intensities is then calculated and regions where the disease DNA are amplified or deleted are readily detected on the metaphase spread. The resulting data are in the form of microarrays. This technique not only gives us information about copy number gains and losses in the disease genomic DNA but also allows the identification of the specific chromosomes and the regions of the chromosomes where these changes occurred.
+
+However, the a-CGH data does not provide direct measurements of the GCN changes. Hence, several statistical approaches for analyzing and describing results from these experiments have been developed. Differences exist in these approaches and newer approaches addressing some of the limitations of existing method are needed. For example, some of these methods do not take into account the spatial dependence within the chromosome (; ; ; ) while others have implemented such dependence structure into their models to enhance the inference (; ; ; ). With the exception of a few that are Bayesian (; ; ), most of the existing methods are frequentist’s. All of the existing methods are designed for analyzing data from unrelated persons and are therefore effective in explaining horizontal changes in GCN. However and when available, family data present wonderful opportunity to investigate the vertical kinship effects of GCN as well as the horizontal changes. For this type of data, the main challenge is to model the high dimensional familial dependence structure, and no such approach was found following a careful review of the literature. In this paper, we present such a method in which we used the nonparametric approach to model the marginal distributions and then linked the joint distribution by a copula structure.
+
+Typically, GCN changes observed from a-CGH experiments are classified into three groups corresponding to the three statuses of copy number changes—amplification, deletion and normal; Thus, allowing the microarray responses to have similar features. The practical challenge in the problem that we describe here is that of high dimensionality due to familial dependence among pedigree members. As we indicated above, several of the statistical tools for microarry data clustering deal with low dimensional data (usually one dimensional) and do not take into account the familial dependence among the pedigree members. Such methods can be divided into two main groups, the model based and non-model based (semiparametric). The former assumes specific probability models for the sub-distributions of response in each cluster and is efficient when the specifications are correct but may be seriously biased if implemented specifications deviate from the true unknown models. The semiparametric does not make any assumption about the models except that of a mixing structure, in which the unknown sub-distributions are estimated nonparametrically from the data themselves, and the inference is robust. This method is adequate when the data size is large so that the sub-distributions can be estimated accurately.  proposed such a method for low dimensional microarray clustering for independent data generated from unrelated persons. For data with high dimensionality, the commonly used multivariate normal model rarely fits the actual data, and the nonparametric method is not directly applicable in cluster analysis, so neither of the above models based or non-model based methods are suitable for analyzing the dependence and high dimensionality of family data.
+
+In statistics, the copula is a widely used tool for modeling the dependence structure of high dimensional data (; ), and is particularly suitable for pedigree data modeling. Here we propose and implement a semiparametric copula model to address this problem. Specifically, the marginal distributions are estimated nonparametrically, the within pedigree dependence structure is modeled by copula with parameters specified by the kinship coefficients. A penalty term is used against non-unimodality of the sub-distributions. The optimal partition is performed using a classification-estimation (of densities)-maximization-estimation (of parameters) algorithm. The algorithm shares the property of ascending the penalized semiparametric likelihood, just like the well known EM algorithm for ascending the parametric likelihood, and thus, under fair conditions, converges to the optimal partition of the microarray.
+
+The Method
+In a-CGH data, the fluorescence ratios between two samples, case and control, are measured across a genomic region. For loci with different copy number changes, the corresponding log-ratio measurement tend to be different. Thus in a-CGH data analysis, often a three-state mixture model is used: deletion state, normal state and amplification state, and we arbitrarily lable them as state 1, 2 and 3. Genes with copy number deletion tend to have smaller log-ratio measurements, those with normal status tend to have moderate measurements, and those with amplification tend to have larger measurements.
+
+We focus on the case of a given chromosome. When there are more than one chromosome under consideration, the method is similar by modeling the chromosomes one by one. Suppose there are n loci of interest and r pedigrees of individuals. The measurement at each locus for each individual is observed. The j-th pedigree has sj individuals (j = 1, …, r), at locus k, the l-th individual of the j-th pedigree has microarray measurement yjkl. Denote yjk (yjk1,…, yjksj)′ be the measurements of the j-th pedigree at locus k, for each fixed pair (j, k) the yjkl’s are familiarly dependent due to kinship.
+
+Generally this question is formulated as a cluster problem, in which each of the gene locus in classified into one of the clusters B1, B2 and B3 represent the three states deletion, normal and amplification. Let y be a general random vector of the observation yjk’s, a mixture model on y is specified as
+
+Where f (·|Bi) is the sub-density of the responses in the i-th cluster, and the αi’s are the mixing proportions satisfying 0 ≤ αi ≤ 1, ∑i=1k α = 1. In the literature usually the f(·|Bi)’s are specified as multi dimensional normal density functions with cluster specific mean vectors and variance matrices. Typically for this type of pedigree data the dimension is around 10 to 15.
+
+In practice, such high dimensional dependent data hardly conforms to a multivariate normal distribution. A commonly used statistical tool to deal with high dimensional dependence structure is the copula. In this method, it is only necessary to specify each of the marginal densities, and then use a link (copula) to compose all the marginal densities into a joint multivariate density with desired dependence structure. There are large number of copulas to be used, and some optimality criteria to select the best copula for a given problem and data. When the copula is selected, we can incorporate the kinship coefficients among the pedigree members into its dependence structure. Also, there is the question of how to specify the marginal densities. There are various parametric densities to choose from, but if the wrong one is used the results may be seriously biased. On the other hand, for data with large sample size, the nonparametric density can adapt to any distributional feature. Since we do not know the true sub-densities we model each of the marginal densities by nonparametric method for robustness. Finally, a modified BIC criterion is used to select the optimal number of clusters. We describe each of the above steps in different sub-sections below.
+
+The marginal distributions
+Since commonly available pedigree data usually consist of three generations and to account for the age and gender difference, the distributions of the measurements are divided into six groups in the following order: first generation male, first generation female, second generation male, second generation female, third generation male and third generation female. We use Gs to denote the s-th group. For example if an individual with observation yjkl is a second generation female in any given pedigree, she is in group 4, we simply denote yjkl ∈ G4, and so on. Denote fs(·|Bi) be the sub-density of array cluster i of group s.
+
+Since the fs(·|Bi)s are unknown, they can be estimated by the well known nonparametric estimator ()
+
+where nis is the sample size (number of individuals) of group s in cluster i, K(·) is arbitrary given kernel density, and hnis is a given bandwidth to be specified below.
+
+In the density estimation literature, the choice of kernel is not of particular importance (; ). Studies suggest that most unimodal densities perform about the same as the other when used as a kernel, and the choice between kernels can be made on other grounds such as computational efficiency. However, there are some popular options in practice for different reasons. For some general introduction for the choice of kernels, we refer to  and . The normal kernel (i.e. K(·) is the density function of the standard normal distribution) is widely used in practice for convenience and other nice features.
+
+In contrast, the choice of bandwidth is crucial in density estimation (). Interesting proposals which address this problem can be found in Fan and Gijbels (1992). There is literature on automatic methods that attempt to minimize a lack-of-fit criterion, such as integrated squared error. From , we choose to use the bandwidth
+
+where σ̂is2 is the empirical variance of the yjkl’s in the s-th group and the i-th cluster.
+
+In the copula formulation we also need the corresponding marginal distribution functions. Let Fs(·|Bi) denote the marginal distribution functions for cluster i and group s, F̂s(·|Bi) for its empirical estimate,
+
+where χ(·) is the indicator function.
+
+The joint distribution
+The copula is a commonly used statistical tool to model multivariate joint distribution, it appeared in the early work of Hoeffding, Fréchet and others and formally introduced by . We first give a very brief account of it and we refer to ;  and Nelson (1999) for detailed review.
+
+A function C defined on [0, 1]d is a d-variate copula if C(F1(x1), …, Fd (xd)) is a joint distribution function for any marginal distribution functions F1(x1), …, Fd (xd). The marginal distributions of C(F1(x1), …, Fd (xd)) itself are just F1(x1), …, Fd (xd). This property provides a convenient way to construct a joint distribution with given marginal ones. On the other hand, given a set of marginal distribution functions F1(x1), …, Fd (xd), there is a unique copula C such that C(F1(x1), …, Fd (xd)) is the true joint distribution of them (). Also, for any joint d-dimensional distribution function F(…), let Fi−1(·) be the quantile functions of the i-th margin, then the function C(x1,…, xd) = F(F1−1(x1),…, Fd−1(xd) is a d-variate copula. Let c (…) be the density function (the total derivative) of C(…) when exists. Let fi (·) be the density function of Fi(·), the density function f (x1, …, xd) of the copula distribution function C(F1(x1), …, Fd (xd)) is given by
+
+Given a copula, the dependence structure can be characterized in several ways, including Pear-son’s correlation, Kendall’s tau, Spearman’s rho, tail dependence, etc. Kendall’s tau is generally easier to compute for copulas, so we use this dependence measure. For a two-dimensional copula, Kendall’s tau is given by
+
+where (X1, Y1) and (X, Y) are independent with the same distribution. −1 ≤ τ ≤ 1, τ = 0 for independence, −1 and 1 for perfect negative and positive dependence.  suggested a pseudo-likelihood approach to estimate the dependence parameters, in which the observed data is transformed via the empirical marginal distributions to obtain pseudo-data that are used in the estimation. Using the special relationships among relative pairs, we can implement the dependence parameters in the copula via the relationships among kinship coefficients, Kendall’s tau and the copula dependence parameters without estimation.
+
+For pedigree data, the dependence relationships among familial members (i, j) are best described by the kinship coeffcients, γij = Δ7ij/2 + Δ8ij/4, where Δ7ij, Δ8ij, Δ9ij are the condensed kinship coefficient () between relative pair i and j. The Δkijs (k = 1, …, 9) are the probabilities for the nine possible condensed identical by descent (IBD) status as in , in which Δ7ij, Δ8ij and Δ9ij are commonly used in practice. They are the population probabilities of sharing 2, 1 and 0 genes IBD for relative pair (i, j), without regard to their particular genotypes, but only (i, j)’s kinship relationships, under the Mendelian inheritance. Also, 2γij is the expected proportion of gene IBD for relative pair(i, j) at this locus. For convenience we list the values of these coefficients for some common relative pairs (), and we compute corresponding Kendall’s tau in the last column after the computations below.
+
+For trait underlined by single locus or multiple loci, Pearson’s correlation for relative pair (i, j) is 2γij (). Assume that gene copy number change statuses are determined only by the underlying genetic sources, and that the amounts of dependence among them are additive with respect to their shared genetic sources. Then at any fixed locus, Kendall’s tau between a fixed type of relative pair (i, j) is ()
+
+As is true for Pearson’s correlation, we postulate that Kendall’s tau remain the same, or approximately so, when the trait is influenced by multiple loci. As the kinship coefficients are already known as in , we get Kendall’s tau by the above relationships and in turn, the dependence parameters in the copula model is obtained from the relationship among the dependence parameters and kendal’s tau for specified copula. Thus we can easily implement the dependence kinship coefficients in the copula in terms of Kendall’s tau without estimating them. For this, we first need to review several commonly used copulas. Note, for family data the dependence are not constant among different relative types, hence copulas with constant dependence parameters, such as Clayton’s copula or Frank’s copula can not be used here.
+
+Multivariate normal copula
+Let Φd (·, Θ) be the d-variate normal distribution function with mean vector 0 and correlation matrix Θ = (θij), φd (·, Θ) be its density function. Φ(·) be the one-dimensional standard normal distribution function, and Φ−1(·) be its quantile (inverse) function. The multivariate normal copula is defined as
+
+with density
+
+Thus for given marginal distribution functions F1(·), …, Fd (·) and their densities f1(·), …, fd (·), the joint distribution function for the multivariate normal copula with these given margins is
+
+with density
+
+For the distribution in (6), any lower dimensional joint distributions have the same form. For example the (i, j)-th joint distribution function is F(xi, xj) = Φ2(Φ−1(Fi(xi)), Φ−1(Fi(xj)); Θij), where Θij is the (i, j) sub-block of the matrix Θ. From  and in this case, Spearman’s and Kendall’s tau are the same. For this copula, Spearman’s rho (Kendall’s tau) and the dependence parameters θij’s in normal copula are related by ()
+
+By relationships (6) and (7), the dependence parameters θij’s in the multivariate normal copula are easily obtained given the τij’s, which are computed via the known kinship coefficients Δkij’s, as long as we know the kin type of relative pair (i, j).
+
+Multivariate T-copula
+Let Θ be the correlation matrix given in the multivariate normal distribution, x = (x1, …, xd)’ The density function d-dimensional T-distribution with r degrees of freedom is
+
+The corresponding copula density is
+
+where Qr(·) is the distribution function of the T-distribution with r degrees of freedom, and qr(·) is its density function. Given marginal distribution functions F1(·), …, Fd(·) and their densities f1(·), …, fd(·), the joint density with the copula defined by this multivariate T-distribution is
+
+For this copula, the relationships between the θij’s and the τij’s are the same as for the multivariate normal copula.
+
+Selection of copula
+Given several candidate copulas C1, …, Ch with densities c1, …, ch, a natural question is how to select the optimal copula for the data. Let F̂jl(·) be the estimated marginal distribution for individual l in pedigree j (although there are only six different versions of them). For example, if individual (j, l) is in group s, then F̂jl(·) F̂s(·). The F̂s(·)’s are defined as
+
+where ns is the number of observations in group s.
+
+When there are parameters to be estimated in the copula, the optimal copula can be selected by AIC criteria (Oakes, 1989; ). Here, our copula has no parameters to be estimated, by the likelihood principle and (5), an intuitive way is to select the C with
+
+or equivalently, to avoid computation overflow or underflow,
+
+This is equivalent to choosing the copula with the largest likelihood.
+
+Now for given copula, the joint density for the data y = {yjkl} is modeled by
+
+where
+
+We point out that although we used the same notation c, for different families, the number of individuals may differ and so are the dimensionalities of the c’s.
+
+However, under the semi-parametric mixture model assumption, the sub-distributions can take any shape, even the shape of the entire distribution, and as a result any cluster partition will give about the same likelihood value via (9). So optimizing (9) over all possible cluster partitions will not be able to identify the desired clusters. Thus we put some constraints on the selection of clusters such that the sub-distribution is approximately unimodal and optimizing model (9) will give the desired clusters, as in . The reference Yuan and He will be refered to as YH in subsequent citations. However there are two major differences between the method we are proposing and that of YH. Our method can handle high-dimensional data and the link among the marginal densities in copula.
+
+Specifically, let g(·|Bi) be the multivariate normal density with mean given by the sample mean for data in Bi, and covariance matrix Θ, for observations in Bi (i = 1, …, 3), and denote g = (g1, g2, g3), where gi = g(·|Bi). g is used as shape constraints for the f̂ (·|Bi)s. Intuitively, for each fixed i, when the ‘correct’ partitions are specified, the differences between the f̂ (·|Bi)s and g(·|Bi)s will be relatively small. The Kullback-Leibler divergence D f̂ (B i), g (Bi) is be used to quantify this difference between the two densities f̂ (·|Bi) and g(·|Bi) with D f̂(Bi), g (Bi)) =∫Bif̂(y|Bi) log[f̂(y|Bi)/g(y |Bi)]dy. Note that D(f̂(Bi)), g (Bi) is non-negative and is zero only if f̂(·|B) ≡ g(·|Bi). An empirical version of it is given by
+
+and we set
+
+Let L0 (α | y, f̂ B) be the log-likelihood of (9). Now, instead of optimizing (9), we optimize over all possible partitions of clusters, the penalized log-likelihood,
+
+for some 0 ≤ λ ≤ 1 to be specified. This model can be viewed as an extension of the traditional mixture model. When λ = 0, it corresponds to a nonparametric specification of sub-distributions, when λ = 1 it is a full parametric model given by the g(·|Bi)s, and when 0 &lt; λ &lt; 1 it corresponds to an intermediate model. By doing this, we are forcing the distributions to be close to normal, more than what is needed for unimodal. The tunning parameter λ is chosen according to simulation for the given type of data. The choice of a multi-variate normal here is for convenience as other choices could be made but may result in additional complication.
+
+The CEME algorithm
+However, directly optimizing the mixture model (10) is usually not easy. A common practice of estimating the cluster membership of each observation in the data while evaluating the maximum likelihood estimate α̂ of α in (10) is the EM algorithm (). The EM algorithm is a much easier (though much slower) endeavor computationally than the direct optimization.
+
+For fixed k, let uij = 1 if the i-th locus belongs to the j-th cluster, ui = (ui1, ui2, ui3) be its membership vector, and u = {uij}. Treating u as missing data, (y, u) is referred to as the “complete” data. Then the likelihood for the “complete” data is
+
+Although we used the same notation f̂(yjk|Bs) for each fixed Bs, the dimension of the data yjk may vary for different pedigree j, as well as the density f̂(yjk|Bs). The corresponding log-likelihood is
+
+By the same reason as (10), we optimize the penalized “complete data” log-likelihood
+
+where g(yjk | Bs) is the analogue of f̂ (yjk|Bs). The above log-likelihood is optimized iteratively, with the clusters Bs’s are classified along each iteration. We specify the starting values at iteration zero as below.
+
+Starting values
+Set αs(0) = 1/3, (s = 1 2 3,); uks(0) = 1/3, (s = 1 2 3); k = 1, …, n). Divide the n loci into 3 region of roughly equal sizes, and lable them as the Bs(0)’s. Let f̂(0) (·|Bs(0)) be the nonparametric estimate of fj(·) using only the measure responses in Bs(0). Denote (B(t) = B1(t), B2(t), B3(t)) be the estimate of B = (B1, B2, B3) at the t-th iteration of the algorithm.
+
+Given the current t-th iteration estimates α(t) = α1(t), α2(t), α3(t)), uij(t)’s B (t), f (t)(·Bs(t))’s and q(t) (·|Bs(t))’s from the t-th iteration, we update them in the (t + 1)-th iteration according to the following CEME steps.
+
+Classification-step: Each response locus k, is classified into a candidate cluster B̃s, if
+
+
+
+
+This is the optimal classification rule in the sense of minimizing the expected loss (), and it is also the so-called Bayesian assignment. In the cases of ties, we use uniform random assignment among the tied clusters. Let B̃ = (B̃1, B̃2, B̃3) be a candidate classification of the clusters after this step.
+
+Expectation-step: Let Uks’s be the associated random variables of the uks’s, and g(t) (·|Bs(t)) be the multi-dimensional normal density with mean and covariance matrix empirically estimated from the data in Bs(t)(s = 1 2 3).
+
+As in YH, for k = 1, …, n; s = 1, 2, 3, we have
+
+
+
+
+where the expectation is taken with respect to the constrained log-likelihood L. Denote u(t+1) = {uks(t+1)}.
+
+Maximization-step: Compute the MLE α(t + 1) of a given u(t + 1) as in YH
+
+
+
+
+Estimation-step: To update the estimation of the density f (t)(·) of current iteration t to f (t+1)(·) for the next iteration t + 1, we first compute candidate sub-marginal density f̃jl(·|B̃s) for individual l in pedigree j at locus k and cluster s. If this individual is in group v, then
+
+
+
+
+with
+
+
+
+
+where ñsv is the number of responses for group v in cluster B̃s, and σ̃sv2 is sample variance of this group. Similarly, the candidate sub-marginal distribution functions are
+
+
+
+
+Then use (5) to get the candidate sub-joint density for the j-th pedigree at locus k, as follows
+
+and that for all the pedigree at locus k is
+
+Let g̃ be the reference densities corresponding to B̃.
+
+We update the quadruple (B(t + 1), f(t + 1), F(t + 1), g(t + 1)) as
+
+The estimate of f (·) at the (t + 1)-th iteration is then
+
+Note that at each iteration t, α(t), B(t), and the uij(t)s are updated, but not necessarily so for f(t) and g(t).
+
+The above four steps are iterated until convergence of (α(t), f(t), B(t)). (Note by the following Proposition, we may check the stability of the α(t) as a simple criterion for the convergence of the triple). We may use the relative error criterion for the convergence of the (α(t)’s, that is, for some pre-specified δ &gt; 0, we stop the iteration when ∑s=13|(αs(t+1) − αs(t))/αs(t)|≤ δ. Typically, δ ≤ 0.01.
+
+As in YH, we have
+
+Proposition
+For each fixed k, the sequence {L(α(t)|y, f (t), g(t), B(t))} is increasing in t, and there is a stationary point (α*, f *, B*) satisfying
+
+When (α*, f *, B*) is the unique stationary point, we have, as t → ∞,
+
+Application
+Simulation study
+We simulate r = 10 pedigrees, each has four individuals, father, mother and two sibs, and we assume there are n = 200 loci of interest, which are divided into 3 clusters as B1 = (1, 80), B2 = (81, 150) and B3 = (151, 200), with cluster means μ1 = (4.9, 4.2), μ2 = (9.9, 9.2) and μ3 = (14.9, 14.2) for male and female individuals. We generated two datasets by simulation using the normal copula and multi-normal models. Each of the datasets were analyzed using both normal copula and multi-normal models.
+
+To simulate data from the Multivariate normal copula model, let A be the Cholesky decomposition of Θ. To sample from this copula distribution: for k = 1, …, n and i = 1, …, 5
+
+generate r independent samples Z1k, …, Zrk from N (0, I4).
+
+Let ulk = AZlk (l = 1, …, r).
+
+For k∈Bi, if j is for male, set xljk = Φ(ul1k) + μk1; if j is for female, set xljk = Φ(ul1k) + μk2, and xlk = (xl1k, …, xl4k), where Φ(·) is the distribution function of the standard normal. Then x1k, …, xrk is a sample from the 4-variate normal copula model with correlation matrix Θ. The results are displayed in  below, with tuning parameter λ of values 0.25, 0.5, 0.75 and 1.
+
+In the above, λ = 1 corresponds to a normal model, and 0 &lt; λ &lt;1 correspond to a mixed model. For this type of data, the model has difficulty in parameter convergence for small values of λ, reflecting the fact that the multivariate data distribution is too noisy for nonparametric part of the model to work alone; thus a parametric unimodal component is needed to help cluster the data. The normal copula model has larger likelihood value in all these cases. This means the normal copula model is more robust than the multivariate normal model. For the data from multi-normal model, when λ = 0.5, 38 loci from cluster three are classified to cluster two. Over all, λ = 0.75 performs well for all the data set, and so we recommend this value of λ in this analysis.
+
+To assess the robustness of the method, we simulated larger data sets with family sizes of 4 and 5, each with 100 families and 200 candidate loci. The simulated clusters and means for male and female are: cluster one, 1–70, (4.9, 4.2); cluster two, 81–150, (8.9,8.2) and cluster three, 171–200, (12.9,12.2) respectively. To reflect some complexity we added minor clusters to some of the clusters. The means for male and female for the minor clusters are 71–80, (5.4, 4.7) and 151–170, (12.4,11.7). The results are summarized in .
+
+Overall, the results are consistent: the smaller the value of λ, the better the model fitness, as indicated by larger likelihood value. This means that the non-parametric model component capture the data distribution in fine details. But in many cases, the computation breaks down for λ = 0 as pointed out earlier. It is seen that for either the data generated from multi-normal or normal copula distributions, the overall performances of the semiparametric model is robust for a range of the tuning parameter λ.
+
+Real data analysis
+We use the proposed method to analyze the Genetics Analysis Workshop 15 (GAW15) data set with 14 pedigrees of CEPH Utah families, each with three generations and about a dozen normal individuals. Expression level of genes in lymphoblastoid cells of the above subjects were obtained using the Affymetrix Human Focus Arrays that contain probes for 8,500 transcripts. Gene copy number variations in normal people within human genome has been the subject of study (; ). For 3,554 of the 8,500 SNPs tested,  found greater variation among individuals than between replicate determinations on the same individual. These 3,554 expression phenotypes (expressed genes) were chosen for copy number change analysis. The first step is to find out the best copula model for the data. We considered three different models, the multi-normal model, the semi-parametric multivariate normal-copula model, and the semi-parametric multivariate T-copula model. Then the criterion in (8) is used to select the optimal model. The average copula likelihood values for the three models are −3217389.15, −2094272.97, −2296408.96 respectively. Thus the semi-parametric multivariate normal-copula model is the best of the three and was used for clustering. The outcome of the analysis of the GAW15 data is displayed in the figure below. The horizontal axis represents the sequential numbering of genes from 1 to 3550, and the vertical axis indicates the classified states of the genes with 1, 2 and 3 representing deletion, normal and amplification.
+
+As shown in the figure, most of the SNPs are in clusters 1 and 3, this observation is consistent with the large variation of the expression levels. The SNPs with deletion status are more likely to be contained in cluster 1, and those with amplification status are more likely to be in cluster 3.
+
+Concluding Remarks
+We proposed, studied and demonstrated a semipa-rametric copula method for microarray-SNP genomewide association analysis using pedigree data. We successfully implemented the kinship relationship into the model for more robust analysis of family data than the commonly used multivariate normal model.
+
+Acknowledgement
+This work is supported in part by the National Center for Research Resources at NIH grant 2G12RR003048, and by the Center for Research on Genomics and Global Health (CRGGH) at NHGRI/NIH.
+
+Disclosure
+
+The authors report no conflicts of interest.
+
+Appendix
+Proof of (6): Let (X1, Y1) be the traits of relative pair (i, j); (X, Y) be an independent copy of (X1, Y1); and Al be the event that a relative pair share l alleles IBD (l = 0, 1, 2). Given a relative pair (i, j), by definition P(A2) = Δ 7ij, P(A1) = Δ8ij, and P(A0) = Δ9ij. By the assumption that GCN change is determined by the underlying genetic source and given A2, the pair (i, j) share the same genetic source at the locus and the same copy number change status; thus X1 = Y1, X = Y. Note that the random variables X1 and X are of continuous type and P((X1 − X) (Y1 − Y). 0|A2) = P((X1 − X)2. 0|A2) = 1. Also, X1 − X and Y1 − Y are random variables symmetric around 0, thus given A0, X1 − X and Y1 − Y are independent, so the events (X1 − X)(Y1 − Y). 0 and (X1 − X)(Y1 − Y), 0 are completely random, each with probability 1/2, i.e. P((X1 − X)(Y1 − Y)|A0) = 1/2. By the additivity assumption, given A1, the probability of the event (X1 − X)(Y1 − Y). 0 is the average of those for cases of given A2 and A0, i.e. P((X1 − X)(Y1 − Y). 0|A1) = 3/4. Then at any fixed locus, Kendall’s tau between a fixed type of relative pair (i, j) is
+
+Kinship coeffcient for selected relative pairs.
+
+Relationship	Δ7	Δ8	Δ9	γ	τ	
+Grand parent-offspring	0	1/2	1/2	1/8	1/4	
+Parent-Offspring	0	1	0	1/4	1/2	
+Half Siblings	0	1/2	1/2	1/8	1/4	
+Full Siblings	1/4	1/2	1/4	1/4	1/2	
+First Cousins	0	1/4	3/4	1/16	1/8	
+Double First Cousins	1/16	6/16	9/16	1/8	1/4	
+Second Cousins	0	1/16	15/16	1/64	1/32	
+Uncle-Nephew	0	1/2	1/2	1/8	1/4	
+Cluster results for normal copula and multi-normal models for 10 pedigrees and 200 loci.
+
+Data	λ	Cluster 1	Cluster 2	Cluster 3	Log-likelihood	
+Normal Copula	0.25	1–80	81–150	151–200	−11438825.76	
+	0.50	1–80	81–150	151–200	−22088970.51	
+	0.75	1–80	81–150	151–200	−32749199.84	
+	1.00	1–80	81–150	151–200	−43412062.82	
+Multi-normal Model	0.50	1–80	81–150(+38)	151–200(−38)	−3117275.81	
+	0.75	1–80	81–150	151–200	−3644388.69	
+	1.00	1–80	81–150	151–200	−4652713.94	
+Summary cluster results from normal copula and multi-normal data sets for 100 pedigrees with 4 or 5 Family Members.
+
+Pedigree size	Data	λ	Cluster 1	Cluster 2	Cluster 3	Log-likelihood	
+4	Normal Copula	0.25	1–80	81–150	151–200	−5503651.81	
+		0.50	1–80	81–150	151–200	−10207757.93	
+		0.75	1–80	81–150	151–200	−14924762.04	
+		1.00	1–80	81–150	151–200	−19645406.52	
+4	Multi-normal Model	0.50	1–80	81–150(+9)	151–200(−9)	−1716690.87	
+		0.75	1–80	81–150	151–200	−2213287.79	
+		1.00	1–80	81–150	151–200	−2726810.52	
+5	Normal Copula	0.25	1–80(−7)	81–150(+7)	151–200	−7841636.12	
+		0.50	1–80(−7)	81–150(+7)	151–200	−15364258.65	
+		0.75	1–80(−7)	81–150(+7)	151–200	−22940970.23	
+		1.00	1–80(−6)	81–150(+6)	151–200	−28643031.41	
+5	Multi-normal Model	0.25	1–80	81–150	151–200	−1639830.86	
+		0.50	1–80	81–150	151–200	−2250676.24	
+		0.75	1–80	81–150	151–200	−2874104.71	
+		1.00	1–80	81–150	151–200	−3503763.43	

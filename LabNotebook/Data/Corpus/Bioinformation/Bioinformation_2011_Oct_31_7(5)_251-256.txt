@@ -1,0 +1,321 @@
+Background:
+In bacteria, one of the main mechanisms to facilitate control of 
+gene expression is the organization of genes into operons 
+[,
+,
+,
+]. 
+The most popular approaches require that the distance 
+between adjacent genes in a cluster to be small  
+[,
+,
+,
+],
+because homologous regions are straightforward when 
+genomic regions are closely related  [].  However,  it  has  been 
+shown that there are considerable difficulties to develop 
+efficient algorithms when paralogous genes are allowed 
+[,
+].
+Several clustering methods have been developed to find gene 
+clusters that have common functions in different genomes. 
+GeneTeams  [,
+] require that the distance between adjacent 
+genes in a cluster to be small. It allows intervening genes that 
+appear consecutively, possibly  in different orders, between 
+genes in a cluster so that various cluster sizes can be adopted. 
+But it includes a restriction that each gene has at most one 
+occurrence in each chromosome. This limits the model as many 
+genomes contain multigene families. To overcome the problem, 
+HomologyTeams [] 
+is a generalized version of GeneTeams that 
+does not require a cluster to appear in every chromosome. It 
+provides statistical significant estimates of identified gene 
+clusters and a fast way to identify sets of gene clusters. Within 
+the gene clusters, neither the  order of the genes nor their 
+orientation needs to be conserved, but a fixed threshold of the 
+distance between adjacent genes limits the model  [].
+DomainTeams  [] is a modified version of GeneTeams that 
+considers chromosomal regions of conserved protein domains 
+as domain teams rather than each gene as basic unit, while 
+other algorithms allow multiple genomes and use a gene 
+proximity parameter that restricts the number of intervening 
+genes between adjacent genes in a cluster.
+
+While many of these algorithms can be used to perform gene 
+clustering across two or more genomes, very few algorithms are 
+efficient enough to analyze a large number of genomes 
+[]. By 
+placing a stricter limit on the maximum cluster size, we observe 
+that efficient algorithms can be developed to perform gene 
+clustering on hundreds of genomes at the same time. This 
+strategy is sufficient for analyzing gene clustering in bacterial 
+genomes, and allows for large-scale study of evolutionary 
+relationships of gene clusters and study of operon formation 
+and destruction. We develop a different formulation based on 
+constraining the overall size of a cluster and develop statistical 
+estimations that allow direct comparisons of clusters of
+different sizes. It also allows the study of whether gene clusters 
+in bacteria occur only at the operon level or whether there are 
+higher-level structures, and the functional relationships 
+between them. This algorithm performs seven hundred bacteria 
+data sets which contain a well-characterized list of operons and 
+perform comparative analysis of operon occurrences, gene 
+orientations, and rearrangements both within and across 
+clusters.
+
+Methodology:
+We investigate the window-based strategy to analyze hundreds 
+of genomes simultaneously by placing a stricter limit on the 
+maximum cluster size.  We allow genes in a same paralogous 
+group to appear in more than one gene on a same chromosome. 
+This makes it possible to avoid the combinatorial explosion of 
+intersecting all combinations of up to k windows at a time with 
+one from each chromosome, and allow the use of a different 
+strategy to find the clusters.
+
+Let C =  {c1, … , 
+ck} be a set of  k chromosomes, one from each 
+genome under consideration. We represent each gene by a 
+number, while ignoring its orientation, so that the same number 
+represents a set of orthologous genes in different genomes and 
+each chromosome  ci
+is represented by a sequence of gene 
+numbers. The same gene number is allowed to appear more 
+than once within each ci
+which represents paralogous copies of a gene.
+
+We consider each window of length l within each chromosome 
+and enumerate each of the  2l
+ subsets of genes within the 
+window. We think of each subset  S as a potential gene cluster 
+and identify the subset of chromosomes in which all genes in S
+appear within a window of length l (See Figure 1 &amp; 2). A subset 
+S that appears in  k' 
+chromosomes is represented by  k lists 
+P1',…,Pk', with  k' 
+of these lists non-empty and each list  Pi'
+containing a set of positions on ci, which together specify all the 
+positions of genes that are in S. To ensure that all genes in S are 
+clustered within a region of size at most l on each chromosome 
+ci for which Pi' 
+is non-empty, we require that each gene number 
+that appears in  G' must appear at least once in each of the  k'
+non-empty lists Pi', and within each non-empty Pi', 
+|r – s|&lt; l for 
+any pair of positions r, s∈Pi'.
+
+To obtain statistical significance estimates, the  p-value of  S is 
+estimated by the probability of S appearing in at least this many 
+chromosomes  (, see supplementary material). Let n
+be the average length of the chromosomes  ci and  l' be the 
+average size of the non-empty lists  Pi'. The probability of  S
+appearing in a given chromosome can be obtained by assuming 
+a random background distribution based on n, l and l' where n
+is the average number of genes in a genome,  l is the window 
+size, and l' is the number of genes selected by subregion S.
+
+We estimate the  p-value of  S 
+(, see supplementary 
+material) by the probability of S appearing in at least k' out of k
+chromosomes spanning at most  l  in  each  case  using  the 
+binomial distribution, and obtain an  e-value from this  p-value, 
+where l' genes are observed in windows of 
+length at most l in k'
+out of  k chromosomes as shown in  
+ (see supplementary material).
+
+Since all possible combinations of included genes and 
+intervening genes are included within each window, this 
+algorithm will not lose any clusters that satisfy the definition. 
+One important advantage of the algorithm is that its time 
+complexity grows linearly with the input size and the base of 2 
+in the exponential part of the time complexity is small, thus a 
+large number of genomes can be considered at the same time.
+
+Experimental dataset:
+The data set used in the experiment is comprised of 700 
+bacterial genomes. We got this data set from NCBI
+(
+ftp://ftp.ncbi.nlm.nih.gov/genomes/Bacteria). NCBI server 
+supports lists of genes and their sequences in FASTA format. 
+The total number of genes used in 700 bacterial genomes is 
+2214301 genes, and the average number of genes per a genome s 
+3163 genes. We apply the algorithm over 1 ≤ l ≤ 12 window size 
+on these bacterial genomes, with homolog groups constructed 
+by finding bidirectional best hits using protein-protein BLAST 
+[] 
+with various e-value cutoffs, and performing single linkage 
+clustering. The stringent e-value cutoff to construct homologous 
+groups generates homologs of the smaller size and the larger 
+number of homologs (Figure 3). Since we allow paralogous and 
+orthologous genes, genes that belong to the same homologous 
+group identified by each  e-value cutoff can appear more than 
+once on the same chromosome and can also appear more than 
+once  in  the  different  genomes.  We  do  not  assign  a  gene  into 
+new homologous group if only one gene is within the 
+homologous group, since this enables the combination of 
+homolgous group within a window to be reduced. We construct 
+the gene map for each chromosome with the gene location 
+information defined by NCBI.
+
+Results:
+To validate our algorithm, we compare the results of gene 
+clusters that include E. coli K12 operons which are 
+experimentally confirmed by the RegulonDB database 
+[]. For 
+each predicted gene cluster, we  retain gene clusters with 
+an  evalue below a certain cutoff, while allowing gene clusters that 
+are completely contained within another gene cluster with a 
+better e-value  so  that we do not  lose any potential gene clusters 
+that satisfy the definition. We investigate whether these gene 
+clusters correspond mostly to one operon or many operons with 
+different e- value cutoffs, and we partition each gene cluster 
+into maximal subregions so that all genes within each subregion 
+have the same orientation and there are no intervening genes 
+between these genes within the subregion.
+
+For each subregion, we only consider predicted gene clusters 
+that include E. coli. We investigate subregions with different 
+evalue cutoffs, and evaluate the agreement between these 
+subregions with experimentally validated E. coli operons from 
+the database. Given a subregion, we compute it with respect to 
+the entire RegulonDB. We choose the e-value cutoff 1e-10 which 
+does not drastically effect  performance and achieves 96% 
+matches.
+
+We study the distribution of occurrences of operonsin 23 
+bacterial groups  (, see supplementary material).  We 
+define the occurrence rate of each bacterial group that appears 
+in gene cluster to be a number of each bacterial group that 
+divides by the total of genomes that appears in gene cluster. We 
+define the overall occurrence rate of a unique bacteria group in 
+all gene clusters to be a number of gene clusters that divides by 
+the total number of gene clusters. Because the algorithm finds
+gene clusters by homologs that have a similar gene structure 
+and evolutionary origin to a gene in another species. In gene 
+clusters, we are able to find all 23 bacterial groups.
+
+The gene rearrangement between adjacent genes within 
+bacterial operons is important for function, expression and 
+regulation of these genes  [,
+]. We study the distribution of 
+gene order with subregions. For a given pair of subregions in a 
+genome  g1 and a set of correspondences with each of them 
+linking a gene in a subregion to a related gene in subregion of 
+another genome  g2, we obtain a subset of one-to-one 
+corresponding pairs of link as follows: if there is more than one 
+link for a gene in subregions1 to another gene in subregions2, we 
+retain the one with the lowest BLAST e-value in both s1 and s2. 
+In the remaining set of k genes in s1 and k related genes in s2, we 
+assign a number from 1 to k to each gene according to the order 
+of genes in subregion, and assign a direction of genes to the 
+number from 1 to  k by its gene strand, such as forward and 
+reverse.  k genes in subregions1  that  correspond  to  a  signed 
+permutation, in which each pair of neighboring genes in  s1 is 
+with number n1 and n2, are considered to be a breakpoint if n1
+and  n2 are not consecutive 
+(|n1 –n2|  ≠1)  
+[]. This iterates 
+|g|(|g|–1)/2 
+times, where |g| is the total number of genomes. 
+We define the percentage of conserved neighboring gene pairs 
+to be the total number of neighboring gene pairs that are not 
+breakpoints, which is divided by the total number of 
+neighboring gene pairs by k-1, and use it to evaluate the degree 
+of conservation of gene order. 94.6% had perfectly conserved 
+neighboring gene pairs, which means that gene order within 
+subregions are the same either both the forward and reverse 
+directions. While comparing all subregions in g1 and g2, we also 
+evaluate subregion in g1 that corresponds to one subregion in g2
+with the best percentage of conserved neighboring gene pairs. 
+96.93% of them are perfectly conserved neighboring gene pairs. 
+We also performed this rearrangement test within gene clusters. 
+39.74% are perfectly conserved. This is not surprising since it is
+possible to locate more than one operon within a gene cluster. 
+Although gene order within operons can be unstable [], our 
+results on gene orientation and gene order indicate that 
+predicted subregions tend to contain only one orientation and 
+the gene order tends to be conserved.
+
+To investigate stronger correlations between the frequency of 
+gene duplication that contains more than two duplicated genes 
+in a subregion and the frequency of gene rearrangement that 
+contains breakpoints between  neighboring gene pairs, we 
+compute the Pearson correlation coefficient between them 
+(, 
+see supplementary material). While there were 
+significant positive correlations among subregions, there were 
+no significant correlations within gene clusters with a value of 
+0.1. Since there can be more than two operons in a gene cluster, 
+the relationship between gene rearrangement and gene 
+duplication is decreased.
+
+Discussion:
+In experiments, we validated the results of gene clusters that 
+include Escherichia coli K12 operons, which are experimentally 
+confirmed by RegulonDB. The gene clustering result reveals a 
+significant amount of spatial conservation that is at a higher 
+level than operon and some of these clusters are likely to 
+correspond to uber-operon. The study for the distribution of 
+gene order within a subregion showed the spatial arrangement
+of genes within bacterial subregion that is important for 
+function, expression and regulation. Although gene order 
+within operons can be unstable [], our results implied that the 
+gene order tends to be conserved and gene orientation appears 
+to face the same direction in the subregion. Because our 
+algorithm does not impose constraints on gene orientations, we 
+can conclude that there is a strong force to preserve gene 
+orientations in bacterial clusters, which is a pre-requisite for 
+functioning as operons. To validate subregions that are 
+predicted from clusters, we investigated a relationship between 
+gene duplication and rearrangement. As a result, a strong 
+positive correlation was predictable between gene duplication 
+and rearrangement considering gene rearrangements include a 
+gene duplication.
+
+Conclusion:
+We have developed a gene clustering algorithm that allows the 
+analysis of gene clusters across a large number of genomes and 
+important biological insights to be obtained from this analysis. 
+The proposed algorithm is able to identify gene clusters that are 
+not found by other algorithms, since we developed a different 
+formulation based on window strategy and statistical 
+significance estimates. One of the advantages in the proposed 
+algorithm is that it allows paralogous genes and orthologous 
+genes so that it considers the more biologically accurate model, 
+and the statistical significance  estimate while allowing gene 
+cluster that may not appear in every genome that is important 
+for biologists in identifying important gene clusters. We 
+demonstrated proposed algorithms that will be useful for 
+biological insight by analyzing gene clusters across a large 
+number of genomes that can help us understand operon 
+occurrences, gene orientations and distributions of gene 
+rearrangements. We used BLAST and the method in  [] to 
+construct homologous gene groups, but it is also possible to use 
+existing database on homology relationships such as COG  []
+and other ways that establish orthologous and paralogous 
+correspondences [].
+
+Supplementary material
+Data 1
+Citation:Gangman Yi &amp; Jaehee Jung, Bioinformation 7(5): 251-256 (2011)
+
+Algorithm to identify gene clusters that include same  gene numbers at least once within a window of length l by the 
+combination of unique gene numbers not to lose potential gene clusters. Paralogous genes are allowed while requiring that each 
+cluster appears in each of the k given chromosomes. X is the set of clusters returned with each cluster B represented by a list of gene 
+numbers. l,  n,  m,  e is the window length, the average length of chromosomes, the minimum number of chromosomes to appear, 
+and e-value cutoff respectively.
+
+Illustration of sample clusters of size greater than one. 
+l, l', k and k' represent the window size, the number of genes in 
+the window, the total number of chromosomes and the number 
+of chromosomes that appears gene clusters, respectively
+
+ a) The graph by BLAST hits; b) e-value cut-off: 1e-01; 
+c) e-value cutoff: 1e-10. Illustration of constructing groups of 
+homologous genes. The first graph is constructed by BLAST  evalue. Two  e-value cutoff graphs represent different 
+homologous groups constructed by the different e-value cutoff. 
+The stringent e-value cutoff makes homologous groups smaller 
+in size, but produces a larger number of homologous groups.
+

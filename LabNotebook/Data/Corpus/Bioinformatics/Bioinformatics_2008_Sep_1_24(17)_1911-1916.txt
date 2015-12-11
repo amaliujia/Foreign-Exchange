@@ -1,0 +1,123 @@
+1 INTRODUCTION
+In the nucleus of a living cell, genomic DNA is packaged into a complex molecular structure known as chromatin. This structure mediates the interaction between the genome and all types of regulatory and transcriptional molecules. Consequently, understanding chromatin structure is essential if we are to understand how the cell accesses the information stored in the genome.
+
+Perhaps the best understood features of chromatin structure are local disruptions, which correspond to the displacement of a single nucleosome by a collection of transcription factors. These are called DNaseI hypersensitive sites (DHSs) because they are identified using assays that depend upon the small, non-specific endonuclease DNaseI (Crawford et al., ; Dorschner et al., ; Keene et al., ; Sabo et al., a, b; Wu, ).
+
+We recently developed an array-based assay for measuring chromatin accessibility in a high-throughput fashion, and we have applied it to the ENCODE regions of the human genome (Sabo et al., ). In addition to identifying classical DHSs, this data gives us the first opportunity to measure experimentally chromatin structure on a large scale.
+
+We undertook this study to characterize DNaseI accessibility via a multi-state model comprised of local regions of similar accessibility. While a hidden Markov model (HMM) makes a natural starting point for this modeling effort, we found that the lengths of segments were not well described by geometric distributions and, as  indicates, that the emissions of this HMM could not be effectively captured using Gaussian models. To address these shortcomings, we employed a generalization of the HMM. Specifically, we employed a hierarchical change-point model (CPM) with a continuous mixture of Gaussians at each state and Gamma distributions for the lengths of segments. Because of the large number of observations in this study we employed an empirical Bayesian approach and obtained maximum a posteriori (MAP) estimates for the parameters of the hierarchical models and those of the length distribution.
+
+Another important feature of these data is that there are a large number of regions of the genome for which data are missing. These missing blocks of observation arise because the human genome contains a large number of repeated elements (Smit et al., ). Because the high similarity of the sequences in these repeats would render localization of observations to genome coordinates nearly impossible, probes for these repeat regions were not included in the array design, leading to gaps in the observed data. As shown subsequently, by treating these gaps as missing data, the resulting algorithm enjoys the advantage of having a linear time and space complexity in the length of the dataset.
+
+The resulting model fits the observed data much better than a HMM. Furthermore, we find that the posterior probability for a four-state CPM approaches 1, and thus the data strongly recommmends a four-state model.
+
+2 METHODS AND RESULTS
+2.1 Tiling array data
+Data for this study was collected using the ENCODE Nimblegen tiled arrays, using a previously described protocol (Sabo et al., ). On these arrays, each probe is 50 bp long, and probes are spaced 38 bp apart (i.e. with a 12-bp overlap). Probes that overlap repetitive elements, as identified by RepeatMasker (Smit et al., ), are not included on the array. The ENCODE Nimblegen array contains 382 884 probes.
+
+To measure DNaseI sensitivity, we treat with DNaseI a sample of intact nuclei and a control sample of bare genomic DNA. We then label the resulting collections of fragments with fluorescent tags (Cy5 and Cy3, respectively) and hybridize the mixture to the Nimblegen array. For a given oligonucleotide probe, a small Cy5 intensity relative to Cy3 intensity indicates that the DNaseI failed to cleave the intact nuclear DNA at that genomic position. Hence, the ratio of Cy5/Cy3 is inversely proportional to DNaseI sensitivity.
+
+For the data used in this study, the assay was performed using the primary Epstein-Barr virus-transformed B-lymphoblastoid cell line GM06990, which is designated as a common reagent by the ENCODE consortium. The resulting collection of 382 884 fluorescence log-ratios, spanning the entire set of ENCODE regions, is available via the UCSC Genome Browser (http://genome.ucsc.edu). Our algorithm models a sequence of fluorescent log-ratios, and the only information about the sequence taken into account by the model is the distance between the probes (for the purpose of spanning the gaps).
+
+2.2 The change point segmentation model
+To segment our data, we developed a CPM that uses a recursive algorithm similar to that described by Liu and Lawrence, (). Here we only give a brief description of the model; details can be found in the Supplementary Material.
+
+Previously, multi-state single Gaussian HMMs have been successfully applied to tiled array data (ENCODE Consortium, ; Li et al., ; Thurman et al., ). However, we found that this approach produces a poor fit to the DNaseI array data, with many outlier log ratios (see ). Such outliers have an adverse impact on state predictions of HMMs in two important ways: first, the outliers from one state can be incorrectly predicted to be members of adjacent states, and second, for many distributions, including the Gaussian, outlying observations have an unduly large impact on parameter estimates characterizing individual states.
+
+The CPM and the HMM both assume that the observed data was generated by a hidden process consisting of a fixed number of hidden states. However, in the HMM, it is common to characterize each hidden state by a single Gaussian distribution. The CPM, in contrast, employs a hierarchical model that uses a continuous mixture of Gaussians at each state. This type of model has been used previously to model oligonucleotide array data at the individual probe level (Ji and Wong, ). In a hierarchical model, instead of having a single mean and variance for each state, these two parameters are themselves taken as random variables following a probability distribution. Thus, within each CPM state, there can be different means and variances for different segments (or substrings) of the data, with each substring having its own mean and variance. The hyperparameters of the hierarchial model are global, while those describing individual substrings are local. This structure permits integration over the substring parameters—the means and variances of the substring intensities—for given values of the hyperparameters. In this way we marginalize over these high-dimensional missing data. We take an empirical Bayes approach and iteratively find the MAP estimates of the low-dimensional hyperparameters. However, all the means and variances of the substrings of a state are drawn from a common model, described by a specific hierarchical probability distribution. The states differ from one another because the parameters of their hierarchical models differ. In essence, the CPM assumes that within-state sequences are not homogeneous, but instead are characterized by substrings of unknown length, each of which is homogeneous.
+
+For example, consider the data shown in . The figure contains three segments in state 0 (δ0, δ3 and δ4), each with its own mean and variance. While the means of these segments differ from one another, all three means are lower than those of the substrings from higher states (δ1 and δ2), because the means of segments in state 0 are drawn from a distribution that is shifted toward lower values. Because each state of the hierarchical CPM is described by a family of normal distributions, rather than by a single distribution, the model gains flexibility to capture complex variability in the data.
+The figure shows a sample segmentation for a 27 kb region within ENr212. The x-axis is the probe number and two probes with no gaps in between are connected by solid line so that the gaps becomes visually obvious in this figure. The figure contains four change points (c1,… c4) and five regions (δ0, …, δ4), with each region assigned to a particular model state. Within each region, the mean and SD is shown by horizontal red dashed lines. Note that δ3 and δ4 are both in state 0, even though there is a change point at c4.
+
+
+
+ also illustrates a second important feature of the CPM. Note that the two segments δ3 and δ4 are generated by model state 0, even though there is a change point at c4. Thus, segments of the data from a single state are comprised of subsegments, each following its own Gaussian distribution. This feature, and the fact that distances between change points are not geometrically distributed, are the distinguishing features of the CPM.
+
+Formally, the CPM can be described as follows. Assume for now that we know the distribution on the length of each segment, for each of the states, and we know the transition probabilities between the states. Suppose the maximum number of change points is kmax. Denote a segmentation by A={δ0,c1, δ1, c2,…, δk−1, ck, δk}, 1≤c1&lt;c2&lt;…&lt;ck≤n, ci is the i-th change point, and δi is the state between its neighboring change points taking value in the set S={0,1,…,D}. The prior probability of A before observing the data is
+
+where pδ(l) is the probability of the length of one ungapped data segment being l, given the segment state is δ, and K is the transition probability between states with initial distribution π. Note that we put transition probabilities between segments, instead of between each data point as in the traditional HMM. Also, transitions between the same state are allowed. We set c0=0 and ck+1 to be the last data point.
+
+Given the segmentation A, the mean and variance for each segment is generated from a normal-inverse-χ2 distribution:
+
+Those parameters with superscript (h) are hyperparameters that need to be specified.
+
+With segmentation A and μi, σi given for each segment, the observations are naturally modeled as normal with given mean and variance:
+
+where we use the notation yi:j={ykk=i,i+1,…,j}
+
+In general, the lengths of the segments generated from each model state are not known ahead of time. Consequently, we employ a Bayesian recursive algorithm similar to that described by (Liu et al., ) to infer the change points from the data. The recursive character of this model allows us to sample directly from the posterior distribution of the change points and the changes in state. This property is beneficial because, in discrete high-dimensional settings like the one we face here, there is no assurance that a maximum likelihood or MAP estimate will characterize the posterior space well (Carvalho and Lawrence, ). Here our main interest is in a high-dimensional discrete unknown, the assignment of states to all of the probes. In order to make better inferences about these variables we employ a centroid estimator (Carvalho and Lawrence, ).
+
+To address the lower dimensional variables of these models, we employ an empirical Bayes approach. In this approach, the low-dimensional parameters of the prior hierarchical models are estimated from the data, rather than being set a priori. We estimate these parameters using the expectation maximization algorithm, as detailed in .
+
+2.3 Spanning the gaps
+The analysis of tiled array data is complicated by the absence from the array of many oligonucleotide probes, which correspond to repetitive DNA elements. To handle this missing data, the CPM includes terms that describe the probability of changing state as a function of distance along the chromosome. In general, when a gap is very long, the state probability distribution at one end of the gap is effectively independent of the state probability distribution at the other end of the gap. However, when these gaps are short, we expect adjacent data fragments to affect one another, with an increased likelihood that the bases at either end of the gap will be in the same state. For the CPM we can calculate the magnitude of this effect analytically.  illustrates, for our four-state model, the probability of being in a given state at the end of a gap of a given length, given the state at the beginning of the gap. This is calculated using the transition probabilities as well as the distribution of segment lengths estimated with empirical Bayes. Using distributions like those in , the CPM accounts for the effects of adjacent data substrings across gaps while retaining linear time complexity of the algorithm with respect to the size of the full dataset.
+Each figure plots the probability of being in a given state at the end of a gap of a given length. (a) assumes that the data prior to the gap is generated from state 0, and (b) assumes state 1, similarly for (c) and (d). After 200 probes (i.e. 7.6 kb), all probability distributions approach the same equilibrium.
+
+
+
+2.4 The four-state model
+Consider first the determination of the number of states. Because of the large number of observations, from over 800 000 probes on the microarray, we needed to employ only a fraction (15%) of the observed probe intensity values to estimate the population parameters of this model. Here ‘population parameters’ refers to those hyperparameters associated with each state as well as the parameters for the underlying Markov chain since these parameters are not specific to a segment. Using the resulting point estimates with the remaining 85% of the data we marginalize over all the remaining unknowns using recursions of the CPM. Note that the hyperparameters do not need to be marginalized over as in traditional Bayesian model selection, since separate data are used for model comparison in our application.  plots the log of the marginal probabilities of the data conditional on these population parameter estimates for models with 1 to 5 states. Assuming that these five models were equally likely a priori, the posterior probability of a four state model is nearly 1, with a five state model being the next most probable with a probability &lt;10−15. This indicates, perhaps not surprisingly, that this large amount of data renders a strong preference for just one of these models, the one with four states.
+Selecting the number of states using the likelihood value on the data. The figure plots the log-likelihood value as a function of the number of states in the CPM. The four-state model is optimal by this metric.
+
+
+
+2.5 Quality of the fit to the data
+Next, we investigated the extent to which the four-state CPM and a four-state HMM Viterbi segmentation with normal distributions for each state fit the observed data. Both of these models assert that the residuals—the difference between the observed values and the local mean—follow a Gaussian distribution.  shows quantile/quantile plots for each of the four states. A quantile gives the value of the residual corresponding to a specified cumulative frequency of the residual. For example, the 0.75 quantile of a random variable X gives the value x such that P(X≤x)=0.75. In these figures, the quantiles of the assumed theoretical Gaussian distribution are plotted against the quantiles of the observed data, whence the axes have been transformed to the Gaussian scale. If the observed data reasonably follow the Gaussian distribution, then the plot will follow a straight line. The HMM parameters were learned using unsupervised expectation maximization. As shown in , while the residuals for States 1 and 2 are reasonably modeled by normal distributions for both the HMM and CPM, the residuals for States 0 and 3 depart substantially from this assumption for the HMM but not the CPM.
+Each figure plots, for a given model state, the quantiles of the theoretical Gaussian distribution versus the quantiles of the observed residuals. A perfect fit would follow the line y=x. In each plot, the two series correspond to the residuals from a four-state, single-Gaussian HMM and from the four-state CPM.
+
+
+
+2.6 Properties of chromatin domains
+ shows the base-level coverage of the four states, as well as the mean and median segment lengths. The median size of the major DHSs agrees well with experimentally observed sizes of DHSs, which generally range from 225–250 bp (Sabo et al., b).
+Base-level coverage and segment lengths for the four states in the CPM segmentation
+
+	Major DHS	Minor DHS	Intermediate	Insensitive	
+	(State 3)	(State 2)	(State 1)	(State 0)	
+Number of segs	492	521	1085	1062	
+Number of bases	162 kb	518 kb	1772 kb	28 007 kb	
+Percent of bases	0.5%	1.7%	5.8%	92.0%	
+Mean seg length	329	994	1633	26 371	
+Median seg length	228	646	950	13 718	
+Hyperprior mean	1.7	0.66	0.0	−.65	
+Length parameter	(0.8 475)	(1.4 480)	(1.0 950)	(1.9 1266)	
+
+
+ shows histograms of the distribution of segment lengths, and  shows histograms of probe intensities and segment mean intensities for the four states. These two figures show that there is considerable overlap between the probe intensities of adjacent states, but little overlap in the mean values of the four states. Thus,  supports the use of subinterval averaging of the CPM as an effective means of averaging across noisy probes for these data. A key feature of the CPM is that we average over adjacent probes by using the hierarchical model and do not require that the means and variances of the four classes are fixed, but rather are drawn from state specific models. The strong evidence for four classes also likely stems from this strong separation. The CPM assigns 92% of the bases to the insensitive state, 5.8% to the intermediate sensitivity states and 2.2% to the hypersensitive state.
+Length distributions of segments. Each panel plots, for a given CPM state, the distribution of segment lengths.
+
+
+Intensity distributions of segments. The two panels plot histograms of probe intensities and segment means for the four states, repectively.
+
+
+
+ shows the transition probabilities between states. Estimates of transition probabilities were obtained with the training dataset, and these parameters are estimated using an empirical Bayes method, detailed in the Supplementary Material. As the table indicates, there is a strong preference for transitions between adjacent states. Specifically, transitions into a hypersensitive state are almost never permitted from the insensitive state. Thus, hypersensitive sites almost always occur within regions of intermediate sensitivity. The resulting regions of intermediate sensitivity chromatin punctuated by hypersensitivity sites we call accessibility islands. Also notice that about two-thirds of the intermediate regions contain no hypersensitive sites, and that probabilities of returning to the current state are small for all except the insensitive state. We applied a Kolmogorov–Smirnov test for the intensity ratios of each pair of adjacent insensitive segments and find the average P-value to be very small (with more than 90% of the P-values &lt;1e−3). Thus we judge that the statistical properties of such adjacent regions are truly different.
+Transition probabilities estimated from the data, where the rows represent the states being transitioned from
+
+	Insensitive	Intermediate	Minor DHS	Major DHS	
+	(State 0)	(State 1)	(State 2)	(State 3)	
+State 0	0.34	0.66	1e−6	1e−6	
+State 1	0.67	1−6	0.33	1e−6	
+State 2	0.08	0.45	1e−6	0.47	
+State 3	1e−6	1e−6	0.999	1e−6	
+
+
+To understand how the CPM segmentation relates to known functional elements in the human genome, we performed an enrichment analysis. We computed the relative enrichment/depletion relative to the insensitive state for each of the other states with respect to functional annotation from the UCSC Genome Browser. These included gene-like elements (KnownGenes, mRNAs and spliced ESTs), CpG islands and a variety of activating histone modifications (H3K4me1–3, H3ac and H4ac). The details of the calculations are explained in the Supplementary Material. As shown in , all these functional tracts are moderately enriched in the intermediate state and highly enriched in the hypersensitive states. Furthermore, the major hypersensitive state is more highly enriched than the minor hypersensitive states for all except two of these functional elements.
+Enrichment of annotated functional elements in sensitive regions (states 1–3) versus insensitive regions (state 0), as identified by the CPM.
+
+
+
+
+3 DISCUSSION
+We have described a Bayesian model-based method for segmenting DNaseI array data. The method relies upon a hierarchical CPM with hyperparameters estimated using an expectation maximization MAP estimation procedure. We have shown that the model produces a good fit to the observed data, and that the model divides the observed data into four classes. The model assigns 5.8% of the bases to regions of intermediate sensitivity, and these regions are significantly enriched in functional elements, including genes and activating histone modifications. The remaining 2.2% of the bases in hypersensitive regions are even more strongly enriched in these elements. Finally, our finding that transitions to hypersensitive states are very uncommon from the insensitive state supports a model of chromatin in which local hypersensitive disruptions are concentrated within larger domains of intermediate sensitivity, forming accessibility islands.
+
+A recently published analysis of ENCODE datasets used a simple two-state HMM, coupled with wavelet analysis, to perform domain-level segmentation of the ENCODE regions (Thurman et al., ). That analysis differs from ours in two important respects. First, Thurman et al., ) analyze multiple data types simultaneously, whereas our analysis focuses on DNaseI. Second, by using wavelet smoothing, the HMM focuses on a single scale at a time, whereas our model simultaneously captures larger- and smaller-scale phenomena. As shown, for example, in, the simple HMM does not fit the DNaseI data as well as the CPM. If the same observation holds for other types of data, then a multi-data set analysis using the CPM would likely yield an accurate picture of both large and small genomic domains, without requiring wavelet analysis.
+
+Finally, some caveats are called for with respect to the results presented here. First, while the hierarchical model we employed does permit greater variability in sensitivity among the regions belonging to one state and an associated improvement in the fit of the model, it does come at a cost of two additional free parameters per state. However, this cost seems worthwhile, given the large size of genomic datasets. While the ratio of data to unknowns is favorable for the population parameters describing the states and transitions between states, the dimension of the space describing the unknown locations of change points is extraordinarily large. Thus we cannot expect that the favorable asymptotic characteristics of MAP estimates will be enjoyed in the inference of change points. This is why we employ centroid estimates of these unknowns. Second, although this model is not specific to DNaseI array data and could be applied in a similar fashion to other types of tiling array data, we expect it to be effective only when features of interest span local regions of the genome coordinates. While our findings support this view for accessibility, further study will be required to determine its appropriateness for other data. If this assumption is borne out for other features, then one obvious direction for future work is to simultaneously segment multiple genome-wide assays using a CPM.
+
+Supplementary Material
+[Supplementary Data]
+ACKNOWLEDGEMENT
+Funding: This work was funded by National Institutes of Health award U01 HG003161 and R01 GM071923.
+
+Conflict of Interest: none declared.
+

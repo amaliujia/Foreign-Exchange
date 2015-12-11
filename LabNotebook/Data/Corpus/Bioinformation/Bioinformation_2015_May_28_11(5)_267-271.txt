@@ -1,0 +1,244 @@
+Background
+With the advent of massively parallel computing techniques
+sequencing technologies generates huge chunks of genome
+data in peta byte scale []. This in turn poses new challenge of
+managing, processing and analysing the generated data 
+[].
+Apart from this the sequencing cost is halved every 5 months
+where as storage cost is halved for every 14 months 
+[]. The
+DNA specific compression tools can be mainly categorized in
+to reference based compression tools and reference free
+compression tools []. Reference based compression tools
+require a reference genome, while reference free compression
+tools capture the redundancies within the dataset for a
+compact representation []. Reference free compression
+methods involves many different approaches like naive
+encoding, statistical, dictionary, grammar and
+transformational methods [].
+
+Many computationally intensive problems in computational
+biology like ClustalW has already been well adapted to high
+performance computing []. Though the distribution of various
+tasksor genome data over many different computers is
+difficult, genomic revolution trends demand for high
+performance computing solutions for data storage and
+management []. Compression algorithm for large dataset
+requires a vast processing power and memory, which is rather
+difficult to process on desktop computers []. The compression
+algorithm COMRAD (Compression using Redundancy of
+DNA sets) is one of the best algorithm reported in the
+literature in terms of compression level as well as data size.
+The best compression achieved is of 0.25 bpb for S.Cerevisiae
+genomes and in this work, our aim is to reduce the
+computational time of COMRAD while maintaining the
+compression achieved using parallel computing techniques
+[].
+
+Methodology
+Materials:
+COMRAD is a sequential iterative algorithm designed for
+compressing DNA sequence. Through a sequential multiple
+passes over the input data repeat substrings are captured for 
+the creation of corpus-wide dictionary. This stage is further
+followed by the replacement, clean up and encoding of the
+files in a sequential manner for compressing large dataset. The
+outline of standard COMRAD algorithm includes the
+following stages [].
+
+Algorithm:
+1: Create the frequency dictionary D1 of all L length substring,
+with frequency of at least F, for the input DNA sequences S0
+2: Encode the input sequences S0 to get sequences S1
+3: k← 2
+4: while the dictionary continues to grow do
+5: Create the frequency dictionary Dk of all substring matching
+pattern in P, with the frequency at least F, for the input
+sequences Sk-1
+6: Encode the input sequences Sk-1 to get sequences Sk
+7: k&lt;− k+1
+8: end while
+9: Cleanup Dictionary D to remove infrequent non terminals
+and make numbering consecutive
+
+COMRAD implementation use only a single core for
+processing the different compression stages which result in a
+long run time for compressing large DNA data set in gigabytes
+range. For instance, while processing malusdomestica genome,
+75% of time is utilized for codebook creation, substitution, 
+clean up and encoding stages. Considering the huge volume
+of data generated, there is a need to create frameworks for
+storing the large genome dataset through parallel computing
+approaches for saving the compression time. But, the current
+COMRAD compression algorithm is not adapted to high
+performance computing. Implementation of parallel
+algorithms can effectively utilize the resource and will
+certainly improve the compression time.
+
+In the current study, our objective is to reduce the
+computational time by parallelizing the COMRAD algorithm.
+As a first step in this direction we introduce data parallelism
+by dividing equally the whole genome into n batches and each
+batch is processed simultaneously by a processor in the cluster
+computer. Further the parallelization of substitution, clean up
+and encoding stages were also incorporated. As the inter
+processor communication is meagre, the proposed algorithm
+can be put into embarrassingly parallel algorithm. The
+experimental model involves a MPI (Message Passing
+Interface) Communication world with 12 processors. 
+shows the flow chart of proposed compression algorithm.
+Parallelism steps involved in the replacement of k-mers by nonterminals,
+clean up and Huffman encoding of each batches are
+carried out with Message Passing Interface (MPI) standard.
+This helps to turn out results more rapidly. The phases
+involved during iteration include
+
+k-mer Pattern:
+In the proposed framework, initially the large genomes files
+are split into batches and allocate each batch of files to each
+processor. The redundant features of genomes are captured
+using an extensive k-mer analysis. For space efficiency k-mers
+are stored in bit encoded form using hash table.
+
+Code book Generation:
+The different processors will capture the repeated k-mers are
+added to a common dictionary at the master computer. The
+dictionary is further updated in recurring with the
+combination of DNA symbols and non-terminals until there is
+no more frequent k-mers.  shows the example of the
+code book generation.
+
+Code book Pattern Generation:
+The algorithm use the feature of COMRAD for defining a set of
+patterns to detect such that a given substring will match to
+only one of the patterns or none. On detection of a specific
+pattern the code book will be updated.
+
+Substitution:
+The most frequency substrings which exceeds the threshold
+frequency limit are replaced with non-terminal symbol as
+unique identifiers.
+
+Clean Up:
+In the dictionary cleanup step, the algorithm replaces all nonterminals
+not occurring at least F times with their original
+substring by allotting the job to different processor which
+further helps to reduce the time effectively.
+
+Huffman Encoding:
+The final stage involves Huffman encoding of the final string
+and the codebook. The most frequent symbols are replaced
+using fewer binary bits and less frequent symbol with higher
+binary bits there by helping to have substantial reduction in
+size.
+
+Dataset Selection:
+The dataset is prepared based on a stratified sampling
+procedure, as the NCBI (National Center for Biotechnology
+Information) database support a classification of genome. The
+designed dataset includes input file size from 48 MB to 3 GB.
+The data of the speedup test comprises of the stratified sample
+of higher order Eukaryotic genomes of Mammals, Birds,
+Fishes and plants - Bos Taurus, Felis catus, Gorilla gorilla, Homo
+sapiens, Mus musculus, Gallus gallus, Taeniopygia guttata, Danio
+rerio, Oryzias latipes, Arabidopsis thaliana, Citrus sinensis, Fragaria
+vesca, Malus domestica, Oryza brachyantha, Solanum lycopersicum
+and Zea mays.
+
+Result &amp; Discussion
+The experiments are run over Rocks cluster (Rocks version 6.1
+(Mamba) with Cent OS 6.3-64 bit version) which is an
+implementation of “Beowulf” cluster, running Sun Grid
+scheduler for job submissions. Each node is a dual six-core
+Intel®XeonE5645 series 2.40GHz rack server with 64GB RAM.
+The performance of Genome Compression using parallel
+computing tool is analyzed based on the Compression run
+time (Sec), Compression in bits per base (bpb) and Speedup
+ratio (S) [,
+]. Compression in bits per base and Speedup ratio
+is defined as 
+
+
+
+
+
+Figure 3 shows the compression time improvement and
+speedup ratio for Homospaiens (Mammals), Malus-domestica
+(Plants), Gallus gallus(Bird) and Danio rerio (Fishes) in
+developed algorithm. Experiment is repeated after splitting the
+whole genome equally between different processors on the
+cluster from n=2 to 12. As the number of processors is
+increased, the elapsed wall time is reduced. The sequential
+COMRAD require 8 hours, 91 minutes , 86 minutes and 41
+minutes to effectively compress the homospaiens, danio rerio,
+gallus gallus and malus domestica genome but the implemented
+developed algorithm could effectively compress it in just 3
+hours, 30 minutes, 29 minutes and 15 minutes.
+
+The proposed method is competitive in terms of compression
+time to the sequential compression COMRAD algorithm. We
+observe that an average compression run time of three times
+better than sequential COMRAD. We further extended the
+experiemental analysis by appending more dataset together.
+While adding more dataset, redundancy with in the dataset is
+increased and the developed algorithm was able to compress
+multliple files relatively faster than COMRAD while
+maintaining the same compression. Among the list of land
+plants Arabidopsis thaliana, Fragaria vesca, Oryza brachyantha
+have relatively less repeat patterns with the index of
+repetitiveness 0.14, 0.03, 0.05 and 0.06 as depicted in 
+
+(see supplementary material) []. Hence individually the
+sequences are hard to compress. The individual genome
+reported a compression of 2.13 bpb, 1.99 bpb, 2.02 bpb
+and1.92bpb respectively using COMRAD. But when all the
+plants genomes in the sample dataset are pooled up the overall
+compression improved to 1.34 bpb both in COMRAD and
+developed algorithm using parallel computing plat form. But
+the elaspsed time for COMRAD is 6 hours for compressing the
+plant genomes of size 5.2 GB. While COMRAD using parallel
+computing technique took just 2 hours for compressing the
+plant genomes, which shows the advantage of newely
+developed algorithm. Yet another advance of pooling the
+dataset is that dictionary size almost remain same at 155 MB,
+even though input dataset size varied for each experiment. So
+even if we further append the dataset, the average 
+compression achieved will be maintained with the advantage
+of compression time.
+
+Conclusion
+We have shown a parallel computing approach for
+compressing large genome dataset. The results of our
+experimental studies demonstrated that parallel computing
+algorithms are worthy alternatives which can pave a new
+direction for effective genome data storage and management
+system. We have scaled the COMRAD algorithm tobe
+adaptable in a high performance computing multicore
+processors. There is approximately 65% of compression time
+improvement with the parallelization of substitution stage,
+clean up and Huffman encoding stage.
+
+Supplementary material
+Data 1
+We thank the Campus Computing facility, University of Kerala
+especially Mr Deelip Kumar, Systems Manager for all the
+technical support.
+
+Funding: This work was funded by State Inter University
+Centre of Excellence in Bioinformatics, University of Kerala,
+Thiruvananthapuram, India.
+
+Citation:Biji et al, Bioinformation 11(5): 267-271 (2015)
+
+ Flow Chart of Compression of Large Genome Dataset
+using COMRAD on Parallel Computing Platform
+
+An example showing the code book generation for an
+input string with string length, L=2 and threshold frequency
+F=2
+
+Compression time and speedups for Compression of
+Large Genomic Datasets using COMRAD on Parallel
+Computing Platform for selected sample data set with size in
+MB as a function of number of processors.
+

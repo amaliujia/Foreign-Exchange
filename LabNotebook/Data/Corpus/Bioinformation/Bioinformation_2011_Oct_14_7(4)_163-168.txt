@@ -1,0 +1,294 @@
+Background:
+Proteins, the work horse molecules of the cellular machinery,
+are accountable for a broad range of cellular functions. Proteins
+mostly function through their interactions with other proteins.
+Such protein-protein interactions are responsible for mediating
+vast majority of protein chores in living cells. A group of
+proteins and their interactions form a protein-protein
+interaction network (PPIN). In a PPIN, a node denotes a protein
+and a connecting edge represents a protein-protein interaction.
+Total number of interactions of a protein is its connectivity.
+Most proteins interact with very few other proteins while a
+relatively small number of proteins have a very large number of
+interacting partners []. Proteins with large number of
+interactions are called hubs and they literally ‘hold the protein
+interaction networks together’ []. Hub proteins are known to
+have high density of binding sites [], which enable multiple
+bindings. Due to their interactions with large number of other
+proteins and thus possible involvements in multiple pathways,
+study of hub proteins assumes critical importance [].
+
+Previous studies have shown the relationship between the
+degree of connectivity of proteins in PPIN and their cellular
+essentiality properties []. When a hub node is deleted, it is
+more likely to be lethal to the organism than the deletion of
+those nodes which are connected with less number of proteins
+in a protein-protein interaction network []. Hub
+characterization is highly crucial for understanding cellular
+functions as well as identifying novel drug targets. Functions of
+many proteins are unknown and hence the identification of the
+physical interactions of these proteins could give an indication
+of their functions. Several well-known and extensively studied
+proteins including p53, p27, p21 and many others which are
+implicated in diseases are hubs []. Knowledge of the pathways,
+topologies and dynamics, of hub proteins should provide useful
+information for predicting side effects in drug discovery [].
+
+There have been attempts to identify hub proteins in proteinprotein
+interaction networks using various data such as gene
+proximity [,
+], gene fusion events 
+[,
+], gene co-expression
+data [,
+], phylogenetic profiling 
+[], interacting protein
+domains [,
+] and gene ontology 
+[]. Most of such
+computational predictions have been centered on the
+identification of pairwise protein-protein interactions with
+varying degrees of accuracies. The lack of availability of the
+above data for the entire protein interaction network of an
+organism is a limiting factor in applying the methods generally.
+For instance, the hub classifier proposed by Michel Hsing et al.
+using gene ontology terms gives 84.96% accuracy, 34.41%
+sensitivity and 90.27% specificity []. However, in order to
+predict whether a target protein is hub or not, this method
+requires gene ontology annotation of the target protein. The
+authors observe that “the performance of hub classifier will
+primarily rely on the number of gene ontology annotations
+available for each species”[]. They relate the low sensitivity, to
+the lack of gene ontology annotations for certain proteins in
+their training sets. Generality of existing methods which use
+structural information are also severely limited as PDB
+structures and functional classifications are not available for
+many of the proteins.
+
+To overcome the limitations of availability of structural and
+ontology data which are slow in emergence, we have chosen to
+investigate whether hubness can be predicted from amino acid
+sequence information alone. Studying structural and functional
+phenomena from sequence information is not a new approach
+and has been widely used with the advent of bioinformatics
+approaches in genomics and proteomics. The author's research
+group itself has been applying this approach to various
+problems from gene finding [] to protein subcellular
+localization [] to protein allostery prediction 
+[]. The
+approach is of course a reductionist approach. Though the
+underlying hypothesis, that sequence information can predict
+structural and functional behaviors, is not yet completely
+accepted, the approach remains as a viable alternative to the
+data dependent methods at this point of time. We report here
+the extraction of twenty features based on amino acid sequence
+information which we have used in designing a hub prediction
+tool based on soft computing.
+
+Methodology:
+Dataset:
+Two organisms, E. coli and H. sapiens, which are well annotated
+and have modest interaction information, were selected for this
+study. IntAct [] database was used to extract the protein
+interaction data of the model organisms. These data were then
+curated to obtain the Uniprot IDs and corresponding
+connectivities of all the proteins. This non-redundant dataset
+included 10,578 H. sapiens PPIs and 2,047 E. coli PPIs. Using the
+uniprot IDs corresponding sequences of varying lengths were
+compiled from Uniprot [].
+
+Determination of Connectivity Threshold for hubs:
+The degree of connectivity of proteins in our PPI dataset ranged
+from 1 to 450. In order to classify a protein as hub, a
+connectivity threshold had to be determined. Review of
+literature revealed that, connectivity thresholds of hub proteins
+are species specific []. Nevertheless, there is no consensus on
+the exact connectivity threshold values for these proteins [].
+There are studies, which have taken the thresholds based on the
+accumulative protein interaction distribution plots []. Some
+other studies base it on fold change []. We have adopted the
+latter approach. The connectivity fold change was computed by
+taking the ratio of the connectivity value and average
+connectivity. In the case of E. coli, a node with fold change
+greater than or equal to 2 was considered as hub (cutoff, Pvalue
+&lt; 0.03 using distribution of standard normalized fold
+change values in E. coli). In the case of H. sapiens, fold change
+greater than or equal to 10 (with P-value &lt; 0.001) was the
+criterion applied for considering a protein as hub. Summary of
+protein interaction data of E. coli and H. sapiens used in this
+study is depicted in  (see supplementary material).
+The datasets of both organisms were divided into two sets, train
+and test, for both hub and non-hub proteins. Train datasets
+were used to develop a model to predict hubness of proteins
+and test datasets were used to evaluate the reliability of the
+model. To ensure stringent sieving of non-hubs, we considered
+only those proteins which have connectivity in a range between
+1 and 5 for non-hub test and train sets in H. sapiens data. To
+minimize data variances, the datasets were equally divided into
+training and testing sets.  (see supplementary material)
+shows the train and test sets statistics.
+
+Amino Acid Properties:
+We examined a set of 28 diverse amino acid properties
+(physicochemical, thermodynamic and conformational) and
+these properties were extracted from most commonly used
+amino acid index databases, AAindex 
+[] and Protscale 
+[].
+These properties are shown in  (see supplementary
+material). They were normalized between 0 and 1 using the
+formulae, P (i) norm = (P (i) – P 
+min) / (P max 
+– P min). Where, P (i), P
+(i) norm are the original and normalized values of amino acid i for
+a particular property, and Pmin and Pmax are, respectively, the
+minimum and maximum values. For each protein, the average
+amino acid property was computed as the sum of amino acid
+indices for all residues divided by total number of residues for
+each property. For a short amino acid sequence
+“MAEKSLAMDG” having a length of 10 amino acids, we give
+the computed numerical values for chosen properties in 
+(see supplementary material).
+
+Dimensionality reduction of feature vector:
+Feasibility of the chosen 28 amino acid features for the
+classification model was analyzed by designing a system of
+linear equations for both organisms. We derived a matrix of
+28×28 feature vector elements by randomly choosing 28 amino
+acid sequences from hub dataset of both organisms. RH is a
+matrix formed with each row representing the feature vector of
+a hub sequence in the train data. The entry rij represents the jth
+feature vector of the ith randomly selected sequence. Consider a
+coefficient matrix CH to be determined 
+such that, RH .CH = I,
+where, CH has dimensions 28×28, and I is a unity vector with
+dimension 28×1. We computed CH 
+as RH-1. I. We then computed
+the average coefficient vector, CH , for hubs by taking the
+average of the modulus of each column of CH. For
+dimensionality reduction, we dropped the least contributing
+features as dictated by the coefficients in CH . The dropped
+coefficients are conveniently numbered 21 to 28 in Table 3. Our
+classification model uses the reduced feature vectors of 20
+elements, identified as mentioned above, since these are most
+contributing to classification vectors of hubness.
+
+Hub classification model:
+We developed a classification model based on linear
+discriminant analysis in combination with normal Bayesian
+approach []. The twenty selected amino acid properties are
+the backbone of the classification model. Each protein sequence
+was encoded using all these features and we compiled a feature
+matrix for entire dataset of both organisms. We took 100 train
+data for both hub and non-hub and produced a matrix of
+100×20 feature vectors, RH 
+and RN, for hub and non-hub
+datasets respectively. Then the mean vectors µ1 and 
+µ2 of
+each train dataset were calculated. The global mean, 
+µG, was
+computed as the average of mean vectors 
+µ1 and µ2 . Then the
+mean corrected data for RH and RN were computed by
+subtracting µG from each row of 
+RH and RN. The covariance matrix
+for each mean corrected data of hub dataset was calculated as,
+CH = RH 
+T × RH T / 
+NH. Similarly, for non-hub dataset, covariance
+matrix for each mean corrected data was calculated as, CN =
+RN T × RN 
+T / NN. In the above equations, 
+NH and NN are the total
+number of training data of hub and non-hub, which are 100 for
+each. Further, we generated the pooled covariance matrix,
+where element Pij, is obtained as, 
+Pij = (NH 
+/ (NH + NN) × CHij ) 
++ (NN / (NH +
+NN) × CNij )
+
+We applied the linear discriminant analysis formula for hubs as,
+fh = µ1P­1xT 
+− 1/2 µ1P­1µ1T+ 
+ln(Pi) where, µ1 is the mean of hub
+train data, P is the pooled covariance , xT is the transpose of the
+feature vector of the target data x and Pi is the prior probability
+which is imputed as 50% for both groups. Similarly for non-hub
+train data, the formula is, fn = µ2 
+P­1 xT − 1/2 
+µ2 C­1 µ2T + ln(Pi)
+where, µ2 is the mean of non-hub train data. In these formulae,
+the second terms, µ1P­1µ1T 
+and µ2P­1µ2T are actually Mahalanobis
+distances, which is the distance to measure dissimilarity
+between several groups []. 
+If fh &gt; fn, the target data x will be
+assigned to hub category, otherwise to non-hub category.
+
+Self-consistency test, jackknife test and independent data test
+were performed to evaluate the classification model. Same
+datasets are used for training and testing in self-consistency
+test. Hence the classification accuracy will be high. If the selfconsistency
+of a method is good, it can be considered as a good
+classification method. In jackknife test, each protein in the
+training set is pulled out to make classification using the rest of
+the training set. Jackknife is considered as more objective and
+exhaustive than other tests. In independent test, different sets of
+training and testing datasets, which were randomly picked,
+were used for hub classification []. In independent test, we
+partitioned training and testing sets equally to minimize data
+discrepancies. We have used different measures to assess the
+accuracy of classifying hub and non-hub proteins. The formulae
+used are, Sensitivity = True Positive / (True Positive + False
+Negative); Specificity = True Negative/ (True Negative + False
+Positive); Accuracy = (True Positive +True Negative)/ (True
+Positive+ False Positive + True Negative + False Negative)
+where, True Positives are hubs identified as hubs, False
+Positives are non-hubs identified as hubs, True Negatives are
+non-hubs identified as non-hubs, and False Negatives are hubs
+identified as non-hubs, respectively.
+
+Discussion:
+Our results show that meaningful amino acid features can
+produce signature features for differentiating hubs from nonhubs.
+For different performance tests including self-consistency,
+jackknife and independent data tests, our hub classifier gave
+comparable accuracies and the results are shown in  (see
+supplementary material). Part (a) of the table reports the results
+on the test data summarized in  (see supplementary
+material). Part (b) of the table reports the results on a broader
+interaction data from APID [], which consists of 12,053
+sequences for H. sapiens and 2,997 sequences for E. coli. For the
+original test data which is depicted in  (see
+supplementary material), the best accuracies, sensitivities and
+specificities in different performance tests are close to 90%. For
+the broader APID dataset the best results in different
+performance tests are close to 87%, which is yet impressive.
+Since the two different datasets gave prediction results on a par,
+we anticipate that the tool would be useful to provide strong
+hypothesis on hubness of proteins. The beta version of our tool
+is available online at http://hubcentre.in/.
+
+The biological significance of the selected amino acid properties
+in this work for hubness identification are yet to be explained,
+even though there are some results which match with our
+extracted feature list []. It would be interesting to investigate
+the significance of these properties in the formation of PPINs.
+Recent works have indicated basic flaw in the concept of high
+connectivity hubs in PPINs []. Chung-Jung Tsai suggests that
+hubs could be multi conformation proteins and each
+conformation is to be considered as a separate molecule [].
+Lack of comprehensive structure data prevents us from testing
+this hypothesis at this point of time.
+
+Supplementary material
+Data 1
+Funding from Department of Information Technology, Govt. of
+India (DIT/R&amp;D/B10/15(23)2008, dated 07/09/2010), is
+acknowledged. Athmaja S. acknowledges the internship
+support from State Inter-University Centre for Bioinformatics,
+University of Kerala.
+
+Citation:Latha et al, Bioinformation 7(4): 163-168 (2011)
+

@@ -1,0 +1,67 @@
+Background
+Many genes that are responsible for Mendelian diseases have been successfully mapped during recent decades. In recent years, the number of polymorphisms considered in
+genetic association study has increased dramatically as the high-throughput genotyping technologies develop rapidly. This increase offers a unique chance to identify genes for
+complex traits through an unbiased search at a genomewide level []. Recent studies have revealed more than 50
+novel susceptible loci for many complex diseases [], including obesity, age-related macular degeneration and
+heart disease. However, genetic polymorphisms underlying most common disease are epistatic: these variations interact with each other and interact with environment
+factors in a complex way. Detecting and characterizing these interactions is crucial for our understanding of these common and complex diseases. Several approaches to
+detect epitasis have been developed (e.g. MDR [], MPVA 
+[], BGTA []). These approaches all showed promise on
+small data sets, but they are quickly overwhelmed by the genome-scale data. A Monte Carlo simulation based approach, called BEAM (Bayesian Epitasis Association
+Mapping), which was recently introduced by Zhang and Liu (2007), can infer possible epistatic interactions among a large number of polymorphisms. In this paper, we
+present PBEAM (Parallel BEAM), which is an improved and parallelized version of BEAM, to facilitate the genome-wide epistasis mapping.
+
+Methodology
+Genome-wide scale epistatic interaction inference
+BEAM [] proposed a Bayesian partition model to describe the disease-associated markers and their interactions. For a
+population-based association study, all the markers across the whole genome are partitioned into three groups: group 0 contains markers unrelated to the disease, group 1
+contains markers contributing independently to the disease risk and group 2 contains markers that jointly affecting the disease risk. Thus, the association study problem is
+transformed into inferring the composition of disease sets, that is, which markers belongs to group 1 and group 2. Given the genotype in the case and control populations, the
+likelihood of a possible partition I (the assignment of each marker to group 0, 1 and 2) can be theoretically calculated. With the likelihood function, the posterior probability that
+each marker set is associated with the disease can be estimated with Markov Chain Monte Carlo (MCMC) simulation.
+
+The goal of the MCMC procedure is to draw the partition I from the distribution conditioned on observed case and control data. Partition I was initialized according to a
+simple theoretical prior. Metropolis-Hastings (MH) algorithm was then used to update the partition I. The authors used two types of update proposals: (1) randomly
+switch a marker's group membership (e.g. from 0 to 1 or from 1 to 2); (2) randomly exchange two markers between different groups. As a standard step in MH algorithm, the
+proposed update is accepted according to the likelihood ratio. BEAM algorithm also takes some annealing-like techniques to improve the sampling performance. The
+many samples of I drawn by MCMC can finally serve as Bayesian-style estimation or the potential ’hits‘ (the most probable partitions). The likelihood-based simulation
+avoids the computationally infeasible enumeration of all the possible combinations of makers, but is still computationally intensive. The execution time of drawing
+millions of samples from a MCMC chain, which is necessary for a stable estimation, has hampered some of the further studies, like permutation analysis.
+
+Parallelization of the Bayesian algorithm
+To reduce the execution time of BEAM, we developed a parallel version, called PBEAM. The design of PBEAM takes the advantage that samples can be drew from several
+Markov chains simulated simultaneously on different computers. We analyzed the source code of BEAM and adapted the algorithm framework and data structure of
+BEAM to the distributed memory parallelism. In the PBEAM, the jobs of Monte Carlo simulations are distributed to different processes using MPI, which can be executed on various heterogeneous 
+platforms.
+
+We have optimized and parallelized the PBEAM program with master/slave architecture. The Master process schedules and distributes blocks of chains to the slave
+process, which actually perform the tasks (). After sampling, the master collects all the samples from slaves
+and adaptively schedules the calculation of B-statistics [] on all the combination of possible disease-associated
+markers. Final reports are based on the results across all process.
+
+Utility
+There is a wide spectrum of epistatic interaction models for disease-associated markers. We chose three common twoloci models (additive, multiplicative and multiplicative
+with threshold []) and simulated three data sets (1000 loci, 400 cases and 400 controls) for each model. Each data set
+was performed on 1 (BEAM) and multiple (PBEAM) processors of an AMD 2GHz Opteron cluster. The execution time of 10 independent repetitions for each
+number of CPUs are averaged for comparison. This experiment design reflects two concerns: 1) the speedup performance of PBEAM; 2) the results consistence of
+BEAM and PBEAM, considering result variance is intrinsic for stochastic sampling algorithms.
+
+The parallel program PBEAM presents an almost perfect speedup. The communication cost between processes and the initial tries of each Markov chain lead to only a slight
+performance loss (). The result variance of PBEAM and BEAM are in comparable range. This performance improvement is crucial for large dataset of 
+the state-of-theart genome wide association studies. A typical dataset[] of these researches consists of ˜4000 individuals 
+(e.g. 2000 cases and 2000 controls) and each individual is genotyped at ˜ 500K markers. For a dataset of this size, BEAM took 27.5 days to draw 109 samples from one 
+Markov chain. With 16 processors, PBEAM could finish the inference procedure within 2 days.
+
+Caveat and future development
+The detailed information about the usage of PBEAM source code and executables could be found in the readme and website. Currently, PBEAM chains treat the MCMC
+local mode issues independently. Future development could include determining the burn-in time and merging the samples collectively between chains.
+
+The authors would like to thank Wanwan Tang and Jin Gu for preparing simulation data and providing the helpful comments on PBEAM code, respectively. This work was
+supported by National Science Foundation of China (60775002 and 60572086).
+
+Citation:Peng et al. Bioinformation 3(8): 349-351 (2009)
+
+Parallelization scheme of PBEAM
+
+Average execution time for 106 iterations on dat sets of 1000 loci, 400 cases and 400 controls
+

@@ -1,0 +1,37 @@
+1 INTRODUCTION
+Since the extensive utilization of RNA sequencing for expression profiling (RNA-Seq, ), numerous tools have been developed, as part of the R/Bioconductor () project, to load RNA-Seq data in R. The first: ‘ShortRead’ () parses manufacturer-specific formats. It gave way to the ‘Rsamtools’ package, as the ‘SAM/BAM’ format () became a de facto standard for reporting next-generation sequencing (NGS) alignment data. In parallel, analysis packages were adapted (‘edgeR’, ) or newly developed (‘DESeq’, ) to accommodate for NGS specificities. Recently, the ‘Bioconductor’ Core Team released several packages to connect these parts of the process: e.g. GenomicRanges, GenomicFeatures; however, combining them appropriately requires a good understanding of their functionalities, and depending on the data, different combinations of these packages have to be used, implying a long learning curve for RNA-Seq neophytes. In parallel to these aspects, the sequencers’ yield increase resulted in the generalization of protocols that allow several samples to be run in a single lane, a process called ‘multiplexing’ (). De-multiplexing the obtained data is a processing step that no R package currently addresses. Here, we describe ‘easyRNASeq’, an R package that eases RNA-Seq processing by combining the necessary packages in a single wrapper that ensures the pertinence of the provided data and information and helps users circumnavigate RNA-Seq processing pitfalls. In addition, it introduces functionalities to handle data produced by recent NGS protocols.
+
+2 easyRNASeq
+The easyRNASeq package combines the following steps: reading in sequenced reads, retrieving annotations, summarizing read counts by the feature of interest, e.g. exon, gene and finally reporting results, normalized or not, in formats suitable for downstream analyses. This is achieved by using and extending many Bioconductor packages functionalities () and provided to end users as a single function that wraps the entire process.
+Packages wrapped by easyRNASeq. At every step of the process, easyRNASeq encapsulates and extends lower level package functionalities, finally merging them into a single high-level function.: easyRNASeq
+
+
+
+2.1 Reading data
+Depending on the alignment format, manufacturer-specific (e.g. Illumina export) or the de facto BAM (Binary Alignment/Map) standard, the data are parsed by either ShortRead or Rsamtools, respectively. The coverage is extracted per base pair and divided by the read length—i.e. reads’ coverage proportion are reported per base pair—and stored in an ‘IRanges running length encoding’ (RLE) vector. This approach yields identical results to the common counting reads per se approach, when applied to non-spliced regions as shown in the ‘RNASeqTutorial’ vignette. However, it more accurately assigns reads spanning exon–exon junctions (EEJ), i.e. unlike common methods that arbitrarily select an EEJ side, reads coverage proportion is, here, distributed across the EEJ.
+
+2.2 Loading annotations
+Genic annotations are retrieved using ‘biomaRt’ () or read from ‘General Feature Format 3’ (GFF3) or ‘Gene Transfer Format’ (GTF) files using ‘genomeIntervals’. The annotation set is stored in a ‘RangedData’ object (IRanges). To reduce loading times, ‘RangedData’ or ‘GRangesList’ objects from the R environment or RData (rda) files can be used, provided they describe exons, features, transcripts or genes (a ‘feature’ is the representation of a genomic locus, not necessarily genic, e.g. an enhancer).
+
+2.3 Counting reads
+The reads’ coverage is summarized according to the chosen features: exons, features, transcripts or gene models. Here, a gene model is defined as the set of non-overlapping loci (i.e. synthetic exons) that represent all the possible exons and untranslated regions of a gene. easyRNASeq is not limited to genic summarization only, e.g. promoter ‘features’ can be used to look for eRNAs ().
+
+2.4 Output
+Four formats are offered: count table (the default), ‘CountDataSet’ (DESeq object), ‘DGEList’ (edgeR object) and ‘RNAseq’ (easyRNASeq object). The count table reports raw counts or ‘reads per kb of feature per million reads’ (RPKM, ), if preferred. For DESeq and edgeR, an object of their respective class is returned. If desired, these would have been subjected to their respective normalization, in which case quality assessment (QA) plots are drawn to evaluate it. Finally, RNAseq objects allow different count summarizations to be performed (e.g. by exon, by gene) on the same data without re-processing, a useful feature when first assessing a dataset.
+
+2.5 Performance
+Fetching annotation using ‘biomaRt’ takes about 10 min from an average network. Generating the gene models takes up to 15 min for large genomes—e.g. Homo sapiens. If these annotations are readily available, processing a 36-bp single-end ‘Illumina’ lane with 100 M reads—a BAM file of 3.2 GB—requires 3 GB RAM and 3 min on an Intel 2.4 GHz CPU.
+
+3 DE-MULTIPLEXING
+The current data yield allows several samples to be sequenced as a single library, where small nucleotide ‘barcodes’ (4–6 bp) uniquely identify the samples. Resulting sequences must be ‘de-multiplexed’, a functionality introduced by easyRNASeq that splits the result file into sample-specific files. To account for sequencing errors, flexibility in identifying the barcode is necessary and achieved using thresholds based on the Hamming distance (). QA plots help validating the chosen thresholds as well as assessing the multiplexing efficacy.
+
+4 CONCLUSIONS
+This note presents the Bioconductor easyRNASeq package. It introduces a method that effectively hides the complex interplay of numerous Bioconductor packages to the end user. Its output can be formatted for further processing by analysis packages such as DESeq or edgeR. Finally, it contains additional features such as de-multiplexing or support for gapped alignments. Future developments will integrate recent trends such as strand-specific sequencing or differential exon usage detection methods.
+
+ACKNOWLEDGEMENTS
+Many thanks to P. Aboyoun, S. Bonn, W. Huber and M. Morgan for suggestions and feedback on the package implementation. Thanks to J. Gagneur, C. Girardot, L.-A. Schmitt and Wu Wei for comments on the article. This note was technically supported by EMBL’s IT Service Unit and EMBL’s Genomics Core Facility.
+
+Funding: European Molecular Biology Laboratory, an ERASysBio grant ModHeart awarded to EEF and a NIH grant (NIH: R01 GM068717) to LMS.
+
+Conflict of Interest: none declared.
+

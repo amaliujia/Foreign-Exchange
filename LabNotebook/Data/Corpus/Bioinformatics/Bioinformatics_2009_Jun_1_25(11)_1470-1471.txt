@@ -1,0 +1,44 @@
+1 INTRODUCTION
+Since its first introduction in 1995, KEGG PATHWAY has been widely used as a reference knowledge base for understanding biological pathways and functions of cellular processes. Over the last years, KEGG PATHWAY has been significantly expanded with the addition of new pathways related to signal transduction, cellular process and disease (Kaneshia et al., ), enhancing its popularity built upon featuring traditional metabolic pathways.
+
+Pathways are stored and presented as graphs on the KEGG server side, where nodes are mainly molecules (protein, compound, etc.) and edges represent relation types between the nodes, e.g. activation or phosphorylation. The graph nature of pathways raised our interest to investigate them with powerful tools implemented in R and Bioconductor (Gentleman et al., ), e.g. graph, RBGL and Rgraphviz (Carey et al., ). While it is barely possible to query the graph characteristics by manual parsing, a native and straightforward client-side tool is currently missing. Packages like KEGG.db and keggorth use information from KEGG, however none of them makes use of the graph information, precluding the option to study pathways from the graph theory perspective (see  for more details).
+
+To address this problem, we developed the open source software package KEGGgraph, an interface between KEGG pathways and graph-theoretical models as well as a collection of tools to analyze, dissect and visualize these graphs.
+
+2 SOFTWARE FEATURES
+KEGGgraph offers the following functionalities:
+Parsing: the package parses the regularly updated KGML (KEGG XML) files into graph models maintaining pathway attributes. It should be noted that one ‘node’ in KEGG pathway does not necessarily map to merely one gene product, for example, the node ERK in the human TGF-β signaling pathway contains two homologs, MAPK1 and MAPK3. Therefore, among several parsing options, users can decide whether to expand these nodes topologically. Beyond facilitating the interpretation of pathways in a gene-oriented manner, the approach also assigns unique identifiers to nodes, enabling merging graphs from different pathways.
+
+Graph operations: two common operations on graphs are subset and merge (union). A subgraph of selected nodes and the edges in between are returned when subsetting, while merging produces a new graph that contains nodes and edges of individual ones. Both are implemented in KEGGgraph.
+
+Visualization: KEGGgraph provides functions to visualize KEGG graphs with custom style. Nevertheless, users are not restricted by them, alternatively they are free to render the graph with other tools like the ones in Rgraphviz.
+
+
+Besides the functionalities described above, KEGGgraph also provides tools for remote KGML file retrieval, graph feature study and other related tasks. We refer interested readers to the vignettes released along the package.
+
+3 EXAMPLE
+Software usage is demonstrated by exploring the graph char-acteristics of pancreatic cancer pathway (http://www.genome.jp/dbget-bin/show_pathway?hsa05212), as KEGG provides pathways also of human diseases.
+
+The human pancreatic cancer pathway is linked to eight other pathways as indicated in the KEGG pathway map. To investigate the global network, we merge them into one graph, consisting of 714 nodes and 3196 edges (see Supplementary Material for the complete source code).
+
+Our aim is to computationally identify the most important nodes. To this end we turn to relative betweenness centrality, one of the measures reflecting the importance of a node in a graph relative to other nodes (Aittokallio and Schwikowski, ). For a graph G≔(V, E) with n vertices, the relative betweenness centrality C′B(v) is defined by:
+
+where σst is the number of shortest paths from s to t, and σst(v) is the number of shortest paths from s to t that pass through a vertex v (Freeman, ).
+
+With the function implemented in RBGL package (Brandes, ), we identified the most important nodes () judged by relative betweenness centrality that are TP53 (tumor protein p53), GRB2 (growth factor receptor-bound protein 2) and EGFR (epidermal growth factor receptor). While the oncological roles of TP53 and EGFR are long established in pancreatic carcinoma (Garces et al., ), it has only very recently been suggested that the binding of GRB2 to TβR-II is essential for mammary tumor growth and metastasis stimulated by TGF-β (Galliher-Beckley and Schiemann, ). No evidence is known to us proving the direct relation between GRB2 and pancreatic cancer. Considering the importance of GRB2 in the network, we suggest to study its role also in this cancer type.
+Nodes with the highest relative betweenness centrality (in orange) and their interacting partners (blue) in the pancreatic cancer pathway. Relative betweenness centrality estimates the relative importance or role in global network organization.
+
+
+
+
+4 DISCUSSION
+Prior to the release of KEGGgraph, several R/Bioconductor packages have been introduced and proved their usefulness in understanding biological pathways with KEGG. However, KEGGgraph is the first package able to parse any KEGG pathways from KGML files into graphs. Existing tools either neglect the graph topology (KEGG.db), or do not parse pathway networks (keggorth), or are specialized for certain pathways (cMAP and pathRender).
+
+Tools have also been implemented on other platforms to use the knowledge of KEGG, e.g. MetaRoute (Blum and Kohlbacher, ), Gaggle (Shannon et al., ) and Cytoscape (Shannon et al., ). To make it unique and complementary to these tools, KEGGgraph allows native statistical and computational analysis of any KEGG pathway based on graph theory in R. Thanks to the variety of Bioconductor packages, KEGGgraph can be built into analysis pipelines targeting versatile biological questions. No active Internet connection is required once the KGML files have been downloaded, reducing the waiting time and network overhead unavoidable in web-service-based approaches. Using tools like KGML-ED (Klukas and Schreiber, ), with KEGGgraph it is even possible to explore newly created or edited pathways via KGML files.
+
+Funding: National Genome Research Network (grant number 01GS0864) of the German Federal Ministry of Education and Research (BMBF); International PhD program of the DKFZ (to J.D.Z.).
+
+Conflict of Interest: none declared.
+
+Supplementary Material
+[Supplementary Data]

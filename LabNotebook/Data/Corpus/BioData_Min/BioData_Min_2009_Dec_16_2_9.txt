@@ -1,0 +1,310 @@
+Background
+DNA microarray technology is a revolutionary method enabling the measurement of expression levels of at least thousands of genes in a single experiment under diverse experimental conditions. This technology has found numerous applications in research and applied areas like biology, drug discovery, toxicological study and diseases diagnosis.
+
+DNA microarray data is typically represented by a matrix where each cell represents the gene expression level of a gene under a particular experimental condition. One important analysis task of microarray data concerns the simultaneous identification of groups of genes that show similar expression patterns across specific groups of experimental conditions (samples) []. Such an application can be addressed by a biclustering process whose aim is to discover coherent biclusters. That is, a bicluster is a subset of genes and conditions of the original expression matrix where the selected genes present a coherent behavior under all the experimental conditions contained in the bicluster.
+
+More generally, biclustering has also applications in other domains such as text mining [,], target marketing [,], markets search [], search in databases [,] and analyzing foreign exchange data [].
+
+Formally, let I = {1, 2, ..., n} denote the index set of n genes and J = {1, 2, ..., m} the index set of m conditions, a data matrix M(I, J) associated with I and J is a n*m matrix where the ith row, i ∈ I, represents the ith gene or attribute and the jth, j ∈ J, column represents the jth condition or individual and mij of the ith row and the jth column represents the value of the jth condition for the ith gene. A bicluster in a data matrix M(I, J) is a couple (I', J') such that I'⊆ I and J'⊆ J. The biclustering problem can be formulated as follows: Given a data matrix M, construct a bicluster Bopt associated with M such that:
+
+where f is an objective function measuring the quality, i.e., degree of coherence, of a group of biclusters and BC(M) is the set of all the possible groups of biclusters associated with M.
+
+Clearly, biclustering is a highly combinatorial problem with a search space of order of O(2|I|+|J|). In the general case, biclustering is known to be NP-hard []. Consequently, most of the algorithms used to discover biclusters are based on heuristics to explore partially the combinatorial search space. The existing algorithms for biclustering can roughly be classified into two large families: systematic search methods and stochastic search methods (also called metaheuristic methods). Representative examples of systematic search methods include, among others, greedy algorithms [,-], divide and conquer algorithms [,] and enumeration algorithms [-]. On the other hand, among the metaheuristic methods, we can mention neighbourhood-based algorithms like simulated annealing [], GRASP [], evolutionary and hybrid algorithms [-]. A recent review of various biclustering algorithms for biological data analysis is provided in [].
+
+Since the biclustering problem is a NP-hard problem and no single existing algorithm is completely satisfactory for solving the problem. It is useful to seek more effective algorithms for better solutions. In this paper, we introduce a new enumeration algorithm for biclustering of DNA microarray data, called BiMine. Our algorithm is based on three original features. First, BiMine relies on a new evaluation function called Average Spearman's rho (ASR) which is used to guide effectively the exploration of the search space. Second, BiMine uses a new tree structure, called Bicluster Enumeration Tree (BET), to represent conveniently the different biclusters discovered during the enumeration process. Third, to avoid the combinatorial explosion of the search tree, BiMine introduces a parametric rule that allows the enumeration process to cut tree branches that cannot lead to good biclusters.
+
+To assess the performance of the proposed BiMine algorithm, we show computational results obtained on both synthetic and real datasets and compare our results with those from four state-of-the-art biclustering algorithms. Moreover, to evaluate the biological relevance of our resulting biclusters, we carry out a practical validation with respect to a specific Gene Ontology (GO) annotation with the help of a popular web tool.
+
+Methods
+A New Evaluation Function of Biclustering
+Like any search algorithm, BiMine needs an evaluation function to assess the quality of a candidate bicluster. One possibility is to use the so-called Mean Squared Residue (MSR) function []. Indeed, since its introduction, MSR has largely been used by biclustering algorithms, see for instance [,,-,,]. However, MSR is known to be deficient to assess correctly the quality of certain types of biclusters [,,]. In a recent work, Teng and Chan [] proposed another function for bicluster evaluation called Average Correlation Value (ACV). However, the performance of ACV is known to be sensitive to errors [].
+
+In this paper, we propose a new evaluation function called Average Spearman's rho (ASR) based on Spearman's rank correlation. Let  and  be two vectors, the Spearman's rank correlation [] expresses the dependency between the vectors Xi and Xj (denoted by ρij) and is defined as follows:
+
+where  (resp. ) is the rank of  (resp. ).
+
+Let (I', J') be a bicluster in data matrix M(I, J), the ASR evaluation function is then defined by:
+
+where:
+
+ρi, j (i ≠ j) is the Spearman's rank correlation associated with the row indices i and j in the bicluster (I', J'). ρk, l (k ≠ l) is the Spearman's rank correlation associated with the column indices k and l in the bicluster (I', J').
+
+Proposition 1: Let (I', J') be a bicluster in a data matrix M(I, J). We have:
+
+Proof: Let us first show that:
+
+Indeed, we have  Spearman's rank correlations to calculate. According to [], a Spearman's rank correlation belongs to [-1..1], we have then:
+
+i.e.
+
+It is easy to show in the same way that:
+
+Hence:
+
+i.e.:
+
+With Spearman's rank correlation, a high (resp. low) value, close to 1 (resp. close to -1), indicates that the data is strongly (resp. weakly) correlated between two vectors []. As shown above, ASR also takes values from [-1..1]. A high (resp. low) ASR value, close to 1 (resp. close to -1), indicates that the genes/conditions of the bicluster are strongly (resp. weakly) correlated.
+
+Furthermore, in the next subsection, we want to assess the quality of the proposed ASR evaluation function in comparison with two popular functions MSR and ACV.
+
+Studies of the ASR Evaluation Function
+We compare the ASR evaluation function with Mean Squared Residue (MSR) []. As mentioned previously, MSR is probably the most popular evaluation function and largely used in the literature. As a second reference function, we use Average Correlation Value (ACV) which was proposed very recently in [].
+
+For the comparison, we apply the evaluation functions (without using any algorithms), i.e., ASR, MSR and ACV, on seven matrices (biclusters) denoted by M1 to M7 (Figure ). These matrices are employed in [,] and represent all typical biclusters. They are defined as follows. M1 is a constant bicluster, M2 has constant rows, M3 has constant columns, M4 is composed of coherent values (additive model), M5 represents coherent values (multiplicative model), M6 contains coherent values (multiplicative model, where the first row of M5 is multiplied by 10) and M7 represents a coherent evolution.
+
+Different typical Biclusters. Data matrix M1 represents a constant bicluster, M2 represents a constant rows bicluster, M3 represents a constant column bicluster, M4 represents coherent values (additive model), M5 represents coherent values (multiplicative model), M6 represents coherent values (multiplicative model, where the first row of M5 is multiplied by 10) and M7 represents a coherent evolution.
+
+The values of ASR versus MSR and ACV are illustrated by Table  where the values of MSR and ACV were taken from [].
+
+ASR versus MSR and ACV.
+
+Biclusters	M1	M2	M3	M4	M5	M6	M7	
+Evaluation Functions								
+MSR	0	0	0	0	0.62	2.425	131.87	
+	
+ACV	1	1	1	1	1	1	0.84	
+	
+ASR	1	1	1	1	1	1	0.99	
+Concerning MSR, a low (resp. high) value, close to 0 (resp. higher than a fixed threshold), indicates that the genes/conditions of the bicluster are strongly (resp. weakly) correlated.
+
+Concerning ACV, a high (resp. low) value, close to 1 (resp. close to 0), indicates that the genes/conditions of the bicluster are strongly (resp. weakly) correlated.
+
+According to Table , the ASR, ACV and MSR functions are perfect to assess the quality of biclusters M1, M2, M3 and M4. However, MSR is deficient on M6 and M7, confirming the claim that MSR may have trouble on certain types of biclusters [,,]. On the other hand, ASR and ACV are perfect to assess the quality of biclusters M5and M6 but ASR is slightly better than ACV when applied on M7.
+
+BiMine Algorithm
+We present now our biclustering algorithm called BiMine which uses ASR as its evaluation function and a new structure, called Bicluster Enumeration Tree (BET) to represent the different biclusters associated with a data matrix. We describe first the main procedure for building biclusters and then show an illustrative example to ease the understanding of the algorithm.
+
+Let M be a data matrix, by using our algorithm, we operate in three steps: During the first step, we preprocess the data matrix M. During the second step, we construct a BET associated with M. Finally, during the last step, we identify the best biclusters.
+
+Preprocessing
+In the clustering area, preprocessing is often used to eliminate insignificant attributes (genes). For the biclustering, the preprocessing step aims to remove irrelevant expression values of the data matrix M that do not contribute in obtaining pertinent results. A value mij of M is considered to be insignificant if we have:
+
+where avgi is the average over the non-missing values in the ith row, mij represents the intersection of row i with column j and δ is a fixed threshold. Equation 4 is applied for each value of M. See Tables  and  for an example.
+
+Data matrix M'.
+
+	C1	C2	C3	C4	C5	C6	
+I1	10	20	5	15	40	18	
+	
+I2	20	40	10	30	24	20	
+	
+I3	23	12	8	15	29	50	
+	
+I4	4	8	2	6	5	5	
+	
+I5	15	25	8	12	29	50	
+Data matrix M after preprocess.
+
+	C1	C2	C3	C4	C5	C6	
+I1	10	20	5	15	40	-	
+	
+I2	20	40	10	30	-	20	
+	
+I3	-	12	8	15	29	50	
+	
+I4	4	8	2	6	-	-	
+	
+I5	15	-	8	12	29	50	
+By considering only non-missing values, we minimize the loss of information in the data matrix. This way of preprocessing missing values should be contrasted with other techniques. For instance, in [], where the whole row is removed if the row contains at least one missing value or in [], where the whole column is removed if it contains at least 5% of missing values. Furthermore, BiMine operates directly on the raw data matrix without resorting to a discretization of data, reducing thus the risk of loss of information.
+
+Building Bicluster Enumeration Tree
+After the preprocessing step, we construct a Bicluster Enumeration Tree (BET) that represents every possible bicluster that can be made from M. Compared to other data structure, BET permits to represent the maximum number of significant biclusters and the links that exist between these biclusters. Since the number of possible biclusters (nodes of BET) increases exponentially, BiMine employs parametric rules to help the enumeration process to close (or cut) a tree node. Intuitively, a node is cut down if the quality of the bicluster represented by this node is below a fixed threshold.
+
+To describe formally our BiMine algorithm, let us define in the following the needed notations:
+
+ni: ith node order containing biclusters.
+
+ni.gi: genes of ni.
+
+ni.Cgi: conditions of ni.
+
+bic: bicluster.
+
+δ: threshold used in Equation 4.
+
+Threshold: quality threshold according to ASR.
+
+The BiMine algorithm (Figure  (Algorithm 1)) uses a first function to built an initial tree (Init_BET) which is recursively extended by a second function (BET-tree). Init_BET (Figure  (Function 1)) generates thus the different biclusters from data matrix M with one gene and significant conditions after using Equation 4. The root of BET is the empty bicluster (Line 1). The nodes at level one are the possible biclusters with one gene (Line 2-4). Notice that each node ni is composed of two part ni.gi (genes) and ni.Cgi (significant conditions after the filter preprocessing with Equation 4). From these initial biclusters, new and larger biclusters are recursively built while pruning as soon as possible any bicluster if its ASR value doesn't reach a fixed Threshold. This is the role of the next function BET-tree.
+
+BiMine algorithm.
+
+BET-tree (Figure  (Function 2)) creates recursively the BET (Line 13) and generates the set of the best biclusters. The ith child of a node is made up, on the one hand, of the union of the genes of the father node and the genes of the ith uncle node, starting from the right side of the father. On the other hand, it is made up of the intersection of the conditions of the father and those of the ith uncle starting from the right side of the father (Line 4-12). If the ASR value associated with the ith child is smaller than or equal to the given Threshold, then this child will be ignored (Line 6-11).
+
+Notice that this parametric pruning rule based on a quality threshold is fully justified in this context. Indeed, if the current bicluster is not good enough, then it is useless to keep it because expanding such a bicluster leads certainly to biclusters of worse quality. From this point of view, the pruning rule shares similar principles largely applied in optimization methods like Dynamic Programming. In addition, this pruning rule is essential in reducing the tree size and remains indispensable for handling large datasets.
+
+Finally, the union of the leaves of the constructed BET that are not included in other leaves and have at least two genes represents a good group of biclusters (Line 8-9).
+
+Proposition 2: Time complexity of BiMine is O(2nmlog(m)), where n is the number of rows and m is the number of columns of the data matrix.
+
+Proof: Time complexity of the first step of BiMine is O(nm). Indeed, this step is achieved via a scanning of the whole data matrix M that is of size nm.
+
+Time complexity of the second step of BiMine is O(2nmlog(m)). Actually, in the worst case, we have 2n nodes in the BET, representing the possible clusters of genes, each of which is associated with m conditions. On the other hand, since the conditions of the node are sorted, the construction of the intersection of two subsets of conditions of size m boils down to the search of m elements in a sorted array of size m. This can be done via a dichotomic search with a time complexity O(mlog(m)). Hence, the time complexity of the second step of BiMine is O(2nmlog(m)). Thus, The time complexity of BiMine is O(2nmlog(m)).
+
+Illustrative Example
+Let M' a data matrix (Table ). During the first step, we make a preprocessing of M' to obtain the data matrix M (Table ). The character "-" represents a removed insignificant value. During the second step, we construct a BET that represents every possible bicluster that can be made from M. Let us set δ = 0.1 and threshold of ASR = 1. The first level of the BET is made up of the nodes that represent the possible biclusters with one gene. Each node represents a row of data matrix M (Figure ).
+
+First level of BET.
+
+The second level of the BET is made up of nodes that are the union of genes and the intersection of conditions in the first level.
+
+In the Figure , we explain the construction of the children of node I1. Each dashed edges without cross represents a valid combination between two nodes (with ASR = 1). First, we perform the union of genes of node labeled I1 with those of I2 (first uncle), and the intersection of {c1, c2, c3, c4, c5} of I1 with those of {c1, c2, c3, c4, c6} of I2. The ASR of the obtained bicluster (I1, I2; c1, c2, c3, c4) is 1; hence we insert it as a first child of I1. After that, we process I1 with node labeled I3 (second uncle). We obtain the bicluster (I1, I3; c2, c3, c4, c5) with ASR lower than 1, hence, this child bicluster of I1 is discarded. We carry out the same process with node I4. We obtain the bicluster (I1, I4; c1, c2, c3, c4) with ASR equal to 1. We insert it as child of I1. Finally, with I5 we obtain the bicluster (I1, I5; c1, c3, c4, c5) with ASR lower than 1; hence we don't insert it.
+
+Children construction of the first node of the second level of BET.
+
+We repeat the same process for the node I2, I3, I4 and I5. This completes the second level of the BET (Figure ).
+
+Second level of BET.
+
+The third level of the BET is made up of nodes that are the union of genes and the intersection of conditions in the second level (Figure ).
+
+Last level of BET.
+
+At each level of the BET, we keep only nodes whose ASR is equal to 1. The union of the leaves of the constructed BET that are not included in other leaves is { (I1, I2, I4; c1, c2, c3, c4), (I3, I5; c3, c4, c5, c6) }. This constitutes the group of biclusters (Figure ).
+
+Extracted biclusters are presented with bold line.
+
+Results
+In this section, we assess the BiMine algorithm on both synthetic and real DNA microarray data. We have implemented our algorithm in Java programming language. We compare BiMine results with the results of four prominent biclustering algorithms used by the community, named as: CC [], OPSM [], ISA [] and Bimax []. For these reference algorithms, we have used Biclustering Analysis Toolbox (BicAT) which is a recent software platform for clustering-based data analysis that integrates all these biclustering algorithms [].
+
+Synthetic Data
+Data Sets
+According to [,,], we generated randomly two types of synthetic datasets of size (I, J) = (200, 20). Different types of biclusters are embedded like constant columns, additive, multiplicative and coherent evolution biclusters. The first (resp. second) dataset contains biclusters without (resp. with) overlapping. To obtain statistically stable results, for each type of datasets, we generated 10 problem instances by randomly inserting the biclusters at different places in the data matrix.
+
+Comparison Criteria
+Following [], we have used the following two ratios to evaluate our biclustering algorithm:
+
+with
+
+Scb = Portion size of biclusters correctly extracted
+
+Totsize = Total size of correct biclusters
+
+with
+
+Sncb = Portion size of biclusters not correctly extracted
+
+Totsize = Total size of corrected biclusters
+
+The ratio θShared (resp. θNotShared) expresses the percent of shared (resp. not shared) biclusters volume which corresponds (resp. not corresponds) with the real biclusters. In fact, when θShared (resp. θNotShared) is equal to 100% the algorithm extracts the corrected (resp. not corrected) biclusters. A perfect solution have θShared = 100% and θNotShared = 0%.
+
+Protocol for Experiments
+For our biclustering algorithm, we have fixed δ = 0.2 and threshold of ASR = 0.85. The parameter settings used for the four reference algorithms are the default values as used in []. We run all the algorithms and we select the 4 biclusters obtained by each algorithm which best fit the 4 real biclusters. We compute the θShared and the θNotShared for each algorithm to show the averaged percentage of volume of the resulting biclusters which is shared and not shared with the real biclusters. The objective of this experiment is to determine which algorithm is able to extract all implanted biclusters.
+
+Table  shows the best biclusters provided by each algorithm for the first dataset.
+
+BiMine results and comparison with other algorithms in synthetic data without overlapped biclusters.
+
+Algorithms	θShared	θNotShared	
+CC	18.21%	36.57%	
+	
+OPSM	46.39%	74.42%	
+	
+ISA	39.38%	5.31%	
+	
+Bimax	58.18%	21.39%	
+	
+BiMine	100%	33.03%	
+As we can see in Table , BiMine can extract 100% of implanted biclusters with an extra volume that represent 33,03% of implanted biclusters. In fact, to obtain a new bicluster, combining two biclusters provide an extra volume only on conditions but give exactly the correct number of genes. However, the best of the studied algorithms, i.e., Bimax, can extract only 58.18% of implanted biclusters with 21.39% of extra volume. CC uses the MSR function of the selected elements as the biclustering criterion. When the signal of the implanted biclusters is weak, the greedy nature of CC may delete some rows and columns of the implanted biclusters in the beginning of the algorithm and miss the deleted rows and columns in the output biclusters. ISA uses only up-regulated and down-regulated constant expression values in its biclustering algorithm. When coherent biclusters exist, ISA may miss some rows and columns of the implanted biclusters. OPSM seeks only up and down regulation expression values with coherent evolution. Its performance decreases when there exist scenarios constant biclusters. The discretization preprocessing used by Bimax cannot identify the elements in the coherent biclusters. Hence, the algorithm cannot find exactly the implanted biclusters.
+
+Table  illustrates the best biclusters provided by each algorithm for the second dataset.
+
+BiMine results and comparison with other algorithms in synthetic data with overlapped biclusters.
+
+Algorithms	θShared	θNotShared	
+CC	9.21%	47.94%	
+	
+OPSM	42.87%	49.31%	
+	
+ISA	23.28%	23.97%	
+	
+Bimax	34.07%	3.43%	
+	
+BiMine	85.35%	41.78%	
+As we can see in Table , the results with BiMine present the highest coverage of the correct biclusters. In fact, BiMine can extract 85.35% of implanted biclusters with an extra volume that represent 41.78% of implanted biclusters. However, the best of the studied algorithms, i.e., OPSM, can extract only 42.87% of implanted biclusters with 49.31% of extra volume. To find overlapped biclusters in a given matrix, some algorithms, e.g., CC, need to mask the discovered biclusters with random values which is not necessary for BiMine. ISA and OPSM are sensitive to overlapping biclusters. They use the normalization step in the first preprocessing step of their algorithms. With overlapping biclusters, the expression value range after normalization becomes narrower. Table  shows that BiMine is marginally affected by the implanted overlap biclusters. We can conclude that BiMine can extract all implanted biclusters unlike other algorithms that can extract only certain types of biclusters.
+
+Real data
+Data Sets
+We applied our approach to the well-known yeast cell-cycle dataset. This dataset is publicly available from [] and described in [] and processed in []. It contains the expression profiles of more than 6000 yeast genes measured at 17 conditions over two complete cell cycles. In our experiments we use 2884 genes selected by [].
+
+Comparison Criteria
+Two criteria are used. First, in order to evaluate the biological relevance of our proposed biclustering algorithm, we compute the p-values to indicate the quality of the extracted biclusters. Second, we identify the biological annotations for the extracted biclusters.
+
+Protocol for Experiments
+For our biclustering algorithm, we have fixed δ = 0.1 and threshold of ASR = 0.85. The parameter settings used for the different reference biclustering algorithms are the default settings as used in []. For the first experiment, we run all the algorithms and we compute the p-value for extracted biclusters. With BiMine (resp. Bimax), we have obtained more than 1800 (resp. 3700) biclusters. Since a biological analysis on 1800 (resp. 3700) biclusters was not feasible, only the 100 biggest biclusters with high ASR were selected for analysis like Christinat et al. []. Post-filtering was applied for all algorithms in order to eliminate insignificant biclusters like Cheng et al. []. With the others algorithms, we obtained 10 biclusters for CC, 45 biclusters for ISA and 14 biclusters for OPSM. For the second experiment, we use a well-known web-tool to search for the significant shared Gene Ontology terms of the groups of genes.
+
+Biological relevance
+In order to evaluate the biological relevance of our proposed biclustering algorithm, we compare it with the results of CC, ISA, Bimax, OPSM on yeast cell-cycle dataset. The idea is to determine whether the set of genes discovered by biclustering algorithms shows significant enrichment with respect to a specific Gene Ontology (GO) annotation. We use the web-tool FuncAssociate [] to evaluate the discovered biclusters. FuncAssociate computes the adjusted significance scores for each bicluster. Indeed, the adjusted significance scores assess genes in each bicluster by computing adjusted p-values, which indicates how well they match with the different GO categories. Note that a smaller p-value, close to 0, is indicative of a better match []. Table  represents the different values of significant scores p-value for each algorithm over the percentage of total extracted biclusters. In fact with BiMine, 100% of tested biclusters have p-value = 5%. The same result is obtained with p-value = 1%. With p-value equals to 0.5% (resp. 0.1%), BiMine has 93% (resp. 82%) of biclusters. On the other hand, the best results (with the p-value is equals to 0.5% and 0.1% respectively) among the compared algorithms are obtained by Bimax with 89% (resp. 79%) of extracted biclusters. Finally, 51% of extracted biclusters with BiMine have p-value = 0.001% while those of Bimax have 64%. We note that BiMine performs well for all p-values compared to CC, ISA and OPSM. Also, BiMine performs well for four cases of p-value (p-value = 5%, p-value = 1%, p-value = 0.5% and p-value = 0.1%) over five compared to Bimax. Best results are obtained by BiMine and Bimax.
+
+Proportions of Biclusters significantly enriched by GO annotations.
+
+p-value	5%	1%	0.5%	0.1%	0.001%	
+Algorithms						
+BiMine	100	100	93	82	51	
+	
+OPSM	100	100	86	36	22	
+	
+Bimax	100	100	89	79	64	
+	
+ISA	89	89	87	69	32	
+	
+CC	80	70	60	20	10	
+Furthermore, in order to identify the biological annotations for the extracted biclusters we use GOTermFinder http://db.yeastgenome.org/cgi-bin/GO/goTermFinder which is a tool available in the Saccharomyces Genome Database (SGD). GOTermFinder is designed to search for the significant shared GO terms of the groups of genes and provides users with the means to identify the characteristics that the genes may have in common.
+
+We present the significant shared GO terms (or parent of GO terms) used to describe the two selected set of genes (extracted by BiMine) with 11 genes × 11 conditions and 12 genes × 13 conditions in each bicluster with ASR equal to 0.8690 and 0.8873 respectively, for biological process, molecular function and cellular component. As [], we report the most significant GO terms shared by these biclusters. For example, with the first bicluster (Table ), the genes (YDL003W, YDL164C, YDR097C, YDR440W, YKL113C, YLL002W, YLR183C, YNL102W) are particularly involved in the process of cellular response to DNA damage stimulus, response to DNA damage stimulus, cellular response to stress, cellular response to stimulus, response to stress and response to stimulus.
+
+Most significant shared GO terms (process, function, component) for two biclusters on Yeast data.
+
+Bicluster volume (genes × conditions)	Process Ontology	Function Ontology	Component Ontology	
+(12 × 13)	cellular response to DNA damage stimulus (66.7%, 1.87e-08)
+response to DNA damage stimulus (66.7%, 6.30e-08)
+cellular response to stress(66.7%, 2.12e-07)
+cellular response to stimulus(66,7%, 3.25e-07)
+DNA repair(50%, 2.58e-05)
+response to stress(66.7%, 2.98e-05)	chromatin binding (25%,0.00037)	microtubule organizing center part(16.7%, 0.00742)	
+	
+(11 × 11)	cell cycle process (63.6%, 2.93e-05)
+cell cycle (63.6%, 6.85e-05)	GTPase activator activity (18.2%,0.00994)	microtubule cytoskeleton (45.5%, 6.33e-06)
+microtubule organizing center (36.4%,4.97e-05)
+spindle pole body (36.4%, 4.97e-05)
+spindle pole (36.4%, 6.77e-05)	
+The values within parentheses after each GO term in Table , such as (66.7%, 1.87e-08) in the first bicluster, indicate the cluster frequency and the statistical significance. The cluster frequency (66.7%) shows that out of 12 genes in the first bicluster 8 belong to this process, and the statistical significance is provided by a p-value of 1.87e-08 (highly significant).
+
+According to [-], in microarray data analysis, genes are considered to be in the same cluster if their trajectory patterns of expression levels are similar across a set of conditions. Figure  shows the biclusters of Table  found by BiMine algorithm on the yeast dataset. From a visual inspection of the biclusters presented, we can notice that the genes present a similar behaviour under a subset of conditions. In Additional File , we show the best bicluster found by each compared algorithm using GoTermFinder. Also, we show their gene expression profiles drawn by BicAT. We notice that BiMine and Bimax have a high p-value. CC (resp. OPSM) cannot identify any component ontology (resp. function ontology) and ISA have p-value lower than BiMine.
+
+Two Biclusters found by BiMine on Yeast dataset. (a): Bicluster of size (12 × 13) with ASR = 0.8873. (b): Bicluster of size (11 × 11) with ASR = 0.8690.
+
+All these experiments show that for this dataset, the proposed approach is able to detect biologically significant and functionally enriched biclusters with low p-value. Furthermore, BiMine gives a good degree of homogeneity.
+
+Discussion
+BiMine algorithm has several interesting features. First, with BiMine, we avoid using a discretization of the data matrix. Indeed, classifying the gene expression values using intervals often leads to bad results []. Also, the discretization may limit the performance of an algorithm to discover a biological model because of noises which are inherent in most experiences of microarrays []. Thus, to discretize biological data we must have a good knowledge of these data to assign good values. However, this is not always possible.
+
+Second, the BiMine algorithm can enumerate all possible cases of attributes while reducing the tree size. In fact, the parametric rule based on ASR threshold allows the enumeration process to prune tree branches that cannot lead to good biclusters.
+
+Third, the BiMine algorithm provides naturally multiple biclusters of variable sizes. The number of the desired biclusters can be determined by tuning the ASR threshold. These multiple solutions of different sizes and different characteristics may be of interest for biological investigations.
+
+Forth, the new ASR evaluation function can be applied by other biclustering algorithm in replacement of MSR or ACV. It can also be used as a complementary function to these previously ones.
+
+Finally, in [], it has been shown that Spearman's rank correlation is less sensitive to the presence of noise in the data. Since our evaluation function ASR is based on Spearman rank correlation, ASR would also be less sensitive to the presence of noise in the data.
+
+Conclusions
+In this paper, we described BiMine, a new algorithm for biclustering of DNA microarray data. Compared with existing biclustering algorithms, BiMine distinguishes itself by a number of original features. First, BiMine operates directly on the raw data matrix without resorting to a discretization of data, reducing thus the risk of loss of information. Second, with BiMine, it is not necessary to fix a minimum or maximum number of genes or conditions, enabling the generation of diversified biclusters. Third, using a convenient tree structure for representing biclusters with a parametric and effective branch pruning rule, BiMine is able to explore effectively the search space. Notice that ASR can also be used by other biclustering algorithm as an alternative evaluation function.
+
+The performance of the BiMine algorithm is tested and assessed on a set of synthetic data as well as a real microarray data (yeast cell-cycle). Computational experiments showed highly competitive results of BiMine in comparison with four other popular biclustering algorithms for both types of datasets. In addition, a biological validation of the selected genes within the biclusters for yeast cell-cycle has been provided based on a publicly available Gene Ontology (GO) annotation tool. Notice that although we presented BiMine with the context of DNA microarray data analysis, it should be clear that the algorithm can be applied or adapted to other biclustering problems.
+
+Finally, let us mention that the proposed algorithm is computational time expensive; one of our ongoing works aims to find new heuristics to speed up the enumeration process. In particular, it would be possible to define other heuristic rules to improve the branch pruning in order to further reduce the size of the explored search tree.
+
+Competing interests
+The authors declare that they have no competing interests.
+
+Authors' contributions
+WA implemented the system, conducted the experimentations and wrote the draft manuscript. ME and JKH supervised the project and co-wrote the manuscript. All authors read and approved the final manuscript.
+
+Supplementary Material
+Additional file 1
+The best bicluster obtained by each compared algorithm. This file illustrates the best bicluster found by each compared algorithm using GoTermFinder. The gene expression profile of each best bicluster is drawn using BicAT.
+
+Click here for file
+
+Acknowledgements
+The authors are grateful to Dr. Jason Moore and Dr. Federico Divina for their insightful comments and questions that helped us to improve the work.
+
