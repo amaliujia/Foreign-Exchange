@@ -59,7 +59,7 @@ public class KeywordFetchService {
             pipeline.setFileTopicDistributionFile("LabNotebook/Data/Document_Topic_Distribution/tutorial_composition_AB.txt");
             pipeline.setFileWordTopicDistributionFile("LabNotebook/Data/Word_Topic_Counts/tutorial_word_topic_AB.txt");
             pipeline.setCorpusDir("LabNotebook/Data/Corpus");
-            children.add(pipeline.start(3, result[i]));
+            children.add(pipeline.start(4, result[i]));
         }
 
         // generate flare.json.
@@ -73,7 +73,5 @@ public class KeywordFetchService {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
     }
 }

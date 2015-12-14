@@ -101,6 +101,7 @@ public class KeywordsFetchPipeline {
         pipes.add(new TokenSequenceLowercase());
         pipes.add(new TokenSequenceRemoveStopwords());
         pipes.add(new TokenSequence2FeatureSequence());
+        // pipes.add(new TokenSequenceRemoveNonAlpha());
         InstanceList instanceList = new InstanceList(new SerialPipes(pipes));
         instanceList.addThruPipe(new ArrayIterator(texts));
         return instanceList;
@@ -210,7 +211,7 @@ public class KeywordsFetchPipeline {
         try {
             this.run(targetWord);
             String[] result = new String[num];
-            for (int i = 0; i < num; i++) {
+            for (int i = 0; i < Math.min(num, this.wordTopicDistribution.getDictionary().size()); i++) {
                 result[i] = this.wordTopicDistribution.getDictionary().get(this.wordsRanking.get(i).wordID);
             }
             return result;
