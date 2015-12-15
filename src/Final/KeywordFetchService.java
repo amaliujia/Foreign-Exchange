@@ -8,6 +8,8 @@ import java.util.ArrayList;
 
 
 /**
+ * This class fetch two levels words for target word. The first level contains 10 words for target word.
+ * The second level contains 4 words for each level one word. The output of these two levels is a JSON file.
  * @author amaliujia
  */
 public class KeywordFetchService {

@@ -16,7 +16,9 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 /**
- * Created by amaliujia on 15-12-5.
+ * KeywordsFetchPipeline accepts one directory that has the corpus, and execute all the necessary steps to compute words
+ * list.
+ * @author amaliujia
  */
 public class KeywordsFetchPipeline {
     private Map<Integer, FileTopicDistribution> fileTopicDistributionList;
@@ -153,6 +155,14 @@ public class KeywordsFetchPipeline {
         }
     }
 
+    /**
+     * extract word-count matrix and document-topic matrix.
+     * @param targetWord
+     * @param numTopics
+     *        How many topics to detect in corpus.
+     * @param numIterations
+     *        How many iterations to compute.
+     */
     private  void extractLDAMatrix(String targetWord, int numTopics, int numIterations)  {
         File folder = new File(this.corpusDir);
         ParallelTopicModel model = null;
@@ -198,8 +208,14 @@ public class KeywordsFetchPipeline {
     }
 
 
+    /**
+     * The start point of algorithm.
+     * @param targetWord
+     * @throws IOException
+     */
     private void run(String targetWord) throws IOException {
-        this.extractLDAMatrix(targetWord, 20, 1000);
+        // extract word-count matrix and document-topic matrix.
+        this.extractLDAMatrix(targetWord, 200, 1000);
         this.readFileTopicDistribution();
         WordTopicComputor computor = new WordTopicComputor(this.fileWordTopicDistributionFile);
         this.wordTopicDistribution = computor.compute();

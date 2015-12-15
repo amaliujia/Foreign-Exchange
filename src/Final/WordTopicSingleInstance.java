@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by amaliujia on 15-12-5.
+ * @author amaliujia
  */
 public class WordTopicSingleInstance {
     private int wordId;

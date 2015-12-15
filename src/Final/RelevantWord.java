@@ -1,7 +1,8 @@
 package Final;
 
 /**
- * Created by amaliujia on 15-12-5.
+ * The representation of relevant word
+ * @author amaliujia
  */
 public class RelevantWord implements Comparable<RelevantWord>{
     public int wordID;

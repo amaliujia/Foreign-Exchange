@@ -6,7 +6,8 @@ import java.io.FileReader;
 import java.util.*;
 
 /**
- * Created by amaliujia on 15-12-5.
+ * This computor computes P(w|z).
+ * @author amaliujia
  */
 public class WordTopicComputor {
     private String datafile;

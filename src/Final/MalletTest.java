@@ -9,6 +9,9 @@ import java.util.*;
 import java.util.regex.*;
 import java.io.*;
 
+/**
+ * This is a fuctional test on Topic Detection module of MALLET library.
+ */
 public class MalletTest {
 
     public static void main(String[] args) throws Exception {

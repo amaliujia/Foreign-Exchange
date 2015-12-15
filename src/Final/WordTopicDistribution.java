@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Created by amaliujia on 15-12-5.
+ * @author amalijia
  */
 public class WordTopicDistribution {
     private Map<Pair<Integer, Integer>, Double> wordTopicDistributionMap;

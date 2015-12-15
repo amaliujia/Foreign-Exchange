@@ -1,7 +1,8 @@
 package Final;
 
 /**
- * Created by amaliujia on 15-12-5.
+ * Representation of Document-Topic distribution.
+ * @author amaliujia
  */
 public class FileTopicDistribution {
     private int fileID;
