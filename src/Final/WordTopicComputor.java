@@ -6,7 +6,7 @@ import java.io.FileReader;
 import java.util.*;
 
 /**
- * This computor computes P(w|z).
+ * This computor computes P(w|z), w is a word and z is a topic.
  * @author amaliujia
  */
 public class WordTopicComputor {

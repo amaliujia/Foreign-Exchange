@@ -8,6 +8,11 @@ public class RelevantWord implements Comparable<RelevantWord>{
     public int wordID;
     public double likelihood;
 
+    /**
+     * comparator.
+     * @param o
+     * @return
+     */
     public int compareTo(RelevantWord o) {
         if (this.likelihood == o.likelihood) {
             return 0;

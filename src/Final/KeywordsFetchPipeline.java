@@ -43,6 +43,10 @@ public class KeywordsFetchPipeline {
         this.fileWordTopicDistributionFile = filename;
     }
 
+    /**
+     * Read documents-topic distribution from file.
+     * @throws IOException
+     */
     private void readFileTopicDistribution() throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader(new File(this.fileTopicDistributionFile)));
 
@@ -67,6 +71,9 @@ public class KeywordsFetchPipeline {
         this.corpusDir = dir;
     }
 
+    /**
+     * Compute the word ranking.
+     */
     private void compute() {
         Map<Integer, String> dictionary = this.wordTopicDistribution.getDictionary();
         Set<Integer> topics = this.wordTopicDistribution.getTopics();
@@ -103,12 +110,19 @@ public class KeywordsFetchPipeline {
         pipes.add(new TokenSequenceLowercase());
         pipes.add(new TokenSequenceRemoveStopwords());
         pipes.add(new TokenSequence2FeatureSequence());
-        // pipes.add(new TokenSequenceRemoveNonAlpha());
         InstanceList instanceList = new InstanceList(new SerialPipes(pipes));
         instanceList.addThruPipe(new ArrayIterator(texts));
         return instanceList;
     }
 
+    /**
+     * Initialize ParalleTopicModel Class from MALLET.
+     * @param texts
+     * @param numTopics
+     * @param numIterations
+     * @return
+     * @throws IOException
+     */
     private ParallelTopicModel createLDAModel(List<String> texts, int numTopics, int numIterations) throws IOException
     {
         InstanceList instanceList = createInstanceList(texts);
