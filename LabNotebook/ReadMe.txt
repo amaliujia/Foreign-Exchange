@@ -16,7 +16,12 @@ Data: Corpus and other intermediate files dir.
 
 images: the images included in notebook.
 
+ThirdPartyLibrary:
+    mallet.jar
+
 Visualization: the d3 visualization code.
+    index.html. The index file for visualization solution.
+    flarex.json. JSON file that encodes word lists.
 
 Report.ipynb. Report file in Jupyter.
 
